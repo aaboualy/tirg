@@ -754,7 +754,7 @@ def GetAverageBeta():
     asbook = test_retrieval.test(opt, trig, dataset)
     print(name,' As PaPer: ',asbook)
 
-#################  Beta From Train Set Section   #################
+#################  Beta From Train & Test Set Section   #################
 
 def getbetaall():
   
