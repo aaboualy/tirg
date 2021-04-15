@@ -587,15 +587,13 @@ def getbetatrain():
   #m = nn.ReLU()
   
 
-  for Data in tqdm(train):
+  for i in range(172048): #172048
+    print('get images=',i,end='\r')
+    item = train[i]
+    imgs += [item['source_img_data']]
+    mods += [item['mod']['str']]
+    target += [item['target_img_data']]
     
-    
-    # imgs += [Data['source_img_data']]
-    # mods += [Data['mod']['str']]
-    # target +=[Data['target_img_data']]
-    imgs += [train.get_img(Data['source_img_id'])]
-    mods += [Data['mod']['str']]
-    target +=[train.get_img(Data['target_img_id'])]
 
     imgs = torch.stack(imgs).float()
     imgs = torch.autograd.Variable(imgs)
@@ -622,22 +620,21 @@ def getbetatrain():
   trigdata=np.array(trigdata)
   imgdata=np.array(imgdata)
 
-  Ntrigdata=trigdata
-  Nimgdata=imgdata
+  
 
   Ntrig2=[]
 
   
  
-  for i in range(Ntrigdata.shape[0]):
-    Ntrigdata[i, :] /= np.linalg.norm(Ntrigdata[i, :])
+  for i in range(trigdata.shape[0]):
+    trigdata[i, :] /= np.linalg.norm(trigdata[i, :])
   
-  for i in range(Nimgdata.shape[0]):
-    Nimgdata[i, :] /= np.linalg.norm(Nimgdata[i, :])
+  for i in range(imgdata.shape[0]):
+    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
 
 
-  for i in range(Ntrigdata.shape[0]):
-      Ntrig2.append(np.insert(Ntrigdata[i],0, 1))
+  for i in range(trigdata.shape[0]):
+      Ntrig2.append(np.insert(trigdata[i],0, 1))
 
 
   Ntrig2=np.array(Ntrig2)
@@ -645,20 +642,19 @@ def getbetatrain():
   X1=np.matmul(Ntrigdata1,Ntrig2)  
   X2=np.linalg.inv(X1)
   X3=np.matmul(X2,Ntrigdata1)  
-  Nbeta=np.matmul(X3,Nimgdata) 
+  Nbeta=np.matmul(X3,imgdata) 
 
   
 
-  with open(Path1+r"/"+'Beta.txt', 'wb') as fp:
+  with open(Path1+r"/"+'Beta1442021.txt', 'wb') as fp:
     pickle.dump(Nbeta, fp)
 
 def GetValuestrain():
   
-  with open (Path1+"/Beta.txt", 'rb') as fp:
+  with open (Path1+"/Beta1442021.txt", 'rb') as fp:
     BetaNormalize = pickle.load(fp) 
 
-  # with open (Path1+"/BetaNot.txt", 'rb') as fp:
-  #   BetaNotNormalize = pickle.load(fp) 
+  
 
   trainset = datasets.Fashion200k(
         path=Path1,
@@ -692,15 +688,11 @@ def GetValuestrain():
   opt.batch_size =1
   opt.dataset='fashion200k'
   
-  for name, dataset in [ ('train', trainset)]: #('train', trainset), ,('test', testset)
+  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
     
     betaNor = test_retrieval.testWbeta(opt, trig, dataset,BetaNormalize)
     print(name,' BetaNormalized: ',betaNor)
 
-    # betaNorNot = test_retrieval.testWbetaNot(opt, trig, dataset,BetaNotNormalize)
-    # print(name,' BetaNotNormalized: ',betaNorNot)
-
-    
     # asbook = test_retrieval.test(opt, trig, dataset)
     # print(name,' As PaPer: ',asbook)
 
@@ -937,157 +929,15 @@ def GetValuesall():
     # print(name,' As PaPer: ',asbook)
 
 
-#################  Beta From Train Set Section same as test retrieval   #################
-
-def getbetatrainsameastestret():
-  
-  
-  train = datasets.Fashion200k(
-        path=Path1,
-        split='train',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-
-  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
-  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  trig.eval()
-
-  imgs = []
-  mods = []
-  trigdata=[]
-  target=[]
-  imgdata=[]
- 
-  #m = nn.ReLU()
-  
-
-  for i in range(172040):
-    print('get images=',i,end='\r')
-    item = train[i]
-    imgs += [item['source_img_data']]
-    mods += [item['mod']['str']]
-    target += [item['target_img_data']]
-    
-
-    imgs = torch.stack(imgs).float()
-    imgs = torch.autograd.Variable(imgs)
-    
-    f = trig.compose_img_text(imgs, mods).data.cpu().numpy()
-
-    target = torch.stack(target).float()
-    target = torch.autograd.Variable(target)
-    #f2 = m(trig.extract_img_feature(target)).data.cpu().numpy()
-    f2 = trig.extract_img_feature(target).data.cpu().numpy() 
-
-    trigdata.append(f[0])
-    imgdata.append(f2[0])
-    
-    imgs = []
-    mods = []
-    target = []
-
-   
-
-    
-  
-
-  trigdata=np.array(trigdata)
-  imgdata=np.array(imgdata)
-
-  Ntrigdata=trigdata
-  Nimgdata=imgdata
-
-  Ntrig2=[]
-
-  
- 
-  for i in range(Ntrigdata.shape[0]):
-    Ntrigdata[i, :] /= np.linalg.norm(Ntrigdata[i, :])
-  
-  for i in range(Nimgdata.shape[0]):
-    Nimgdata[i, :] /= np.linalg.norm(Nimgdata[i, :])
-
-
-  for i in range(Ntrigdata.shape[0]):
-      Ntrig2.append(np.insert(Ntrigdata[i],0, 1))
-
-
-  Ntrig2=np.array(Ntrig2)
-  Ntrigdata1=Ntrig2.transpose()
-  X1=np.matmul(Ntrigdata1,Ntrig2)  
-  X2=np.linalg.inv(X1)
-  X3=np.matmul(X2,Ntrigdata1)  
-  Nbeta=np.matmul(X3,Nimgdata) 
-
-  
-
-  with open(Path1+r"/"+'Betadiff.txt', 'wb') as fp:
-    pickle.dump(Nbeta, fp)
-
-def GetValuestrainsameastestret():
-  
-  with open (Path1+"/Betadiff.txt", 'rb') as fp:
-    BetaNormalize = pickle.load(fp) 
-
-  # with open (Path1+"/BetaNot.txt", 'rb') as fp:
-  #   BetaNotNormalize = pickle.load(fp) 
-
-  trainset = datasets.Fashion200k(
-        path=Path1,
-        split='train',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-  
-  testset = datasets.Fashion200k(
-        path=Path1,
-        split='test',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-
-  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
-  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  
-
-  opt = argparse.ArgumentParser()
-  opt.add_argument('--batch_size', type=int, default=2)
-  opt.add_argument('--dataset', type=str, default='fashion200k')
-  opt.batch_size =1
-  opt.dataset='fashion200k'
-  
-  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
-    
-    betaNor = test_retrieval.testWbeta(opt, trig, dataset,BetaNormalize)
-    print(name,' BetaNormalized: ',betaNor)
-
-    # betaNorNot = test_retrieval.testWbetaNot(opt, trig, dataset,BetaNotNormalize)
-    # print(name,' BetaNotNormalized: ',betaNorNot)
-
-    
-    # asbook = test_retrieval.test(opt, trig, dataset)
-    # print(name,' As PaPer: ',asbook)
 
     
 
     
 if __name__ == '__main__': 
     
-    #getbetatrainsameastestret()
-    GetValuestrainsameastestret()
+    
+  getbetatrain()
+  GetValuestrain()
 
     
 
