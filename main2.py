@@ -477,9 +477,7 @@ def getbeta():
   for i in range(Ntrigdata.shape[0]):
       Ntrig2.append(np.insert(Ntrigdata[i],0, 1))
 
-  # for i in range(trigdata.shape[0]):
-  #     trigdata2.append(np.insert(trigdata[i],0, 1))
-
+  
 
   Ntrig2=np.array(Ntrig2)
   Ntrigdata1=Ntrig2.transpose()
@@ -488,28 +486,16 @@ def getbeta():
   X3=np.matmul(X2,Ntrigdata1)  
   Nbeta=np.matmul(X3,Nimgdata) 
 
-  #  trigdata2=np.array(trigdata2)
-  # trigdata1=trigdata2.transpose()
-
-  # X11=np.matmul(trigdata1,trigdata2)  
-  # X21=np.linalg.inv(X11)
-  # X31=np.matmul(X21,trigdata1)  
-  # beta=np.matmul(X31,imgdata)  
+  
 
 
   with open(Path1+r"/"+'testBetaNormalized.txt', 'wb') as fp:
     pickle.dump(Nbeta, fp)
 
-  # with open(Path1+r"/"+'testBetaNotNormalized.txt', 'wb') as fp:
-  #   pickle.dump(beta, fp)
-
 def GetValues():
   
   with open (Path1+"/testBetaNormalized.txt", 'rb') as fp:
     Nbeta = pickle.load(fp) 
-
-  with open (Path1+"/testBetaNotNormalized.txt", 'rb') as fp:
-    beta = pickle.load(fp) 
 
   train = datasets.Fashion200k(
         path=Path1,
@@ -536,7 +522,7 @@ def GetValues():
 
   trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
   trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  #trig.eval()
+  
 
   opt = argparse.ArgumentParser()
   opt.add_argument('--batch_size', type=int, default=2)
@@ -545,18 +531,13 @@ def GetValues():
   opt.dataset='fashion200k'
   
   for name, dataset in [ ('train', train),('test', test)]: #('train', trainset),
-    
-        # betaN = test_retrieval.testbetaNot(opt, trig, dataset,Beta)
-        # print('BetaNotNormalized: ',betaN)
-        
+     
      betaNor = test_retrieval.testWbeta(opt, trig, dataset,Nbeta)
      print(name,' BetaNormalized: ',betaNor)
 
      asbook = test_retrieval.test(opt, trig, dataset)
      print(name,' As PaPer: ',asbook)
     
-    #  betaNor = test_retrieval.testWbetaNot(opt, trig, dataset,beta)
-    #  print(name,' BetaNotNormalized: ',betaNor)
      
 #################  Beta From Train Set Section   #################
 
@@ -602,7 +583,7 @@ def getbetatrain():
 
     target = torch.stack(target).float()
     target = torch.autograd.Variable(target)
-    #f2 = m(trig.extract_img_feature(target)).data.cpu().numpy()
+    
     f2 = trig.extract_img_feature(target).data.cpu().numpy() 
 
     trigdata.append(f[0])
@@ -693,8 +674,8 @@ def GetValuestrain():
     betaNor = test_retrieval.testWbeta(opt, trig, dataset,BetaNormalize)
     print(name,' BetaNormalized: ',betaNor)
 
-    # asbook = test_retrieval.test(opt, trig, dataset)
-    # print(name,' As PaPer: ',asbook)
+    asbook = test_retrieval.test(opt, trig, dataset)
+    print(name,' As PaPer: ',asbook)
 
 
 #################  Get Average Beta   #################
@@ -709,11 +690,7 @@ def GetAverageBeta():
   BetaAvg1= np.add(BetaTrain, BetaTest)
   BetaAvg2=BetaAvg1/2
 
-  # print(BetaTrain[0][0])
-  # print(BetaTest[0][0])
-  # print(BetaAvg1[0][0])
-  # print(BetaAvg2[0][0])
-  # print(BetaAvg1)
+  
   trainset = datasets.Fashion200k(
         path=Path1,
         split='train',
@@ -791,15 +768,11 @@ def getbetaall():
   target=[]
   imgdata=[]
  
-  #m = nn.ReLU()
   
 
   for Data in tqdm(train):
     
     
-    # imgs += [Data['source_img_data']]
-    # mods += [Data['mod']['str']]
-    # target +=[Data['target_img_data']]
     imgs += [train.get_img(Data['source_img_id'])]
     mods += [Data['mod']['str']]
     target +=[train.get_img(Data['target_img_id'])]
@@ -811,7 +784,7 @@ def getbetaall():
 
     target = torch.stack(target).float()
     target = torch.autograd.Variable(target)
-    #f2 = m(trig.extract_img_feature(target)).data.cpu().numpy()
+   
     f2 = trig.extract_img_feature(target).data.cpu().numpy() 
 
     trigdata.append(f[0])
