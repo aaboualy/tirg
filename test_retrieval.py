@@ -160,6 +160,7 @@ def testWbeta(opt, model, testset,beta):
         for j in range(len(f)): 
           # for i in range(f.shape[0]):
           #   f[i, :] /= np.linalg.norm(f[i, :])
+          f[j, :] /= np.linalg.norm(f[j, :])
           X1 = np.insert(f[j],0, 1)
           X2=np.matmul(X1,beta) 
           f[j]=X2
@@ -200,8 +201,9 @@ def testWbeta(opt, model, testset,beta):
         imgs = torch.autograd.Variable(imgs)
         f = model.compose_img_text(imgs, mods).data.cpu().numpy()
         for j in range(len(f)): 
-          # for i in range(f.shape[0]):
-          #   f[i, :] /= np.linalg.norm(f[i, :])
+          #for i in range(f.shape[0]):
+            #f[i, :] /= np.linalg.norm(f[i, :])
+          f[j, :] /= np.linalg.norm(f[j, :])
           X1 = np.insert(f[j],0, 1)
           X2=np.matmul(X1,beta) 
           f[j]=X2
@@ -221,8 +223,8 @@ def testWbeta(opt, model, testset,beta):
     all_queries = np.concatenate(all_queries)
 
   # feature normalization
-  for i in range(all_queries.shape[0]):
-    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  # for i in range(all_queries.shape[0]):
+  #   all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
   for i in range(all_imgs.shape[0]):
     all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
 

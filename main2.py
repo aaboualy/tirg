@@ -627,12 +627,12 @@ def getbetatrain():
 
   
 
-  with open(Path1+r"/"+'Beta1442021.txt', 'wb') as fp:
+  with open(Path1+r"/"+'Betatrain.txt', 'wb') as fp:
     pickle.dump(Nbeta, fp)
 
 def GetValuestrain():
   
-  with open (Path1+"/Beta1442021.txt", 'rb') as fp:
+  with open (Path1+"/Betatrain.txt", 'rb') as fp:
     BetaNormalize = pickle.load(fp) 
 
   
