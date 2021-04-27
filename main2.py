@@ -901,16 +901,224 @@ def GetValuesall():
     # asbook = test_retrieval.test(opt, trig, dataset)
     # print(name,' As PaPer: ',asbook)
 
+def getvaluespdf():
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
 
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.eval()
 
+  imgs = []
+  mods = []
+  trigdata=[]
+  target=[]
+  imgdata=[]
+ 
+  #m = nn.ReLU()
+  
+
+  for i in range(172048): #172048
+    print('get images=',i,end='\r')
+    item = train[i]
+    imgs += [item['source_img_data']]
+    mods += [item['mod']['str']]
+    target += [item['target_img_data']]
     
 
+    imgs = torch.stack(imgs).float()
+    imgs = torch.autograd.Variable(imgs)
     
+    f = trig.compose_img_text(imgs, mods).data.cpu().numpy()
+
+    target = torch.stack(target).float()
+    target = torch.autograd.Variable(target)
+    
+    f2 = trig.extract_img_feature(target).data.cpu().numpy() 
+
+    trigdata.append(f[0][:256])
+    imgdata.append(f2[0][:256])
+    
+    imgs = []
+    mods = []
+    
+    target=[]
+
+  for i in range(trigdata.shape[0]):
+    trigdata[i, :] /= np.linalg.norm(trigdata[i, :])
+  
+  for i in range(imgdata.shape[0]):
+    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
+
+
+  print(trigdata)
+  print(imgdata)
+  with open(Path1+r"/"+'traindata.txt', 'wb') as fp:
+    pickle.dump(trigdata, fp) 
+
+  with open(Path1+r"/"+'imgdata.txt', 'wb') as fp:
+    pickle.dump(imgdata, fp)
+
+class NLR(nn.Module):
+  def __init__(self,insize,outsize,hidden):
+    super().__init__()
+    self.nlmodel= torch.nn.Sequential(torch.nn.Linear(insize, hidden),torch.nn.Sigmoid(),torch.nn.Linear(hidden, outsize))
+  def myforward (self,x11):
+    p=self.nlmodel(x11)
+    return p
+
+def getNLP():
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.eval()
+
+  imgs = []
+  mods = []
+  trigdata=[]
+  target=[]
+  imgdata=[]
+
+  dtsz, indm, hddm, oudm = 172048, 513, 350, 512
+
+  loss_fn = torch.nn.MSELoss(reduction='sum')
+  torch.manual_seed(3)
+  model=NLR(indm,oudm,hddm)
+  torch.manual_seed(3)
+
+  criterion=nn.MSELoss()
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
+  epoch=3
+
+  losses=[]
+  
+  for j in range(epoch):
+    for l in range(dtsz): #172048
+      print('Epoch:',j,' get images=',l,end='\r')
+      item = train[l]
+      imgs += [item['source_img_data']]
+      mods += [item['mod']['str']]
+      target += [item['target_img_data']]
+      
+
+      imgs = torch.stack(imgs).float()
+      imgs = torch.autograd.Variable(imgs)
+      
+      f = trig.compose_img_text(imgs, mods).data.cpu().numpy()
+
+      target = torch.stack(target).float()
+      target = torch.autograd.Variable(target)
+      
+      f2 = trig.extract_img_feature(target).data.cpu().numpy()
+
+      for i in range(f.shape[0]):
+        f[i, :] /= np.linalg.norm(f[i, :])
+      
+      for i in range(f2.shape[0]):
+        f2[i, :] /= np.linalg.norm(f2[i, :]) 
+
+      for i in range(f.shape[0]):
+        trigdata =np.insert(f[i],0, 1)
+
+      trigdata=torch.from_numpy(trigdata)
+      f2=torch.from_numpy(f2)
+
+      yp=model.myforward(trigdata)
+      loss=criterion(yp,f2)
+      if(l%5000 == 0):
+        print("epoch ",j, "loss ", loss.item())
+      losses.append(loss)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+
+      imgs = []
+      mods = []
+      trigdata=[]
+      target=[]
+      imgdata=[]
+
+
+
+
+  print('Finished Training')
+  torch.save(model.state_dict(), Path1+r'\NLP.pth') 
+  
+def resultsNLP():
+  
+  
+  dtsz, indm, hddm, oudm = 172048, 513, 350, 512
+
+  model=NLR(indm,oudm,hddm)
+  model.load_state_dict(torch.load(Path1+r'\NLP.pth' , map_location=torch.device('cpu') ))
+  model.eval()
+
+
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+    
+    NLP = test_retrieval.testNLP(opt, trig, dataset,model)
+    print(name,' NLP: ',NLP)
+
+    asbook = test_retrieval.test(opt, trig, dataset)
+    print(name,' As PaPer: ',asbook)
+
+
 if __name__ == '__main__': 
     
-    
-  getbetatrain()
-  GetValuestrain()
+  #getvaluespdf()
+  #getbetatrain()
+  #GetValuestrain()
+  resultsNLP()
 
     
 
