@@ -674,8 +674,8 @@ def GetValuestrain():
     betaNor = test_retrieval.testWbeta(opt, trig, dataset,BetaNormalize)
     print(name,' BetaNormalized: ',betaNor)
 
-    asbook = test_retrieval.test(opt, trig, dataset)
-    print(name,' As PaPer: ',asbook)
+    # asbook = test_retrieval.test(opt, trig, dataset)
+    # print(name,' As PaPer: ',asbook)
 
 
 #################  Get Average Beta   #################
@@ -944,8 +944,8 @@ def getvaluespdf():
     
     f2 = trig.extract_img_feature(target).data.cpu().numpy() 
 
-    trigdata.append(f[0][:256])
-    imgdata.append(f2[0][:256])
+    trigdata.append(f[0])
+    imgdata.append(f2[0])
     
     imgs = []
     mods = []
@@ -997,16 +997,17 @@ def getNLP():
   target=[]
   imgdata=[]
 
-  dtsz, indm, hddm, oudm = 172048, 513, 350, 512
+  dtsz, indm, hddm, oudm = 172048, 513, 700, 512
 
   loss_fn = torch.nn.MSELoss(reduction='sum')
   torch.manual_seed(3)
   model=NLR(indm,oudm,hddm)
+  #model=model.cuda()
   torch.manual_seed(3)
 
   criterion=nn.MSELoss()
   optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
-  epoch=3
+  epoch=50
 
   losses=[]
   
@@ -1018,15 +1019,13 @@ def getNLP():
       mods += [item['mod']['str']]
       target += [item['target_img_data']]
       
-
       imgs = torch.stack(imgs).float()
-      imgs = torch.autograd.Variable(imgs)
+      imgs = torch.autograd.Variable(imgs)#.cuda()
       
-      f = trig.compose_img_text(imgs, mods).data.cpu().numpy()
-
       target = torch.stack(target).float()
-      target = torch.autograd.Variable(target)
-      
+      target = torch.autograd.Variable(target)#.cuda()
+
+      f = trig.compose_img_text(imgs, mods).data.cpu().numpy()
       f2 = trig.extract_img_feature(target).data.cpu().numpy()
 
       for i in range(f.shape[0]):
@@ -1043,7 +1042,7 @@ def getNLP():
 
       yp=model.myforward(trigdata)
       loss=criterion(yp,f2)
-      if(l%5000 == 0):
+      if(l%20000 == 0):
         print("epoch ",j, "loss ", loss.item())
       losses.append(loss)
       optimizer.zero_grad()
@@ -1060,12 +1059,13 @@ def getNLP():
 
 
   print('Finished Training')
-  torch.save(model.state_dict(), Path1+r'\NLP.pth') 
+  torch.save(model.state_dict(), Path1+r'\NLP2.pth') 
   
 def resultsNLP():
   
   
-  dtsz, indm, hddm, oudm = 172048, 513, 350, 512
+  dtsz, indm, hddm, oudm = 172048, 513, 700, 512
+
 
   model=NLR(indm,oudm,hddm)
   model.load_state_dict(torch.load(Path1+r'\NLP.pth' , map_location=torch.device('cpu') ))
@@ -1112,13 +1112,196 @@ def resultsNLP():
     asbook = test_retrieval.test(opt, trig, dataset)
     print(name,' As PaPer: ',asbook)
 
+def getNLPF():
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.eval()
+
+  imgs = []
+  mods = []
+  trigdata=[]
+  target=[]
+  imgdata=[]
+
+  dtsz, indm, hddm, oudm = 172048, 513, 700, 512
+
+  loss_fn = torch.nn.MSELoss(reduction='sum')
+  torch.manual_seed(3)
+  model=NLR(indm,oudm,hddm)
+  torch.manual_seed(3)
+
+  criterion=nn.MSELoss()
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
+  epoch=3
+
+  losses=[]
+
+  for l in range(dtsz): #172048
+    print(' get images=',l,end='\r')
+    item = train[l]
+    imgs += [item['source_img_data']]
+    mods += [item['mod']['str']]
+    target += [item['target_img_data']]
+  
+  imgs = torch.stack(imgs).float()
+  imgs = torch.autograd.Variable(imgs)
+      
+  f = trig.compose_img_text(imgs, mods).data.cpu().numpy()
+
+  target = torch.stack(target).float()
+  target = torch.autograd.Variable(target)
+      
+  f2 = trig.extract_img_feature(target).data.cpu().numpy()
+
+  for i in range(f.shape[0]):
+      f[i, :] /= np.linalg.norm(f[i, :])
+      
+  for i in range(f2.shape[0]):
+      f2[i, :] /= np.linalg.norm(f2[i, :]) 
+
+  for i in range(f.shape[0]):
+        trigdata =np.insert(f[i],0, 1)
+
+  trigdata=torch.from_numpy(trigdata)
+  f2=torch.from_numpy(f2)
+
+  for j in range(epoch):
+    yp=model.myforward(trigdata)
+    loss=criterion(yp,f2)
+    if(l%20000 == 0):
+      print("epoch ",j, "loss ", loss.item())
+    losses.append(loss)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+  print('Finished Training')
+  torch.save(model.state_dict(), Path1+r'\NLPF.pth') 
+
+
+##############  LP ###############################################
+
+class LR(nn.Module):
+  def __init__(self,insize,outsize,hidden):
+    super().__init__()
+    self.nlmodel= torch.nn.Sequential(torch.nn.Linear(insize, outsize))
+  def myforward (self,x11):
+    p=self.nlmodel(x11)
+    return p
+
+def getLP():
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.eval()
+
+  imgs = []
+  mods = []
+  trigdata=[]
+  target=[]
+  imgdata=[]
+
+  dtsz, indm, hddm, oudm = 172048, 513, 700, 512
+
+  loss_fn = torch.nn.MSELoss(reduction='sum')
+  torch.manual_seed(3)
+  model=LR(indm,oudm,hddm)
+  #model=model.cuda()
+  torch.manual_seed(3)
+
+  criterion=nn.MSELoss()
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
+  epoch=50
+
+  losses=[]
+  
+  for j in range(epoch):
+    for l in range(dtsz): #172048
+      print('Epoch:',j,' get images=',l,end='\r')
+      item = train[l]
+      imgs += [item['source_img_data']]
+      mods += [item['mod']['str']]
+      target += [item['target_img_data']]
+      
+      imgs = torch.stack(imgs).float()
+      imgs = torch.autograd.Variable(imgs)#.cuda()
+      
+      target = torch.stack(target).float()
+      target = torch.autograd.Variable(target)#.cuda()
+
+      f = trig.compose_img_text(imgs, mods).data.cpu().numpy()
+      f2 = trig.extract_img_feature(target).data.cpu().numpy()
+
+      for i in range(f.shape[0]):
+        f[i, :] /= np.linalg.norm(f[i, :])
+      
+      for i in range(f2.shape[0]):
+        f2[i, :] /= np.linalg.norm(f2[i, :]) 
+
+      for i in range(f.shape[0]):
+        trigdata =np.insert(f[i],0, 1)
+
+      trigdata=torch.from_numpy(trigdata)
+      f2=torch.from_numpy(f2)
+
+      yp=model.myforward(trigdata)
+      loss=criterion(yp,f2)
+      if(l%20000 == 0):
+        print("epoch ",j, "loss ", loss.item())
+      losses.append(loss)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+
+      imgs = []
+      mods = []
+      trigdata=[]
+      target=[]
+      imgdata=[]
+
+
+
+
+  print('Finished Training')
+  torch.save(model.state_dict(), Path1+r'\NLP2.pth') 
+  
+
+
+
+
+
 
 if __name__ == '__main__': 
     
   #getvaluespdf()
   #getbetatrain()
-  #GetValuestrain()
-  resultsNLP()
+  #print(torch.cuda.is_available())
+  GetValuestrain()
+  #getNLP()
+  #resultsNLP()
+  #getNLPF()
+  #getLP()
 
     
 
