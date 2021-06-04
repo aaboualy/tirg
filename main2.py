@@ -34,7 +34,8 @@ import img_text_composition_models
 
 
 
-Path1=r"D:\personal\master\MyCode\files"
+#Path1=r"D:\personal\master\MyCode\files"
+Path1=r"C:\MMaster\Files"
 
 
 #################  Support Functions Section   #################
@@ -174,10 +175,10 @@ def getbetatrainNot():
   Nimgdata=imgdata
 
   Ntrig2=[]
-  #   for i in range(Ntrigdata.shape[0]):
-  #     Ntrigdata[i, :] /= np.linalg.norm(Ntrigdata[i, :])
-  #   for i in range(Nimgdata.shape[0]):
-  #     Nimgdata[i, :] /= np.linalg.norm(Nimgdata[i, :])
+  for i in range(Ntrigdata.shape[0]):
+    Ntrigdata[i, :] /= np.linalg.norm(Ntrigdata[i, :])
+  for i in range(Nimgdata.shape[0]):
+    Nimgdata[i, :] /= np.linalg.norm(Nimgdata[i, :])
   for i in range(Ntrigdata.shape[0]):
     Ntrig2.append(np.insert(Ntrigdata[i],0, 1))
 
@@ -432,12 +433,17 @@ def getbeta():
   target=[]
   imgdata=[]
  
+  all_source_captions=[]
+  all_target_captions=[]
+
   
   for Data in tqdm(test.get_test_queries()):
     imgs += [test.get_img(Data['source_img_id'])]
     mods += [Data['mod']['str']]
     target +=[test.get_img(Data['target_id'])]
-    
+    all_source_captions +=Data['source_caption']
+    all_target_captions +=Data['target_caption']
+
     imgs = torch.stack(imgs).float()
     imgs = torch.autograd.Variable(imgs)
     
@@ -456,11 +462,20 @@ def getbeta():
     mods = []
     target = []
 
-    
-  
+  with open(Path1+r"/"+'test_all_source_captionsG.pkl', 'wb') as fp:
+    pickle.dump(all_source_captions, fp)
+  with open(Path1+r"/"+'test_all_target_captionsG.pkl', 'wb') as fp:
+    pickle.dump(all_target_captions, fp)
+ 
+
   trigdata=np.array(trigdata)
   imgdata=np.array(imgdata)
+  with open(Path1+r"/"+'test_all_queriesG.pkl', 'wb') as fp:
+    pickle.dump(trigdata, fp)
 
+  with open(Path1+r"/"+'test_all_imgsG.pkl', 'wb') as fp:
+    pickle.dump(imgdata, fp)
+ 
   Ntrigdata=trigdata
   Nimgdata=imgdata
 
@@ -489,7 +504,7 @@ def getbeta():
   
 
 
-  with open(Path1+r"/"+'testBetaNormalized.txt', 'wb') as fp:
+  with open(Path1+r"/"+'testBetaNormalizedG.txt', 'wb') as fp:
     pickle.dump(Nbeta, fp)
 
 def GetValues():
@@ -615,9 +630,9 @@ def getbetatrain():
 
 
   for i in range(trigdata.shape[0]):
-      Ntrig2.append(np.insert(trigdata[i],0, 1))
+    Ntrig2.append(np.insert(trigdata[i],0, 1))
 
-
+  print("Ntrig2 shape %d  first elemnt %d",Ntrig2[0] )
   Ntrig2=np.array(Ntrig2)
   Ntrigdata1=Ntrig2.transpose()
   X1=np.matmul(Ntrigdata1,Ntrig2)  
@@ -632,7 +647,7 @@ def getbetatrain():
 
 def GetValuestrain():
   
-  with open (Path1+"/Betatrain.txt", 'rb') as fp:
+  with open (Path1+"\\Betatrain.txt", 'rb') as fp:
     BetaNormalize = pickle.load(fp) 
 
   
@@ -1112,13 +1127,279 @@ def resultsNLP():
     asbook = test_retrieval.test(opt, trig, dataset)
     print(name,' As PaPer: ',asbook)
 
+def savevaluestofile():
+    
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.eval()
+
+  imgs = []
+  mods = []
+  trigdata=[]
+  target=[]
+  imgdata=[]
+  alldata=[]
+  #m = nn.ReLU()
+  
+
+  for i in range(172048): #172048
+    print('get images=',i,end='\r')
+    item = train[i]
+    imgs += [item['source_img_data']]
+    mods += [item['mod']['str']]
+    target += [item['target_img_data']]
+    
+
+    imgs = torch.stack(imgs).float()
+    imgs = torch.autograd.Variable(imgs)
+    
+    f = trig.compose_img_text(imgs, mods).data.cpu().numpy()
+
+    target = torch.stack(target).float()
+    target = torch.autograd.Variable(target)
+    
+    f2 = trig.extract_img_feature(target).data.cpu().numpy() 
+    # trigdata.append(f[0])
+    # imgdata.append(f2[0])
+
+    opsig={
+                  'SourceTrig':f[0],
+                  'TargetData':f2[0],
+                  'IDX':i
+    }
+    alldata.append(opsig)
+    imgs = []
+    mods = []
+    trigdata=[]
+    target=[]
+    imgdata=[]
+
+
+
+
+  with open(Path1+r"/"+'TrigImgData172.txt', 'wb') as fp:
+    pickle.dump(alldata, fp)
+
+
+def Savevaluestest():
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.eval()
+
+
+  imgs = []
+  mods = []
+  trigdata=[]
+  target=[]
+  imgdata=[]
+  alldata=[]
+  
+  for Data in tqdm(test.get_test_queries()):
+    imgs += [test.get_img(Data['source_img_id'])]
+    mods += [Data['mod']['str']]
+    target +=[test.get_img(Data['target_id'])]
+    
+    imgs = torch.stack(imgs).float()
+    imgs = torch.autograd.Variable(imgs)
+    
+    f = trig.compose_img_text(imgs, mods).data.cpu().numpy()
+
+    target = torch.stack(target).float()
+    target = torch.autograd.Variable(target)
+    f2 = trig.extract_img_feature(target).data.cpu().numpy()
+
+    
+    opsig={
+                  'SourceTrig':f[0],
+                  'TargetData':f2[0],
+                  'IDX':Data['source_img_id']
+    }
+    alldata.append(opsig)
+    all_captions = [img['captions'][0] for img in test.imgs]
+
+    imgs = []
+    mods = []
+    trigdata=[]
+    target=[]
+    imgdata=[]
+
+  with open(Path1+r"/"+'allcaptions.txt', 'wb') as fp:
+    pickle.dump(all_captions, fp)
+
+
+
+  with open(Path1+r"/"+'TrigImgDatatestset.txt', 'wb') as fp:
+    pickle.dump(alldata, fp)
+    
+def trainsaveddataresultsa():
+  with open (Path1+"\\TrigImgData172.txt", 'rb') as fp:
+    Datasaved172 = pickle.load(fp) 
+
+  with open (Path1+"\\TrigImgDatatestset.txt", 'rb') as fp:
+    Datasavedtest = pickle.load(fp) 
+  
+  with open (Path1+"\\Betatrain.txt", 'rb') as fp:
+    BetaNormalize = pickle.load(fp) 
+
+ 
+    
+    #betaNor = test_retrieval.testWbetaWsaveddataa(BetaNormalize,Datasaved172)
+    #print('trained',' BetaNormalized: ',betaNor)
+    betaNor = test_retrieval.testWbetaWsaveddataa(BetaNormalize,Datasavedtest)
+    print('test',' BetaNormalized: ',betaNor)
+
+def trainsaveddataresults():
+  with open (Path1+"\\TrigImgData172.txt", 'rb') as fp:
+    Datasaved172 = pickle.load(fp) 
+
+  with open (Path1+"\\TrigImgDatatestset.txt", 'rb') as fp:
+    Datasavedtest = pickle.load(fp) 
+  
+  with open (Path1+"\\Betatrain.txt", 'rb') as fp:
+    BetaNormalize = pickle.load(fp) 
+
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+    
+    betaNor = test_retrieval.testWbetaWsaveddata(opt, trig, dataset,BetaNormalize,Datasaved172,Datasavedtest)
+    print(name,' BetaNormalized: ',betaNor)
+
+def Save_GetValues():
+  
+  
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  for name, dataset in [ ('train', train),('test', test)]: #('train', trainset),
+          
+     asbook = test_retrieval.test_and_save(opt, trig, dataset)
+     print(name,' As PaPer: ',asbook)
+    
+     
+
+
+
+
+
+
+
 
 if __name__ == '__main__': 
     
-  #getvaluespdf()
   #getbetatrain()
-  #GetValuestrain()
-  resultsNLP()
+  # GetValuestrain()
+  #savevaluestofile()
+  #Savevaluestest()
+  #Savevaluestest()
+  #Save_GetValues()
+  #Save_GetValues()
+  #asbook = test_retrieval.test_on_saved(1,0)
+  #print('train',' As PaPer: ',asbook)
+  #asbook = test_retrieval.test_on_saved(0,0)
+  #print('test',' As PaPer: ',asbook)
+
+  
+  #asbook = test_retrieval.test_on_saved(0,1)
+  #print('test
+  # ',' As PaPer: ',asbook)
+  #test_on_saved(test_train,normal_beta,create_load,filename)
+  #test_retrieval.test_on_saved(0,1,0,'testBetaNormalized.pkl')
+  getbeta()
+  #Save_GetValues()
 
     
 
