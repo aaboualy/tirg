@@ -293,6 +293,8 @@ def testNLP(opt, model, testset,model2):
         imgs = torch.stack(imgs).float()
         imgs = torch.autograd.Variable(imgs)
         f = model.compose_img_text(imgs, mods).data.cpu().numpy()
+        for i in range(f.shape[0]):
+          f[i, :] /= np.linalg.norm(f[i, :])
         f =np.insert(f,0, 1)
         f=np.expand_dims(f, axis=0)
         f=torch.from_numpy(f)
@@ -335,6 +337,8 @@ def testNLP(opt, model, testset,model2):
         imgs = torch.stack(imgs).float()
         imgs = torch.autograd.Variable(imgs)
         f = model.compose_img_text(imgs, mods).data.cpu().numpy()
+        for i in range(f.shape[0]):
+          f[i, :] /= np.linalg.norm(f[i, :])
         f =np.insert(f,0, 1)
         f=np.expand_dims(f, axis=0)
         f=torch.from_numpy(f)
