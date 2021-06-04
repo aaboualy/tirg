@@ -1287,6 +1287,7 @@ def getLP():
   torch.save(model.state_dict(), Path1+r'\NLP2.pth') 
   
 
+##############3 save values ###############################
 
 
 
