@@ -1364,7 +1364,8 @@ def Save_GetValues():
   opt.batch_size =1
   opt.dataset='fashion200k'
   
-  for name, dataset in [ ('train', train),('test', test)]: #('train', trainset),
+  #for name, dataset in [ ('test', test),('train', train)]: #('train', trainset),
+  for name, dataset in [ ('train', train)]: #('train', trainset),
           
      asbook = test_retrieval.test_and_save(opt, trig, dataset)
      print(name,' As PaPer: ',asbook)
@@ -1397,9 +1398,9 @@ if __name__ == '__main__':
   #print('test
   # ',' As PaPer: ',asbook)
   #test_on_saved(test_train,normal_beta,create_load,filename)
-  #test_retrieval.test_on_saved(0,1,0,'testBetaNormalized.pkl')
-  getbeta()
-  #Save_GetValues()
+  #test_retrieval.test_on_saved(0,1,0,'testBetaNormalizedG.pkl')
+  #getbeta()
+  Save_GetValues()
 
     
 

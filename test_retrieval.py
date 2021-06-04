@@ -533,12 +533,15 @@ def test_and_save(opt, model, testset):
   all_captions = []
   all_queries = []
   all_target_captions = []
+  all_captions=[]
   if test_queries:
     # compute test query features
     imgs = []
     mods = []
     for t in tqdm(test_queries):
       imgs += [testset.get_img(t['source_img_id'])]
+      all_captions += [t['source_caption']]
+      all_target_captions += [t['target_caption']]
       mods += [t['mod']['str']]
       if len(imgs) >= opt.batch_size or t is test_queries[-1]:
         if 'torch' not in str(type(imgs[0])):
@@ -550,7 +553,7 @@ def test_and_save(opt, model, testset):
         imgs = []
         mods = []
     all_queries = np.concatenate(all_queries)
-    all_target_captions = [t['target_caption'] for t in test_queries]
+    #all_target_captions = [t['target_caption'] for t in test_queries]
 
     # compute all image features
     imgs = []
@@ -572,8 +575,8 @@ def test_and_save(opt, model, testset):
     imgs0 = []
     imgs = []
     mods = []
-    for i in range(10000):
-      print('get images=',i,end='\r')
+    for i in range(len(testset)):
+      
       item = testset[i]
       imgs += [item['source_img_data']]
       mods += [item['mod']['str']]
@@ -591,7 +594,7 @@ def test_and_save(opt, model, testset):
         imgs0 = model.extract_img_feature(imgs0).data.cpu().numpy() #.cuda()
         all_imgs += [imgs0]
         imgs0 = []
-      all_captions += [item['target_caption']]
+      all_captions += [item['source_caption']]
       all_target_captions += [item['target_caption']]
     all_imgs = np.concatenate(all_imgs)
     all_queries = np.concatenate(all_queries)
@@ -609,16 +612,16 @@ def test_and_save(opt, model, testset):
    with open(Path1+r"/"+'test_all_target_captions.pkl', 'wb') as fp:
     pickle.dump(all_target_captions, fp)
   else:
-   with open(Path1+r"/"+'test_queries.pkl', 'wb') as fp:
+   with open(Path1+r"/"+'test_queries172k.pkl', 'wb') as fp:
     pickle.dump(test_queries, fp)
 
-   with open(Path1+r"/"+'all_queries.pkl', 'wb') as fp:
+   with open(Path1+r"/"+'all_queries172k.pkl', 'wb') as fp:
     pickle.dump(all_queries, fp)
-   with open(Path1+r"/"+'all_imgs.pkl', 'wb') as fp:
+   with open(Path1+r"/"+'all_imgs172k.pkl', 'wb') as fp:
     pickle.dump(all_imgs, fp)
-   with open(Path1+r"/"+'all_captions.pkl', 'wb') as fp:
+   with open(Path1+r"/"+'all_captions172k.pkl', 'wb') as fp:
     pickle.dump(all_captions, fp)
-   with open(Path1+r"/"+'all_target_captions.pkl', 'wb') as fp:
+   with open(Path1+r"/"+'all_target_captions172k.pkl', 'wb') as fp:
     pickle.dump(all_target_captions, fp)
 
 
@@ -676,9 +679,9 @@ def test_on_saved(test_train,normal_beta,create_load,filename):
     all_queries=pickle.load( fp)
    with open(Path1+r"/"+'test_all_imgsG.pkl', 'rb') as fp:
     all_imgs=pickle.load( fp)
-   with open(Path1+r"/"+'test_all_captionsG.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'test_all_target_captionsG.pkl', 'rb') as fp:
     all_captions=pickle.load( fp)
-   with open(Path1+r"/"+'test_all_target_captions.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'test_all_target_captionsG.pkl', 'rb') as fp:
     all_target_captions=pickle.load( fp)
   else:
    with open(Path1+r"/"+'test_queries.pkl', 'rb') as fp:
