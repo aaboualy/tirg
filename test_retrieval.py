@@ -688,16 +688,16 @@ def test_on_saved(test_train,normal_beta,create_load,filename):
    with open(Path1+r"/"+'test_all_target_captionsG.pkl', 'rb') as fp:
     all_target_captions=pickle.load( fp)
   else:
-   with open(Path1+r"/"+'test_queries.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'test_queries172k.pkl', 'rb') as fp:
     test_queries=pickle.load( fp)
 
-   with open(Path1+r"/"+'all_queries.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
     all_queries=pickle.load( fp)
-   with open(Path1+r"/"+'all_imgs.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'all_imgs172k.pkl', 'rb') as fp:
     all_imgs=pickle.load( fp)
-   with open(Path1+r"/"+'all_captions.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'all_captions172k.pkl', 'rb') as fp:
     all_captions=pickle.load( fp)
-   with open(Path1+r"/"+'all_target_captions.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'all_target_captions172k.pkl', 'rb') as fp:
     all_target_captions=pickle.load( fp)
   if (normal_beta==1 ):
     if(create_load==0):
@@ -717,14 +717,14 @@ def test_on_saved(test_train,normal_beta,create_load,filename):
       X3=np.matmul(X2,new_all_queriest)  
       beta=np.matmul(X3,all_imgs) 
 
-    #################################
+     #################################
       with open(Path1+r"/"+filename, 'wb') as fp:
         pickle.dump( beta, fp)
     else:
       with open(Path1+r"/"+filename, 'rb') as fp:
         beta=pickle.load( fp)
-    for t in range(len(all_queries)):
-      if (t%20==0):
+    for t in range(int(len(all_queries)/4)):
+      if (t%100==0):
         print('get testdata=',t,end='\r')
       f=all_queries[t,:]
       f/=np.linalg.norm(f)
@@ -739,21 +739,22 @@ def test_on_saved(test_train,normal_beta,create_load,filename):
     
     
   # feature normalization
-  for i in range(all_queries.shape[0]):
+  for i in range(int(all_queries.shape[0]/4)):
     all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
-  for i in range(all_imgs.shape[0]):
+  for i in range(int(all_imgs.shape[0]/4)):
     all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
 
   # match test queries to target images, get nearest neighbors
   nn_result = []
 
-  for i in tqdm(range(all_queries.shape[0])):
-    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+  for i in tqdm(range(int(all_queries.shape[0]/4))):
+    sims = all_queries[i:(i+1), :].dot(all_imgs[:int(all_imgs.shape[0]/4)].T)
     
     if test_train==0:
      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
-    nn_result.append(np.argsort(-sims[0, :])[:110])
-    
+    nn_result.append(np.argsort(-sims[0, :])[:105])
+  all_imgs=[]
+  all_queries=[]
   # compute recalls
   out = []
   nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]

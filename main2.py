@@ -1370,7 +1370,7 @@ def Save_GetValues():
      print(name,' As PaPer: ',asbook)
     
      
-
+ 
 
 
 
@@ -1397,9 +1397,14 @@ if __name__ == '__main__':
   #print('test
   # ',' As PaPer: ',asbook)
   #test_on_saved(test_train,normal_beta,create_load,filename)
-  #test_retrieval.test_on_saved(0,1,0,'testBetaNormalizedG.pkl')
+  out =test_retrieval.test_on_saved(1,0,1,'testBetaNormalized172k.pkl')
+  sourceFile = open('172kout.txt', 'w')
+  print('0,0,1,testBetaNormalized172k.pkl ',out, file = sourceFile)
+  print(out)
+  
+  sourceFile.close()
   #getbeta()
-  Save_GetValues()
+  #Save_GetValues()
 
     
 
