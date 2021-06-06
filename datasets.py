@@ -204,7 +204,7 @@ class Fashion200k1(BaseDataset):
   """Fashion200k dataset."""
 
   def __init__(self, path, split='train', transform=None):
-    super(Fashion200k, self).__init__()
+    super(Fashion200k1, self).__init__()
 
     self.split = split
     self.transform = transform
@@ -546,6 +546,8 @@ class Fashion200k(BaseDataset):
     ]
     label_files = [f for f in label_files if split in f]
 
+    label_files = [f for f in label_files if '._' not in f]
+
     # read image info from label files
     self.imgs = []
 
@@ -555,7 +557,7 @@ class Fashion200k(BaseDataset):
                                    '&', 'andmark').replace('*', 'starmark')
 
     for filename in label_files:
-      #print('read ' + filename)
+      print('read ' + filename)
       with open(label_path + '/' + filename , encoding='utf-8') as f:
         lines = f.readlines()
       for line in lines:
