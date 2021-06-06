@@ -1370,12 +1370,6 @@ def Save_GetValues():
      print(name,' As PaPer: ',asbook)
     
      
- 
-
-
-
-
-
 
 
 if __name__ == '__main__': 
