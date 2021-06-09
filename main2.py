@@ -31,6 +31,7 @@ import PIL
 import argparse
 import datasets
 import img_text_composition_models
+Path1=r"C:\MMaster\Files"
 
 
 
@@ -1364,11 +1365,239 @@ def Save_GetValues():
   opt.dataset='fashion200k'
   
   #for name, dataset in [ ('test', test),('train', train)]: #('train', trainset),
-  for name, dataset in [ ('train', train)]: #('train', trainset),
+  for name, dataset in [ ('test', test)]: #('train', trainset),
           
      asbook = test_retrieval.test_and_save(opt, trig, dataset)
      print(name,' As PaPer: ',asbook)
-    
+
+def print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld):
+  print(' Experiment setup : ', file = sourceFile)
+  if (test_train==1):
+    print('Dataset:Training Data set', file = sourceFile)
+  else:
+    print('Dataset:Testing Data set', file = sourceFile)
+
+  if (normal_beta==0):
+    print(' Trig', file = sourceFile)
+  else:
+    print(' Trig followed by Regression network', file = sourceFile)
+  if (normal_beta==1):
+    if (create_load==0):
+      print(' Regression Network Created, save to file', file = sourceFile)
+    else:
+      print(' Regression Network Loaded from file ', file = sourceFile)
+    print(' = ',filename, file = sourceFile)
+    if (normal_normalize==0):
+      print(' Regression done without normalization ', file = sourceFile)
+    else:
+      print(' Regression done on normalized vectors ', file = sourceFile)
+  else:
+    print('       ', file=sourceFile)
+  if (dot_eucld==0):
+    print(' Distance: Cos Angle between vectors ', file = sourceFile)
+  else:
+    print(' Distance: Eucledian  ', file = sourceFile)
+  print(' Dataset size Divider ', set_size_divider, file = sourceFile)
+  print(' Experiment Outcome: - ','\n',out,'\n', file = sourceFile)
+
+def results():
+  sourceFile = open(Path1+r"/"+'results'+time.strftime("%Y%m%d-%H%M%S")+'.txt', 'w')
+  test_train=0
+  normal_beta=0
+  set_size_divider=1
+  normal_normalize=0
+  create_load=0
+  filename='na'
+  dot_eucld=0
+  # 1
+  print(' 1', file=sourceFile)
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  set_size_divider=17.2
+  # 2
+  print(' 2', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  normal_beta=1
+  create_load=0
+  filename='REGTR10ND.BTA'
+  # 3
+  print(' 3', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR10ND.BTA'
+  # 4
+  print(' 4', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=0
+  filename='REGTS33ND.BTA'
+  # 5
+  print(' 5', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  
+  test_train=1
+  set_size_divider=1
+  normal_beta=0
+  create_load=0
+  filename='na'
+  # 6
+  print(' 6', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+
+  test_train=1
+  set_size_divider=1
+  normal_beta=1
+  create_load=0
+  filename='REGTR172ND,BTA'
+  # 7
+  print(' 7', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+ 
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR172ND,BTA'
+  # 8
+  print(' 8', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  ###################NNORMALIZED BETA##############################################################
+  test_train=3
+  normal_beta=1
+  set_size_divider=17.2
+  normal_normalize=0
+  create_load=0
+  filename='REGTR10NND.BTA'
+  dot_eucld=0
+  test_train=1
+  # 3NN
+  print(' 3NN', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR10NND.BTA'
+  # 4 NN
+  print(' 4NN', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  set_size_divider=1
+  normal_beta=1
+  create_load=0
+  filename='REGTR172NND,BTA'
+  # 7 NN
+  print(' 7NN', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+ 
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR172NND,BTA'
+  # 8 NN
+  print(' 8NN', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  
+  ###################eucledian##############################################################
+  test_train=0
+  normal_beta=0
+  set_size_divider=1
+  normal_normalize=0
+  create_load=0
+  filename='na'
+  dot_eucld=1
+  # 1 E
+  print(' 1 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  set_size_divider=17.2
+  # 2 E
+  print(' 2 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  normal_beta=1
+  create_load=0
+  filename='REGTR10NE.BTA'
+  # 3 E
+  print(' 3 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR10NE.BTA'
+  # 4 E
+  print(' 4 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=0
+  filename='REGTS33NE.BTA'
+  # 5 E
+  print(' 5 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  
+  test_train=1
+  set_size_divider=1
+  normal_beta=0
+  create_load=0
+  filename='na'
+  # 6 E
+  print(' 6 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+
+  sourceFile.close()
+
+
+
+
+
+
+
+     
      
  
 
@@ -1391,18 +1620,12 @@ if __name__ == '__main__':
   #print('train',' As PaPer: ',asbook)
   #asbook = test_retrieval.test_on_saved(0,0)
   #print('test',' As PaPer: ',asbook)
-
+  results()
   
   #asbook = test_retrieval.test_on_saved(0,1)
   #print('test
   # ',' As PaPer: ',asbook)
-  #test_on_saved(test_train,normal_beta,create_load,filename)
-  out =test_retrieval.test_on_saved(1,0,1,'testBetaNormalized172k.pkl')
-  sourceFile = open('172kout.txt', 'w')
-  print('0,0,1,testBetaNormalized172k.pkl ',out, file = sourceFile)
-  print(out)
-  
-  sourceFile.close()
+  #test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
   #getbeta()
   #Save_GetValues()
 
