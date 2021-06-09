@@ -673,7 +673,7 @@ def test_and_save(opt, model, testset):
       out += [('recall_top' + str(k) + '_correct_noun', r)]
 
   return out
-def test_on_saved(test_train,normal_beta,create_load,filename):
+def test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize,sz,dot_eucld):
   # test_queries:
   if test_train==0:
    with open(Path1+r"/"+'test_test_queries.pkl', 'rb') as fp:
@@ -705,29 +705,33 @@ def test_on_saved(test_train,normal_beta,create_load,filename):
       new_all_queries=np.zeros((all_queries.shape[0],all_queries.shape[1]+1))
       for i in range(all_queries.shape[0]):
         f=all_queries[i,:]
-        f/=np.linalg.norm(f)
+        if (normal_normalize==1):
+          f/=np.linalg.norm(f)
         f=np.insert(f,0,1)
         new_all_queries[i,:]=f
-      for i in range(all_imgs.shape[0]):
-        all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+      if (normal_normalize==1):
+        for i in range(all_imgs.shape[0]):
+          all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
       
       new_all_queriest=new_all_queries.transpose()
       X1=np.matmul(new_all_queriest,new_all_queries)  
       X2=np.linalg.inv(X1)
       X3=np.matmul(X2,new_all_queriest)  
       beta=np.matmul(X3,all_imgs) 
-
+      new_all_queries=[]
+      new_all_queriest=[]
      #################################
       with open(Path1+r"/"+filename, 'wb') as fp:
         pickle.dump( beta, fp)
     else:
       with open(Path1+r"/"+filename, 'rb') as fp:
         beta=pickle.load( fp)
-    for t in range(int(len(all_queries)/4)):
+    for t in range(int(len(all_queries)/sz)):
       if (t%100==0):
         print('get testdata=',t,end='\r')
       f=all_queries[t,:]
-      f/=np.linalg.norm(f)
+      if (normal_normalize==1):
+        f/=np.linalg.norm(f)
        
       f=np.insert(f,0,1)
       
@@ -739,20 +743,114 @@ def test_on_saved(test_train,normal_beta,create_load,filename):
     
     
   # feature normalization
-  for i in range(int(all_queries.shape[0]/4)):
+  for i in range(int(all_queries.shape[0]/sz)):
     all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
-  for i in range(int(all_imgs.shape[0]/4)):
+  for i in range(int(all_imgs.shape[0]/sz)):
     all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
 
   # match test queries to target images, get nearest neighbors
   nn_result = []
+  sims=np.zeros((1,int(all_imgs.shape[0]/sz)))
 
-  for i in tqdm(range(int(all_queries.shape[0]/4))):
-    sims = all_queries[i:(i+1), :].dot(all_imgs[:int(all_imgs.shape[0]/4)].T)
-    
+  for i in tqdm(range(int(all_queries.shape[0]/sz))):
+    if (dot_eucld==0):
+      sims = all_queries[i:(i+1), :].dot(all_imgs[:int(all_imgs.shape[0]/sz)].T)
+    else:
+      sims[0,:]=np.sum(abs(all_imgs[:int(all_imgs.shape[0]/sz),:]-all_queries[i, :]),axis=1)
+      #for j in range(int(all_imgs.shape[0]/sz)):
+      #  sims[0,j] =distance.euclidean( all_queries[i, :],all_imgs[j,:])
+
+
     if test_train==0:
-     sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
-    nn_result.append(np.argsort(-sims[0, :])[:105])
+      if (dot_eucld==0):
+        sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      else:
+        sims[0, test_queries[i]['source_img_id']] = 10e10  # remove query image
+    if (dot_eucld==0):
+      nn_result.append(np.argsort(-sims[0, :])[:105])
+    else:
+      nn_result.append(np.argsort(sims[0, :])[:105])
+
+  all_imgs=[]
+  all_queries=[]
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+  print(out)  
+  
+ 
+  return out
+
+def train_network_on_saved(test_train,create_load,normal_normalize,filename,sz,dot_eucld):
+  if test_train==0:
+   with open(Path1+r"/"+'test_test_queries.pkl', 'rb') as fp:
+    test_queries=pickle.load( fp)
+
+   with open(Path1+r"/"+'test_all_queriesG.pkl', 'rb') as fp:
+    all_queries=pickle.load( fp)
+   with open(Path1+r"/"+'test_all_imgsG.pkl', 'rb') as fp:
+    all_imgs=pickle.load( fp)
+   with open(Path1+r"/"+'test_all_target_captionsG.pkl', 'rb') as fp:
+    all_captions=pickle.load( fp)
+   with open(Path1+r"/"+'test_all_target_captionsG.pkl', 'rb') as fp:
+    all_target_captions=pickle.load( fp)
+  else:
+   with open(Path1+r"/"+'test_queries172k.pkl', 'rb') as fp:
+    test_queries=pickle.load( fp)
+
+   with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
+    all_queries=pickle.load( fp)
+   with open(Path1+r"/"+'all_imgs172k.pkl', 'rb') as fp:
+    all_imgs=pickle.load( fp)
+   with open(Path1+r"/"+'all_captions172k.pkl', 'rb') as fp:
+    all_captions=pickle.load( fp)
+   with open(Path1+r"/"+'all_target_captions172k.pkl', 'rb') as fp:
+    all_target_captions=pickle.load( fp)
+    
+    #################################
+      
+    
+    
+    
+  # feature normalization
+  for i in range(int(all_queries.shape[0]/sz)):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(int(all_imgs.shape[0]/sz)):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  sims=np.zeros((1,int(all_imgs.shape[0]/sz)))
+
+  for i in tqdm(range(int(all_queries.shape[0]/sz))):
+    if (dot_eucld==0):
+      sims = all_queries[i:(i+1), :].dot(all_imgs[:int(all_imgs.shape[0]/sz)].T)
+    else:
+      sims[0,:]=np.sum(abs(all_imgs[:int(all_imgs.shape[0]/sz),:]-all_queries[i, :]),axis=1)
+      #for j in range(int(all_imgs.shape[0]/sz)):
+      #  sims[0,j] =distance.euclidean( all_queries[i, :],all_imgs[j,:])
+
+
+    if test_train==0:
+      if (dot_eucld==0):
+        sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      else:
+        sims[0, test_queries[i]['source_img_id']] = 10e10  # remove query image
+    if (dot_eucld==0):
+      nn_result.append(np.argsort(-sims[0, :])[:105])
+    else:
+      nn_result.append(np.argsort(sims[0, :])[:105])
+
   all_imgs=[]
   all_queries=[]
   # compute recalls
