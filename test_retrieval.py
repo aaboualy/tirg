@@ -528,6 +528,7 @@ def testWbetaWsaveddata(opt, model, testset,beta,savedtrain,savedtest):
       out += [('recall_top' + str(k) + '_correct_noun', r)]
 
   return out
+
 def test_and_save(opt, model, testset):
   """Tests a model over the given testset."""
   model.eval()
