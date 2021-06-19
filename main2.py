@@ -35,8 +35,8 @@ Path1=r"C:\MMaster\Files"
 
 
 
-#Path1=r"D:\personal\master\MyCode\files"
-Path1=r"C:\MMaster\Files"
+Path1=r"D:\personal\master\MyCode\files"
+#Path1=r"C:\MMaster\Files"
 
 
 #################  Support Functions Section   #################
@@ -1392,7 +1392,7 @@ def print_results(sourceFile,out,test_train,normal_beta,create_load,filename,nor
     else:
       print(' Regression done on normalized vectors ', file = sourceFile)
   else:
-    print('       ', file=sourceFile)
+    print('       ', sourceFile)
   if (dot_eucld==0):
     print(' Distance: Cos Angle between vectors ', file = sourceFile)
   else:
@@ -1459,10 +1459,10 @@ def results():
   sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
 
   # 5
-  print(' 5', file=sourceFile)
+  # print(' 5', sourceFile)
 
-  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
-  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  # out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  # print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
   
   test_train=1
   set_size_divider=1
@@ -1473,10 +1473,10 @@ def results():
   sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
 
   # 6
-  print(' 6', file=sourceFile)
+  # print(' 6', sourceFile)
 
-  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
-  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  # out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  # print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
 
   test_train=1
   set_size_divider=1
@@ -1487,10 +1487,10 @@ def results():
   sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
 
   # 7
-  print(' 7', file=sourceFile)
+  # print(' 7', sourceFile)
 
-  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
-  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  # out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  # print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
  
   test_train=0
   set_size_divider=1
@@ -1565,11 +1565,9 @@ def results():
   out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
   print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
   
-  ###################eucledian##############################################################
-  test_train=0
-  normal_beta=0
+  test_train=1
   set_size_divider=1
-  normal_normalize=0
+  normal_beta=0
   create_load=0
   filename='na'
   dot_eucld=1
@@ -1627,8 +1625,9 @@ def results():
   # 5 E
   print(' 5 E', file=sourceFile)
 
-  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
-  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+
+def SaveFilesFeatures():
+  
   
   test_train=1
   set_size_divider=1
@@ -1641,11 +1640,33 @@ def results():
   # 6 E
   print(' 6 E', file=sourceFile)
 
-  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
-  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  
 
-  sourceFile.close()
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
 
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
 
 def results2():
   stime='20210615-072642'
@@ -1962,15 +1983,57 @@ def results_temp():
 
  
 
+  datasets.Features172K().SavetoFiles(Path1+r'/dataset172', trig, trainset,opt)
+  print('172 Finished')
+  datasets.Features33K().SavetoFiles(Path1+r'/dataset33', trig, testset,opt)
+  print('33 Finished')
 
+def getvaluesfilesaved():
 
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
 
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
 
-     
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+    
+    asbook1 = test_retrieval.testLoaded(opt, trig, dataset)
+    print(name,' Loaded As PaPer: ',asbook1)
+
+    asbook = test_retrieval.test(opt, trig, dataset)
+    print(name,' As PaPer: ',asbook)
      
 
 
 if __name__ == '__main__': 
+  getvaluesfilesaved()
     
   #getbetatrain()
   # GetValuestrain()
