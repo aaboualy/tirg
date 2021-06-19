@@ -1364,8 +1364,8 @@ def Save_GetValues():
   opt.batch_size =1
   opt.dataset='fashion200k'
   
-  #for name, dataset in [ ('test', test),('train', train)]: #('train', trainset),
-  for name, dataset in [ ('test', test)]: #('train', trainset),
+  for name, dataset in [ ('test', test),('train', train)]: #('train', trainset),
+  #for name, dataset in [ ('test', test)]: #('train', trainset),
           
      asbook = test_retrieval.test_and_save(opt, trig, dataset)
      print(name,' As PaPer: ',asbook)
@@ -1401,8 +1401,9 @@ def print_results(sourceFile,out,test_train,normal_beta,create_load,filename,nor
   print(' Experiment Outcome: - ','\n',out,'\n', file = sourceFile)
 
 def results():
-  sourceFile = open(Path1+r"/"+'results'+time.strftime("%Y%m%d-%H%M%S")+'.txt', 'w')
-  test_train=0
+  stime=time.strftime("%Y%m%d-%H%M%S")
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'w')
+  test_train=1
   normal_beta=0
   set_size_divider=1
   normal_normalize=0
@@ -1410,11 +1411,15 @@ def results():
   filename='na'
   dot_eucld=0
   # 1
-  print(' 1', file=sourceFile)
+  print(' 1 ', file=sourceFile)
   out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
   print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
   test_train=1
   set_size_divider=17.2
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+
   # 2
   print(' 2', file=sourceFile)
 
@@ -1424,6 +1429,9 @@ def results():
   normal_beta=1
   create_load=0
   filename='REGTR10ND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 3
   print(' 3', file=sourceFile)
 
@@ -1434,6 +1442,9 @@ def results():
   normal_beta=1
   create_load=1
   filename='REGTR10ND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 4
   print(' 4', file=sourceFile)
 
@@ -1444,6 +1455,9 @@ def results():
   normal_beta=1
   create_load=0
   filename='REGTS33ND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 5
   print(' 5', file=sourceFile)
 
@@ -1455,6 +1469,9 @@ def results():
   normal_beta=0
   create_load=0
   filename='na'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 6
   print(' 6', file=sourceFile)
 
@@ -1465,7 +1482,10 @@ def results():
   set_size_divider=1
   normal_beta=1
   create_load=0
-  filename='REGTR172ND,BTA'
+  filename='REGTR172ND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 7
   print(' 7', file=sourceFile)
 
@@ -1476,7 +1496,10 @@ def results():
   set_size_divider=1
   normal_beta=1
   create_load=1
-  filename='REGTR172ND,BTA'
+  filename='REGTR172ND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 8
   print(' 8', file=sourceFile)
 
@@ -1491,6 +1514,11 @@ def results():
   filename='REGTR10NND.BTA'
   dot_eucld=0
   test_train=1
+  
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  
   # 3NN
   print(' 3NN', file=sourceFile)
 
@@ -1501,6 +1529,9 @@ def results():
   normal_beta=1
   create_load=1
   filename='REGTR10NND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 4 NN
   print(' 4NN', file=sourceFile)
 
@@ -1510,7 +1541,10 @@ def results():
   set_size_divider=1
   normal_beta=1
   create_load=0
-  filename='REGTR172NND,BTA'
+  filename='REGTR172NND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 7 NN
   print(' 7NN', file=sourceFile)
 
@@ -1521,7 +1555,10 @@ def results():
   set_size_divider=1
   normal_beta=1
   create_load=1
-  filename='REGTR172NND,BTA'
+  filename='REGTR172NND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 8 NN
   print(' 8NN', file=sourceFile)
 
@@ -1536,6 +1573,9 @@ def results():
   create_load=0
   filename='na'
   dot_eucld=1
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 1 E
   print(' 1 E', file=sourceFile)
 
@@ -1543,6 +1583,9 @@ def results():
   print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
   test_train=1
   set_size_divider=17.2
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 2 E
   print(' 2 E', file=sourceFile)
 
@@ -1552,6 +1595,9 @@ def results():
   normal_beta=1
   create_load=0
   filename='REGTR10NE.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 3 E
   print(' 3 E', file=sourceFile)
 
@@ -1562,6 +1608,9 @@ def results():
   normal_beta=1
   create_load=1
   filename='REGTR10NE.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+  
   # 4 E
   print(' 4 E', file=sourceFile)
 
@@ -1572,6 +1621,9 @@ def results():
   normal_beta=1
   create_load=0
   filename='REGTS33NE.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 5 E
   print(' 5 E', file=sourceFile)
 
@@ -1583,6 +1635,9 @@ def results():
   normal_beta=0
   create_load=0
   filename='na'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
   # 6 E
   print(' 6 E', file=sourceFile)
 
@@ -1592,6 +1647,320 @@ def results():
   sourceFile.close()
 
 
+def results2():
+  stime='20210615-072642'
+ # sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'w')
+  test_train=0
+  normal_beta=0
+  set_size_divider=1
+  normal_normalize=0
+  create_load=0
+  filename='na'
+  dot_eucld=0
+  # 1
+  #print(' 1', file=sourceFile)
+  #out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  #print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  set_size_divider=17.2
+  #sourceFile.close()
+  #sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+
+  # 2
+  #print(' 2', file=sourceFile)
+
+  #out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  #print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  normal_beta=1
+  create_load=0
+  filename='REGTR10ND.BTA'
+  #sourceFile.close()
+  #sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 3
+  #print(' 3', file=sourceFile)
+
+  #out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  #print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR10ND.BTA'
+  #sourceFile.close()
+  #sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 4
+  #print(' 4', file=sourceFile)
+
+  #out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  #print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=0
+  filename='REGTS33ND.BTA'
+  #sourceFile.close()
+  #sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 5
+  #print(' 5', file=sourceFile)
+
+  #out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  #print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  
+  test_train=1
+  set_size_divider=10
+  normal_beta=0
+  create_load=0
+  filename='na'
+  #sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 6
+  print(' 6', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+
+  test_train=1
+  set_size_divider=10
+  normal_beta=1
+  create_load=0
+  filename='REGTR172ND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 7
+  print(' 7', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+ 
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR172ND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 8
+  print(' 8', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  ###################NNORMALIZED BETA##############################################################
+  test_train=1
+  normal_beta=1
+  set_size_divider=17.2
+  normal_normalize=0
+  create_load=0
+  filename='REGTR10NND.BTA'
+  dot_eucld=0
+  test_train=1
+  
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  
+  # 3NN
+  print(' 3NN', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR10NND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 4 NN
+  print(' 4NN', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  set_size_divider=10
+  normal_beta=1
+  create_load=0
+  filename='REGTR172NND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 7 NN
+  print(' 7NN', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+ 
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR172NND.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 8 NN
+  print(' 8NN', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  
+  ###################eucledian##############################################################
+  test_train=0
+  normal_beta=0
+  set_size_divider=1
+  normal_normalize=0
+  create_load=0
+  filename='na'
+  dot_eucld=1
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 1 E
+  print(' 1 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  set_size_divider=17.2
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 2 E
+  print(' 2 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=1
+  normal_beta=1
+  create_load=0
+  filename='REGTR10NE.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 3 E
+  print(' 3 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=1
+  filename='REGTR10NE.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+  
+  # 4 E
+  print(' 4 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  test_train=0
+  set_size_divider=1
+  normal_beta=1
+  create_load=0
+  filename='REGTS33NE.BTA'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 5 E
+  print(' 5 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  
+  test_train=1
+  set_size_divider=10
+  normal_beta=0
+  create_load=0
+  filename='na'
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  # 6 E
+  print(' 6 E', file=sourceFile)
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+
+  sourceFile.close()
+
+def results_temp():
+  stime=time.strftime("%Y%m%d-%H%M%S")
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'w')
+  test_train=1
+  normal_beta=0
+  set_size_divider=10
+  normal_normalize=0
+  create_load=0
+  filename='beta1806.pkl'
+  dot_eucld=0
+  # 1
+  print(' 1 ', file=sourceFile)
+  print ('1')
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+  test_train=1
+  normal_beta=1
+  set_size_divider=10
+  normal_normalize=1
+  create_load=0
+  filename='beta1806.pkl'
+  dot_eucld=0
+  
+
+  # 2
+  print(' 2', file=sourceFile)
+  print('2')
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  test_train=1
+  normal_beta=0
+  set_size_divider=10
+  normal_normalize=0
+  create_load=0
+  filename='beta1806euc.pkl'
+  dot_eucld=1
+  # 1
+  print(' 3 ', file=sourceFile)
+  print ('3 ')
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+  test_train=1
+  normal_beta=1
+  set_size_divider=10
+  normal_normalize=1
+  create_load=0
+  filename='beta1806euc.pkl'
+  dot_eucld=1
+  
+
+  # 2
+  print(' 4', file=sourceFile)
+  print('4')
+
+  out =test_retrieval.test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+ 
 
 
 
@@ -1609,12 +1978,12 @@ if __name__ == '__main__':
   #Savevaluestest()
   #Savevaluestest()
   #Save_GetValues()
-  #Save_GetValues()
+  results_temp()
   #asbook = test_retrieval.test_on_saved(1,0)
   #print('train',' As PaPer: ',asbook)
   #asbook = test_retrieval.test_on_saved(0,0)
   #print('test',' As PaPer: ',asbook)
-  results()
+  #results2()
   
   #asbook = test_retrieval.test_on_saved(0,1)
   #print('test
