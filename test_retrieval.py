@@ -20,6 +20,7 @@ import torch
 from tqdm import tqdm as tqdm
 from scipy.spatial import distance
 import datasets
+import main2
 
 Path1=r"D:\personal\master\MyCode\files"
 #Path1=r"C:\MMaster\Files"
@@ -165,6 +166,90 @@ def testLoaded(opt, model, testset):
     all_queries = datasets.Features172K().Get_all_queries()[:10000]
     all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
     
+
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
+def testLoaded_NLP(opt, model, testset):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_images()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries = datasets.Features33K().Get_all_queries()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+    
+  modelNLR=main2.NLR2(all_queries.shape[1],all_imgs.shape[1],700)
+  modelNLR.load_state_dict(torch.load(Path1+r'\NLP3.pth'))
+  modelNLR.eval()
+  all_queries=torch.from_numpy(all_queries)
+  
+
+  # for t in range(int(len(all_queries))):
+  #   print('get testdata=',t,end='\r')
+  #   f=all_queries[t]
+  #   all_queries[t] = modelNLR.myforward(f)
+
+  all_queries = modelNLR.myforward(all_queries)
+  
+  #all_queries.detach().numpy()
+  all_queries = torch.tensor(all_queries,requires_grad=False)
+  all_queries=np.array(all_queries)
 
   # feature normalization
   for i in range(all_queries.shape[0]):
