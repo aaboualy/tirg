@@ -35,8 +35,8 @@ Path1=r"C:\MMaster\Files"
 
 
 
-#Path1=r"D:\personal\master\MyCode\files"
-Path1=r"C:\MMaster\Files"
+Path1=r"D:\personal\master\MyCode\files"
+#Path1=r"C:\MMaster\Files"
 
 
 #################  Support Functions Section   #################
@@ -1613,7 +1613,7 @@ import pickle
 import torch
 from tqdm import tqdm as tqdm
 from scipy.spatial import distance
-Path1=r"C:\MMaster\Files"
+
 
 
 def test(opt, model, testset):
@@ -2662,7 +2662,137 @@ def test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_n
   print(out)  
 
 
+#####################Loaded ################
+def build_and_train_net_loaded(hiddensize,max_iterations, min_error,batch_size):
+  all_imgs = datasets.Features172K().Get_all_images()
+  all_captions = datasets.Features172K().Get_all_captions()
+  all_queries = datasets.Features172K().Get_all_queries()
+  all_target_captions = datasets.Features172K().Get_all_captions()
+  
+  model=NLR2(all_queries.shape[1],all_imgs.shape[1],hiddensize)
+  #model=model.cuda()
+  torch.manual_seed(3)
+  loss_fn = torch.nn.MSELoss(reduction='sum')
+  torch.manual_seed(3)
+  criterion = nn.CosineSimilarity() 
+  
 
+  #loss.backward()
+
+  #criterion=nn.MSELoss()
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
+  epoch=max_iterations
+
+  losses=[]
+  totallosses=[]
+  for j in range(epoch):
+    total_loss=0
+    for l in range(int(all_queries.shape[0]/batch_size)):
+      print('Epoch=',j,' Batch=',l,end='\r')      
+      item_batch = all_queries[l*batch_size:(l+1)*batch_size-1,:]
+
+      netoutbatch=model.myforward(torch.from_numpy(item_batch))
+      #loss=criterion(all_imgs[l*batch_size:(l+1)*batch_size-1,:],netoutbatch)
+      loss = torch.mean(torch.abs(criterion(torch.from_numpy(all_imgs[l*batch_size:(l+1)*batch_size-1,:]),netoutbatch)))
+
+      loss = 1 - loss
+
+      losses.append(loss)
+      #optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+      if (l%1000==0) :
+        print('Epoch:',j,' get images batch=',l*batch_size,':',(l+1)*batch_size,'loss',loss,end='\r')
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss',total_loss)
+    totallosses.append(total_loss)
+
+  print('Finished Training')
+  torch.save(model.state_dict(), Path1+r'\NLP3.pth') 
+
+
+def test_on_saved_NN_CMP_loaded(test_train):
+  # test_queries:
+  if test_train==0:
+   
+
+    all_imgs = datasets.Features33K().Get_all_images()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries = datasets.Features33K().Get_all_queries()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+  else:
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+
+  
+  ######### neural Network *********************************
+  model=NLR2(all_queries.shape[1],all_imgs.shape[1],700)
+  #torch.load(model.state_dict(), Path1+r'\NLP2.pth')
+  model.load_state_dict(torch.load(Path1+r'\NLP3.pth'))
+
+  model.eval()
+  all_queries=Variable(torch.Tensor(all_queries))
+
+  # for t in range(int(len(all_queries))):
+  #   if (t%100==0):
+  #     print('get testdata=',t,end='\r')
+  #   f=all_queries[t,:]
+  
+  #   all_queries[t,:] = model.myforward(f)
+
+  all_queries = model.myforward(all_queries)
+  all_queries = torch.tensor(all_queries,requires_grad=False)
+  #all_queries.detach().numpy()
+  all_queries=np.array(all_queries)
+
+    
+    
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    # if test_train==0:
+    #   sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  print(out)  
 
 
 
@@ -2684,6 +2814,8 @@ if __name__ == '__main__':
   #test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_normalize,sz,dot_eucld,hiddensize):
   #test_on_saved_NN_CMP(1,0,0,'nn',0,17.2,0,700,'')
   #test_on_saved_NN_CMP(0,0,0,'nn',0,1,0,700)
+  test_on_saved_NN_CMP_loaded(0)
+  test_on_saved_NN_CMP_loaded(1)
     
 
    

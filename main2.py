@@ -2030,10 +2030,111 @@ def getvaluesfilesaved():
     asbook = test_retrieval.test(opt, trig, dataset)
     print(name,' As PaPer: ',asbook)
      
+class NLR2(nn.Module):
+  def __init__(self,netin,netout,nethidden1):
+    super().__init__()
+    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.ReLU(),torch.nn.Linear(nethidden1, netout))
+  def myforward (self,inv):
+    outv=self.netmodel(inv)
+    return outv
 
+def build_and_train_net_loaded(hiddensize,max_iterations, min_error,batch_size):
+  all_imgs = datasets.Features172K().Get_all_images()
+  all_captions = datasets.Features172K().Get_all_captions()
+  all_queries = datasets.Features172K().Get_all_queries()
+  all_target_captions = datasets.Features172K().Get_all_captions()
+  
+  model=NLR2(all_queries.shape[1],all_imgs.shape[1],hiddensize)
+  #model=model.cuda()
+  torch.manual_seed(3)
+  loss_fn = torch.nn.MSELoss(reduction='sum')
+  torch.manual_seed(3)
+  criterion = nn.CosineSimilarity() 
+  
+
+  #loss.backward()
+
+  #criterion=nn.MSELoss()
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
+  epoch=max_iterations
+
+  losses=[]
+  totallosses=[]
+  for j in range(epoch):
+    total_loss=0
+    for l in range(int(all_queries.shape[0]/batch_size)):
+      print('Epoch=',j,' Batch=',l,end='\r')      
+      item_batch = all_queries[l*batch_size:(l+1)*batch_size-1,:]
+
+      netoutbatch=model.myforward(torch.from_numpy(item_batch))
+      #loss=criterion(all_imgs[l*batch_size:(l+1)*batch_size-1,:],netoutbatch)
+      loss = torch.mean(torch.abs(criterion(torch.from_numpy(all_imgs[l*batch_size:(l+1)*batch_size-1,:]),netoutbatch)))
+
+      loss = 1 - loss
+
+      losses.append(loss)
+      #optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+      if (l%1000==0) :
+        print('Epoch:',j,' get images batch=',l*batch_size,':',(l+1)*batch_size,'loss',loss,end='\r')
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss',total_loss)
+    totallosses.append(total_loss)
+
+  print('Finished Training')
+  torch.save(model.state_dict(), Path1+r'\NLP3.pth') 
+
+def NLP2Values():
+
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+
+  
+  
+  for name, dataset in [ ('train', trainset)]: #('train', trainset), ,('test', testset)
+    
+    asbook1 = test_retrieval.testLoaded_NLP(opt, trig, dataset)
+    print(name,' NLP2 Loaded : ',asbook1)
+
+    asbook = test_retrieval.testLoaded(opt, trig, dataset)
+    print(name,' Loaded As PaPer: ',asbook)
+    
 
 if __name__ == '__main__': 
-  getvaluesfilesaved()
+  NLP2Values()
+  #getvaluesfilesaved()
     
   #getbetatrain()
   # GetValuestrain()
