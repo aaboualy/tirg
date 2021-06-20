@@ -31,12 +31,12 @@ import PIL
 import argparse
 import datasets
 import img_text_composition_models
+
+
+
+
+#Path1=r"D:\personal\master\MyCode\files"
 Path1=r"C:\MMaster\Files"
-
-
-
-Path1=r"D:\personal\master\MyCode\files"
-#Path1=r"C:\MMaster\Files"
 
 
 #################  Support Functions Section   #################

@@ -21,8 +21,8 @@ from tqdm import tqdm as tqdm
 from scipy.spatial import distance
 import datasets
 
-Path1=r"D:\personal\master\MyCode\files"
-#Path1=r"C:\MMaster\Files"
+#Path1=r"D:\personal\master\MyCode\files"
+Path1=r"C:\MMaster\Files"
 
 
 def test(opt, model, testset):
@@ -843,19 +843,9 @@ def test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize,s
       else:
         sims[0, test_queries[i]['source_img_id']] = 10e10  # remove query image
     if (dot_eucld==0):
-<<<<<<< HEAD
       nn_result.append(np.argsort(-sims[0, :])[:110])
     else:
       nn_result.append(np.argsort(sims[0, :])[:110])
-=======
-      #nn_result.append(np.argsort(-sims[0, :])[:105])
-      nn_result.append(np.argsort(-sims[0, :])[:110])
-      #nn_result +=[(np.argsort(-sims[0, :].data.numpy())[:105])]
-    else:
-      nn_result.append(np.argsort(sims[0, :])[:110])
-      #nn_result.append(np.argsort(sims[0, :])[:105])
-      #nn_result +=[(np.argsort(sims[0, :].data.numpy())[:105])]
->>>>>>> 7f919a185236423f9b3a03cd2221a3d33bd48a01
 
   all_imgs=[]
   all_queries=[]

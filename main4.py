@@ -106,7 +106,50 @@ def Reform_Training_Dataset():
 
 
   
+def adapt_dataset(size_limit):
+  with open(Path1+r"/"+'test_queries1806172k.pkl', 'rb') as fp:
+    test_queries=pickle.load( fp)
 
+  with open(Path1+r"/"+'all_queries1806172k.pkl', 'rb') as fp:
+    all_queries=pickle.load( fp)
+  with open(Path1+r"/"+'all_imgs1806172k.pkl', 'rb') as fp:
+    all_imgs=pickle.load( fp)
+   #with open(Path1+r"/"+'all_captions1806172k.pkl', 'rb') as fp:
+    #all_captions=pickle.load( fp)
+  with open(Path1+r"/"+'all_target_captions1806172k.pkl', 'rb') as fp:
+    all_target_captions=pickle.load( fp)
+  size_limit=len(all_target_captions)
+
+  new_all_imgs=np.zeros((size_limit,512))
+
+  for i in range(size_limit):
+    if (sum(new_all_imgs[i,:])==0):
+      l=[]
+      t=all_target_captions[i]
+      l+=[i]
+      for  j in range(i+1,size_limit):
+        if (all_target_captions[i]==all_target_captions[j]):
+          l+=[j]
+    
+      tmp1=np.zeros((1,512))
+      for j in range(len(l)):
+        tmp1+=all_imgs[l[j],:]
+      tmp1=tmp1/len(l)
+      for j in range(len(l)):
+        new_all_imgs[l[j],:]=tmp1
+    
+  with open(Path1+r"/"+'new_all_imgs2006172k.pkl', 'wb') as fp:
+    pickle.dump(new_all_imgs, fp)
+  
+    
+
+
+      
+
+
+    
+
+  
 def print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld):
   print(' Experiment setup : ', file = sourceFile)
   if (test_train==1):
@@ -489,23 +532,29 @@ def test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize,s
    with open(Path1+r"/"+'test_all_target_captionsG.pkl', 'rb') as fp:
     all_target_captions=pickle.load( fp)
   else:
-   with open(Path1+r"/"+'test_queries172k.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'test_queries1806172k.pkl', 'rb') as fp:
     test_queries=pickle.load( fp)
 
-   with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'all_queries1806172k.pkl', 'rb') as fp:
     all_queries=pickle.load( fp)
-   with open(Path1+r"/"+'all_imgs172k.pkl', 'rb') as fp:
+   with open(Path1+r"/"+'new_all_imgs2006172k.pkl', 'rb') as fp:
     all_imgs=pickle.load( fp)
-   with open(Path1+r"/"+'all_captions172k.pkl', 'rb') as fp:
-    all_captions=pickle.load( fp)
-   with open(Path1+r"/"+'all_target_captions172k.pkl', 'rb') as fp:
+   #with open(Path1+r"/"+'all_captions1806172k.pkl', 'rb') as fp:
+    #all_captions=pickle.load( fp)
+   all_queries_original=all_queries
+   with open(Path1+r"/"+'all_target_captions1806172k.pkl', 'rb') as fp:
     all_target_captions=pickle.load( fp)
+  all_captions=all_target_captions
+  
   if (normal_beta==1 ):
     if(create_load==0):
     #################################
+      distance_before=0
+      distance_after=0
       new_all_queries=np.zeros((all_queries.shape[0],all_queries.shape[1]+1))
       for i in range(all_queries.shape[0]):
         f=all_queries[i,:]
+        distance_before+=np.sum(abs(all_imgs[i,:]-all_queries[i, :]))
         if (normal_normalize==1):
           f/=np.linalg.norm(f)
         f=np.insert(f,0,1)
@@ -532,14 +581,15 @@ def test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize,s
         print('get testdata=',t,end='\r')
       f=all_queries[t,:]
       if (normal_normalize==1):
-        f/=np.linalg.norm(f)
-       
+        f/=np.linalg.norm(f)       
       f=np.insert(f,0,1)
       
       X2=np.matmul(f,beta) 
         
       all_queries[t,:] = X2
-      
+      distance_after+=np.sum(abs(all_imgs[i,:]-all_queries[i, :]))
+    print('before after',distance_before,distance_after)
+
     
     
     
@@ -555,9 +605,12 @@ def test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize,s
 
   for i in tqdm(range(int(all_queries.shape[0]/sz))):
     if (dot_eucld==0):
-      sims = all_queries[i:(i+1), :].dot(all_imgs[:int(all_imgs.shape[0]/sz)].T)
+      sims = all_queries[i, :].dot(all_imgs[:int(all_imgs.shape[0]/sz)].T)
+      simso=all_queries_original[i, :].dot(all_imgs[:int(all_imgs.shape[0]/sz)].T)
     else:
       sims[0,:]=np.sum(abs(all_imgs[:int(all_imgs.shape[0]/sz),:]-all_queries[i, :]),axis=1)
+      simso[0,:]=np.sum(abs(all_imgs[:int(all_imgs.shape[0]/sz),:]-all_queries_original[i, :]),axis=1)
+
       #for j in range(int(all_imgs.shape[0]/sz)):
       #  sims[0,j] =distance.euclidean( all_queries[i, :],all_imgs[j,:])
 
@@ -575,9 +628,17 @@ def test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize,s
   all_imgs=[]
   all_queries=[]
   # compute recalls
+  out2=[]
   out = []
   nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
-  
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      for c in range(k):
+        if (all_target_captions[i] == nns[c]):
+          r += 1
+    r /= len(nn_result)
+    out2.append(str(k) + ' ---> '+ str(r*100))   
   for k in [1, 5, 10, 50, 100]:
     r = 0.0
     for i, nns in enumerate(nn_result):
@@ -587,7 +648,7 @@ def test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize,s
     #out += [('recall_top' + str(k) + '_correct_composition', r)]
     out.append(str(k) + ' ---> '+ str(r*100))
 
-  print(out)  
+  print(out,'out2',out2)  
   
  
   return out
@@ -865,7 +926,75 @@ def test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_n
 
   print(out)  
 
+def results_temp():
+  stime=time.strftime("%Y%m%d-%H%M%S")
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'w')
+  test_train=1
+  normal_beta=0
+  set_size_divider=100
+  normal_normalize=0
+  create_load=0
+  filename='beta1806.pkl'
+  dot_eucld=0
+  # 1
+  print(' 1 ', file=sourceFile)
+  print ('1')
+  #out =test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  #print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+  test_train=1
+  normal_beta=1
+  set_size_divider=100
+  normal_normalize=0
+  create_load=0
+  filename='beta1806.pkl'
+  dot_eucld=0
+  
 
+  # 2
+  print(' 2', file=sourceFile)
+  print('2')
+
+  #out =test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  #print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+
+  test_train=1
+  normal_beta=0
+  set_size_divider=100
+  normal_normalize=1
+  create_load=0
+  filename='beta1806euc.pkl'
+  dot_eucld=1
+  # 1
+  print(' 3 ', file=sourceFile)
+  print ('3 ')
+  out =test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  sourceFile.close()
+  sourceFile = open(Path1+r"/"+'results'+stime+'.txt', 'a')
+  test_train=1
+  normal_beta=1
+  set_size_divider=100
+  normal_normalize=0
+  create_load=0
+  filename='beta1806euc.pkl'
+  dot_eucld=1
+  
+
+  # 2
+  print(' 4', file=sourceFile)
+  print('4')
+
+  out =test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld)
+  sourceFile.close()
+
+ 
+
+  
 if __name__ == '__main__': 
     
   #with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
@@ -877,7 +1006,9 @@ if __name__ == '__main__':
   #test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_normalize,sz,dot_eucld,hiddensize):
   #test_on_saved_NN_CMP(1,0,0,'nn',0,17.2,0,700,'')
   #test_on_saved_NN_CMP(0,0,0,'nn',0,1,0,700)
-  Reform_Training_Dataset()
+  #Reform_Training_Dataset()
+  results_temp()
+  #adapt_dataset(1000)
 
     
 
