@@ -2520,7 +2520,8 @@ def build_and_train_net(hiddensize,max_iterations, min_error, all_queries,all_im
   print('Finished Training')
   torch.save(model.state_dict(), Path1+r'\NLP3.pth') 
   
-def test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_normalize,sz,dot_eucld,hiddensize):
+
+def test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_normalize,sz,dot_eucld,hiddensize,model_fn):
   # test_queries:
   if test_train==0:
    with open(Path1+r"/"+'test_test_queries.pkl', 'rb') as fp:
@@ -2550,8 +2551,9 @@ def test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_n
     ######### neural Network *********************************
     model=NLR2(all_queries.shape[1],all_imgs.shape[1],hiddensize)
     #torch.load(model.state_dict(), Path1+r'\NLP2.pth')
-    model.load_state_dict(torch.load(Path1+r'\NLP3.pth'))
- 
+    #model.load_state_dict(torch.load(Path1+r'\'+NLP2.pth'))
+    model.load_state_dict(torch.load(Path1+r'\''+model_fn))
+
     model.eval()
     all_queries=Variable(torch.Tensor(all_queries))
 
@@ -2801,14 +2803,14 @@ def test_on_saved_NN_CMP_loaded(test_train):
 
 if __name__ == '__main__': 
     
-  # with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
-  #   all_queries=pickle.load( fp)
-  # with open(Path1+r"/"+'all_imgs172k.pkl', 'rb') as fp:
+  #with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
+  #  all_queries=pickle.load( fp)
+  #with open(Path1+r"/"+'all_imgs172k.pkl', 'rb') as fp:
   #  all_imgs=pickle.load( fp)
-  #build_and_train_net_loaded(700,2000, 50,200)
+  #build_and_train_net(700,1000, 50, all_queries,all_imgs,200)
   #def build_and_train_net(hiddensize,max_iterations, min_error, all_queries,all_imgs,batch_size):
   #test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_normalize,sz,dot_eucld,hiddensize):
-  #test_on_saved_NN_CMP(0,2,0,'nn',0,1,0,700)
+  test_on_saved_NN_CMP(1,0,0,'nn',0,17.2,0,700,'')
   #test_on_saved_NN_CMP(0,0,0,'nn',0,1,0,700)
   test_on_saved_NN_CMP_loaded(0)
   test_on_saved_NN_CMP_loaded(1)
