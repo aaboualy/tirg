@@ -892,3 +892,4 @@ class Features33K():
     with open (Path1+r"/dataset33/"+'Features33Kall_target_captions.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
+

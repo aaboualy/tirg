@@ -31,7 +31,7 @@ import PIL
 import argparse
 import datasets
 import img_text_composition_models
-Path1=r"C:\MMaster\Files"
+#Path1=r"C:\MMaster\Files"
 
 
 
@@ -1783,7 +1783,7 @@ def NLP2Values():
 
   
   
-  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+  for name, dataset in [ ('train', trainset)]: #('train', trainset), ,('test', testset)
     
     asbook1 = test_retrieval.testLoaded_NLP(opt, trig, dataset)
     print(name,' NLP2 Loaded : ',asbook1)

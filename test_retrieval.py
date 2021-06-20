@@ -229,13 +229,13 @@ def testLoaded_NLP(opt, model, testset):
 
   else:
     # use training queries to approximate training retrieval performance
-    all_imgs = datasets.Features172K().Get_all_images()[:10000]
-    all_captions = datasets.Features172K().Get_all_captions()[:10000]
-    all_queries = datasets.Features172K().Get_all_queries()[:10000]
-    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_imgs = datasets.Features172K().Get_all_images()#[:10000]
+    all_captions = datasets.Features172K().Get_all_captions()#[:10000]
+    all_queries = datasets.Features172K().Get_all_queries()#[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()#[:10000]
     
   modelNLR=main2.NLR2(all_queries.shape[1],all_imgs.shape[1],700)
-  modelNLR.load_state_dict(torch.load(Path1+r'\NLP3.pth'))
+  modelNLR.load_state_dict(torch.load(Path1+r'\NLPMohamed3.pth'))
   modelNLR.eval()
   all_queries=torch.from_numpy(all_queries)
   
