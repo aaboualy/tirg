@@ -2133,7 +2133,8 @@ def NLP2Values():
     
 
 if __name__ == '__main__': 
-  NLP2Values()
+  getvaluesfilesaved()
+  #NLP2Values()
   #getvaluesfilesaved()
     
   #getbetatrain()
@@ -2142,7 +2143,7 @@ if __name__ == '__main__':
   #Savevaluestest()
   #Savevaluestest()
   #Save_GetValues()
-  results_temp()
+  #results_temp()
   #asbook = test_retrieval.test_on_saved(1,0)
   #print('train',' As PaPer: ',asbook)
   #asbook = test_retrieval.test_on_saved(0,0)
