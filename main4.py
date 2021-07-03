@@ -784,6 +784,55 @@ def build_and_train_netMSE(hidden1,hidden2,max_iterations, min_error, all_querie
   print('Finished Training')
   torch.save(model.state_dict(), Path1+r'\NLPMSEt.pth') 
   
+def build_and_train_netCOS(hidden1,hidden2,max_iterations, min_error, all_queries,all_imgs,batch_size):
+  all_queries=Variable(torch.Tensor(all_queries))
+  all_imgs=variable(torch.tensor(all_imgs))
+  model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
+  #model=model.cuda()
+  torch.manual_seed(3)
+  loss_fn = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+  torch.manual_seed(3)
+  #criterion = nn.CosineSimilarity() 
+  criterion=nn.CosineSimilarity(dim=1, eps=1e-6)
+ #loss.backward()
+
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.002)
+  epoch=max_iterations
+
+  losses=[]
+  totallosses=[]
+  for j in range(epoch):
+    total_loss=0
+    for l in range(int(all_queries.shape[0]/batch_size)):
+      
+      item_batch = all_queries[l*batch_size:(l+1)*batch_size-1,:]
+      target_batch=all_imgs[l*batch_size:(l+1)*batch_size-1,:]
+      netoutbatch=model.myforward(item_batch)
+      #loss = loss_fn(target_batch,netoutbatch)
+      loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
+
+      #loss=1-loss
+      losses.append(loss)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+      if (l%1000==0) :
+        print('Epoch:',j,' get images batch=',l*batch_size,':',(l+1)*batch_size,'loss',loss,end='\r')
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    if(j%1000==0):
+      torch.save(model.state_dict(), Path1+r'\NLPCOS172K'+str(j)+'.pth') 
+
+  print ('mean square loss',loss_fn(model.myforward(all_queries),all_imgs))  
+  print('Finished Training')
+  with open(Path1+r"/"+'loosses2.pkl', 'wb') as fp:
+          pickle.dump( totallosses, fp)
+
+  torch.save(model.state_dict(), Path1+r'\NLPCOSfinal172k.pth') 
+
 def test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_normalize,sz,dot_eucld,hiddensize,model_fn):
   # test_queries:
   if test_train==0:
@@ -1011,11 +1060,11 @@ def ab_OtestLoaded(opt, model, testset):
 
   else:
     # use training queries to approximate training retrieval performance
-    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    all_imgs = datasets.Features172K().Get_all_images()  #[:100000]
     
-    all_captions = datasets.Features172K().Get_all_captions()[:10000]
-    all_queries = datasets.Features172K().Get_all_queries()[:10000]
-    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_captions = datasets.Features172K().Get_all_captions() #[:100000]
+    all_queries = datasets.Features172K().Get_all_queries() #[:100000]
+    all_target_captions = datasets.Features172K().Get_all_captions() #[:100000]
     
 
   # feature normalization
@@ -1255,8 +1304,8 @@ def ab_Mgetvaluesfilesaved(option):
   opt.dataset='fashion200k'
   
   #for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
-  for name, dataset in [ ('test', testset)]:
-  #for name, dataset in [ ('train', trainset)]:
+  #for name, dataset in [ ('test', testset)]:
+  for name, dataset in [ ('train', trainset)]:
      #('train', trainset), 
 
     
@@ -1285,11 +1334,11 @@ def ab_MtestLoaded(opt, model, testset,option):
 
   else:
     # use training queries to approximate training retrieval performance
-    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    all_imgs = datasets.Features172K().Get_all_images() #[:10000]
     
-    all_captions = datasets.Features172K().Get_all_captions()[:10000]
-    all_queries = datasets.Features172K().Get_all_queries()[:10000]
-    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_captions = datasets.Features172K().Get_all_captions() #[:10000]
+    all_queries = datasets.Features172K().Get_all_queries() #[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions() #[:10000]
     
     new_all_queries=mymodels(all_queries,all_imgs,all_target_captions,option,test_queries)
 
@@ -1421,18 +1470,19 @@ def     mymodels(all_queries,all_imgs,all_target_captions,option,test_queries):
       new_all_queries=regression(all_queries,all_imgs,0,test_queries)
   if (option==2):
     new_all_queries=neural_model(all_queries,all_imgs,0,test_queries)
-
+  if (option==3):
+    new_all_queries=neural_model(all_queries,all_imgs,1,test_queries)
   return new_all_queries
 
 def neural_model(all_queries,all_imgs,model_option,test_queries):
   if model_option==0:
-    hidden1=800
-    hidden2=700
-    batch_size=100
-    itr=10000
+    hidden1=900
+    hidden2=800
+    batch_size=200
+    itr=15000
     if not test_queries:
       build_and_train_netMSE(hidden1,hidden2,itr, 0.01, all_queries,all_imgs,batch_size)
-    model=NLR2(all_queries.shape[1],all_imgs.shape[1],800,700)
+    model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
 
     model.load_state_dict(torch.load(Path1+r"/"+r'\NLPMSEt.pth'))
     #torch.save(model.state_dict(), Path1+r'\NLPMSE.pth') 
@@ -1447,7 +1497,29 @@ def neural_model(all_queries,all_imgs,model_option,test_queries):
     
     return new_all_queries
   else:
-    return all_queries
+    if model_option==1:
+      hidden1=900
+      hidden2=800
+      batch_size=200
+      itr=15000
+      if not test_queries:
+        build_and_train_netCOS(hidden1,hidden2,itr, 0.01, all_queries,all_imgs,batch_size)
+      model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
+
+      model.load_state_dict(torch.load(Path1+r"/"+r'\NLPCOSfinal172k.pth'))
+    #torch.save(model.state_dict(), Path1+r'\NLPMSE.pth') 
+
+      model.eval()
+      all_queries=Variable(torch.Tensor(all_queries))
+ 
+      new_all_queries=model.myforward(all_queries)
+      new_all_queries = torch.tensor(new_all_queries,requires_grad=False)
+    #all_queries.detach().numpy()
+      new_all_queries=np.array(new_all_queries)
+    
+      return new_all_queries
+    else:
+      return all_queries
   
 
 def regression(all_queries,all_imgs,option, test_queries):
@@ -1496,7 +1568,7 @@ if __name__ == '__main__':
   #test_on_saved_NN_CMP(0,0,0,'nn',0,1,0,700)
   #Reform_Training_Dataset()
   #results_temp()
-  ab_Mgetvaluesfilesaved(2)
+  ab_Mgetvaluesfilesaved(3)
   #adapt_dataset(1000)
 
     
