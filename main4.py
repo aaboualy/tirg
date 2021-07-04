@@ -800,7 +800,6 @@ def build_and_train_netCOS(hidden1,hidden2,max_iterations, min_error, all_querie
   epoch=max_iterations
 
   losses=[]
-  totallosses=[]
   for j in range(epoch):
     total_loss=0
     for l in range(int(all_queries.shape[0]/batch_size)):
@@ -812,26 +811,23 @@ def build_and_train_netCOS(hidden1,hidden2,max_iterations, min_error, all_querie
       loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
 
       #loss=1-loss
-      losses.append(loss)
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
       total_loss+=loss
-      if (l%1000==0) :
-        print('Epoch:',j,' get images batch=',l*batch_size,':',(l+1)*batch_size,'loss',loss,end='\r')
     if (total_loss<min_error):
       break
-    print('iteration:',j, 'total loss',total_loss)
-    totallosses.append(total_loss)
+    print('iteration:',j, 'total loss=',total_loss,'last batch loss=',loss)
+    losses.append(total_loss)
     if(j%1000==0):
-      torch.save(model.state_dict(), Path1+r'\NLPCOS172K'+str(j)+'.pth') 
+      torch.save(model.state_dict(), Path1+r'\NLP2COS172K'+str(j)+'.pth') 
 
   print ('mean square loss',loss_fn(model.myforward(all_queries),all_imgs))  
   print('Finished Training')
   with open(Path1+r"/"+'loosses2.pkl', 'wb') as fp:
-          pickle.dump( totallosses, fp)
+          pickle.dump( losses, fp)
 
-  torch.save(model.state_dict(), Path1+r'\NLPCOSfinal172k.pth') 
+  torch.save(model.state_dict(), Path1+r'\NLP2COSfinal172k.pth') 
 
 def test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_normalize,sz,dot_eucld,hiddensize,model_fn):
   # test_queries:
@@ -1498,15 +1494,15 @@ def neural_model(all_queries,all_imgs,model_option,test_queries):
     return new_all_queries
   else:
     if model_option==1:
-      hidden1=900
-      hidden2=800
-      batch_size=200
+      hidden1=950
+      hidden2=850
+      batch_size=400
       itr=15000
       if not test_queries:
         build_and_train_netCOS(hidden1,hidden2,itr, 0.01, all_queries,all_imgs,batch_size)
       model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
 
-      model.load_state_dict(torch.load(Path1+r"/"+r'\NLPCOSfinal172k.pth'))
+      model.load_state_dict(torch.load(Path1+r"/"+r'\NLP2COSfinal172k.pth'))
     #torch.save(model.state_dict(), Path1+r'\NLPMSE.pth') 
 
       model.eval()
