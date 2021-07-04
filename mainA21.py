@@ -162,11 +162,11 @@ def ab_MtestLoaded(opt, model, testset,option):
 
   else:
     # use training queries to approximate training retrieval performance
-    all_imgs = datasets.Features172K().Get_all_images()[:100000]
+    all_imgs = datasets.Features172K().Get_all_images()[:50000]
     
-    all_captions = datasets.Features172K().Get_all_captions()[:100000]
-    all_queries = datasets.Features172K().Get_all_queries()[:100000]
-    all_target_captions = datasets.Features172K().Get_all_captions()[:100000]
+    all_captions = datasets.Features172K().Get_all_captions()[:50000]
+    all_queries = datasets.Features172K().Get_all_queries()[:50000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:50000]
     
     new_all_queries=mymodels(all_queries,all_imgs,option)
 
