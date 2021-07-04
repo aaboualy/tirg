@@ -22,8 +22,8 @@ from scipy.spatial import distance
 import datasets
 import main2
 
-Path1=r"D:\personal\master\MyCode\files"
-#Path1=r"C:\MMaster\Files"
+#Path1=r"D:\personal\master\MyCode\files"
+Path1=r"C:\MMaster\Files"
 
 
 def test(opt, model, testset):
@@ -927,7 +927,30 @@ def test_on_saved(test_train,normal_beta,create_load,filename,normal_normalize,s
         sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
       else:
         sims[0, test_queries[i]['source_img_id']] = 10e10  # remove query image
-    #if (dot_eucld==0):
+    if (dot_eucld==0):
+      nn_result.append(np.argsort(-sims[0, :])[:110])
+    else:
+      nn_result.append(np.argsort(sims[0, :])[:110])
+
+  all_imgs=[]
+  all_queries=[]
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+  print(out)  
+  
+ 
+  return out
 
 def train_network_on_saved(test_train,create_load,normal_normalize,filename,sz,dot_eucld):
   if test_train==0:

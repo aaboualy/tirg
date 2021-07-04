@@ -2470,7 +2470,7 @@ def train_network_on_saved(test_train,create_load,normal_normalize,filename,sz,d
 class NLR2(nn.Module):
   def __init__(self,netin,netout,nethidden1):
     super().__init__()
-    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.ReLU(),torch.nn.Linear(nethidden1, netout))
+    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.Tanh(),torch.nn.Linear(nethidden1, netout))
   def myforward (self,inv):
     outv=self.netmodel(inv)
     return outv
@@ -2803,14 +2803,16 @@ def test_on_saved_NN_CMP_loaded(test_train):
 
 if __name__ == '__main__': 
     
-  #with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
-  #  all_queries=pickle.load( fp)
-  #with open(Path1+r"/"+'all_imgs172k.pkl', 'rb') as fp:
-  #  all_imgs=pickle.load( fp)
-  #build_and_train_net(700,1000, 50, all_queries,all_imgs,200)
+  with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
+    all_queries=pickle.load( fp)
+    all_queries=all_queries[:10000,:]
+  with open(Path1+r"/"+'all_imgs172k.pkl', 'rb') as fp:
+    all_imgs=pickle.load( fp)
+    all_imgs=all_imgs[:10000,:]
+  build_and_train_net(1000,5000, 0.01, all_queries,all_imgs,1000)
   #def build_and_train_net(hiddensize,max_iterations, min_error, all_queries,all_imgs,batch_size):
   #test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_normalize,sz,dot_eucld,hiddensize):
-  test_on_saved_NN_CMP(1,0,0,'nn',0,17.2,0,700,'')
+  #test_on_saved_NN_CMP(1,0,0,'nn',0,17.2,0,700,'')
   #test_on_saved_NN_CMP(0,0,0,'nn',0,1,0,700)
   test_on_saved_NN_CMP_loaded(0)
   test_on_saved_NN_CMP_loaded(1)
