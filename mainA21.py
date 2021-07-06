@@ -134,13 +134,13 @@ def ab_Mgetvaluesfilesaved():
   opt.dataset='fashion200k'
   
 
-  for x in range(0, 15000, 1000):
-    asbook1, model, euc_model = ab_MtestLoaded(opt, trig, trainset,x)
+  for x in range(1000, 3001, 1000):
+    asbook1, model, euc_model = ab_MtestLoaded(opt, trig, testset,x)
     print(x,': ',asbook1, '\n  model generated      ',model, '\n    euc model',euc_model )
 
-  for name, dataset in [ ('train', trainset)]:
-    R = test_retrieval.testLoaded(opt, trig, dataset)
-    print(name,' PAPER Results: ',R)
+  # for name, dataset in [ ('train', trainset)]:
+  #   R = test_retrieval.testLoaded(opt, trig, dataset)
+  #   print(name,' PAPER Results: ',R)
 
 def ab_MtestLoaded(opt, model, testset,option):
   """Tests a model over the given testset."""
@@ -162,11 +162,11 @@ def ab_MtestLoaded(opt, model, testset,option):
 
   else:
     # use training queries to approximate training retrieval performance
-    all_imgs = datasets.Features172K().Get_all_images()[:50000]
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
     
-    all_captions = datasets.Features172K().Get_all_captions()[:50000]
-    all_queries = datasets.Features172K().Get_all_queries()[:50000]
-    all_target_captions = datasets.Features172K().Get_all_captions()[:50000]
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
     
     new_all_queries=mymodels(all_queries,all_imgs,option)
 
@@ -237,14 +237,14 @@ def ab_MtestLoaded(opt, model, testset,option):
   return out, out2, out3
 
 def mymodels(all_queries,all_imgs,option):
-    hidden1=900
-    hidden2=800
+    hidden1=950
+    hidden2=850
     batch_size=200
     itr=15000
     
     model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
 
-    model.load_state_dict(torch.load(Path1+r'\NLPCOS172K'+str(option)+'.pth'))
+    model.load_state_dict(torch.load(Path1+r'\NLP2COS172K'+str(option)+'.pth'))
     model.eval()
     all_queries=Variable(torch.Tensor(all_queries))
  
