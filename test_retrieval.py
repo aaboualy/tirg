@@ -210,6 +210,92 @@ def testLoaded(opt, model, testset):
 
   return out
 
+def testLoadedBeta(opt, model, testset,beta):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_queries1=[]
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_images()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries1 = datasets.Features33K().Get_all_queries()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+
+    for j in range(len(all_queries1)): 
+      all_queries1[j, :] /= np.linalg.norm(all_queries1[j, :])
+      X1 = np.insert(all_queries1[j],0, 1)
+      X2=np.matmul(X1,beta) 
+      all_queries.append(X2)
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries1 = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+    for j in range(len(all_queries1)): 
+      all_queries1[j, :] /= np.linalg.norm(all_queries1[j, :])
+      X1 = np.insert(all_queries1[j],0, 1)
+      X2=np.matmul(X1,beta) 
+      all_queries.append(X2)
+    
+  all_queries= np.array(all_queries)
+  # feature normalization
+  # for i in range(all_queries.shape[0]):
+  #   all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
+
+
+
+
+
 def testLoaded_NLP(opt, model, testset):
   """Tests a model over the given testset."""
   model.eval()
@@ -293,8 +379,6 @@ def testLoaded_NLP(opt, model, testset):
       out += [('recall_top' + str(k) + '_correct_noun', r)]
 
   return out
-
-
 
 def testWbeta(opt, model, testset,beta):
   """Tests a model over the given testset."""

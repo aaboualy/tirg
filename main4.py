@@ -34,8 +34,8 @@ import PIL
 import argparse
 import datasets
 import img_text_composition_models
-Path1=r"C:\MMaster\Files"
-
+#Path1=r"C:\MMaster\Files"
+Path1=r"D:\personal\master\MyCode\files"
 
 #################  Support Functions Section   #################
 def Reform_Training_Dataset():
@@ -106,9 +106,6 @@ def Reform_Training_Dataset():
   with open(Path1+r"/"+'all_target_captions1806172k.pkl', 'wb') as fp:
     pickle.dump(all_target_captions, fp)
 
-
-
-  
 def adapt_dataset(size_limit):
   with open(Path1+r"/"+'test_queries1806172k.pkl', 'rb') as fp:
     test_queries=pickle.load( fp)
@@ -143,15 +140,6 @@ def adapt_dataset(size_limit):
     
   with open(Path1+r"/"+'new_all_imgs2006172k.pkl', 'wb') as fp:
     pickle.dump(new_all_imgs, fp)
-  
-    
-
-
-      
-
-
-    
-
   
 def print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld):
   print(' Experiment setup : ', file = sourceFile)
@@ -1106,7 +1094,6 @@ def ab_OtestLoaded(opt, model, testset):
 
   return out
 
- 
 def ab_Ogetvaluesfilesaved():
 
   trainset = datasets.Fashion200k(
@@ -1148,8 +1135,7 @@ def ab_Ogetvaluesfilesaved():
 
     asbook = ab_Otest(opt, trig, dataset)
     print(name,' As PaPer: ',asbook)
-     
-
+    
 def ab_Otest(opt, model, testset):
   """Tests a model over the given testset."""
   model.eval()
@@ -1307,8 +1293,6 @@ def ab_Mgetvaluesfilesaved(option):
     
     asbook1, model, euc_model = ab_MtestLoaded(opt, trig, dataset,option)
     print(name,' Loaded As PaPer: ',asbook1, '\n  model generated      ',model, '\n    euc model',euc_model )
-
-     
 
 def ab_MtestLoaded(opt, model, testset,option):
   """Tests a model over the given testset."""
@@ -1472,9 +1456,9 @@ def     mymodels(all_queries,all_imgs,all_target_captions,option,test_queries):
 
 def neural_model(all_queries,all_imgs,model_option,test_queries):
   if model_option==0:
-    hidden1=900
-    hidden2=800
-    batch_size=200
+    hidden1=1050
+    hidden2=950
+    batch_size=500
     itr=15000
     if not test_queries:
       build_and_train_netMSE(hidden1,hidden2,itr, 0.01, all_queries,all_imgs,batch_size)

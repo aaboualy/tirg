@@ -797,6 +797,29 @@ class Features172K():
     with open(Path+r"/"+'Features172Kall_captions.txt', 'wb') as fp:
       pickle.dump(all_captions, fp)
 
+  def SavetoFilesImageSource(self,Path,model,testset,opt):
+    model.eval()
+    all_imgs = []
+    all_captions = []
+    all_queries = []
+    all_target_captions = []
+
+    imgs0 = []
+    imgs = []
+    mods = []
+    for i in range(172048):#172048
+      print('get images=',i,end='\r')
+      item = testset[i]
+      img1=testset[i]['source_img_data'].numpy()
+      imgs += [img1]
+    
+    imgs = np.concatenate(imgs)
+
+    with open(Path+r"/"+'Features172Kall_source.txt', 'wb') as fp:
+      pickle.dump(imgs, fp)
+
+   
+
   def Get_all_queries(self):
     with open (Path1+r"/dataset172/"+'Features172Kall_queries.txt', 'rb') as fp:
       data = pickle.load(fp) 
