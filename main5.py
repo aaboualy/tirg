@@ -749,14 +749,14 @@ def build_and_train_netMSE(hidden1,hidden2,max_iterations, min_error, all_querie
   all_imgs=variable(torch.tensor(all_imgs))
   model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
   #model=model.cuda()
-  torch.manual_seed(3)
+  torch.manual_seed(300)
   loss_fn = torch.nn.MSELoss()
-  torch.manual_seed(3)
+  torch.manual_seed(300)
   #criterion = nn.CosineSimilarity() 
   criterion=nn.MSELoss()
  #loss.backward()
 
-  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.015)
   epoch=max_iterations
 
   losses=[]
@@ -765,8 +765,8 @@ def build_and_train_netMSE(hidden1,hidden2,max_iterations, min_error, all_querie
     total_loss=0
     for l in range(int(all_queries.shape[0]/batch_size)):
       
-      item_batch = all_queries[l*batch_size:(l+1)*batch_size-1,:]
-      target_batch=all_imgs[l*batch_size:(l+1)*batch_size-1,:]
+      item_batch = all_queries[l*batch_size:(l+1)*batch_size,:]
+      target_batch=all_imgs[l*batch_size:(l+1)*batch_size,:]
       netoutbatch=model.myforward(item_batch)
       loss = loss_fn(target_batch,netoutbatch)
       losses.append(loss)
@@ -776,13 +776,14 @@ def build_and_train_netMSE(hidden1,hidden2,max_iterations, min_error, all_querie
       total_loss+=loss
       if (l%1000==0) :
         print('Epoch:',j,' get images batch=',l*batch_size,':',(l+1)*batch_size,'loss',loss,end='\r')
+        torch.save(model.state_dict(), Path1+r'\NLPMSE172K'+str(hidden1)+'-'+str(hidden2)+str(j)+'.pth') 
     if (total_loss<min_error):
       break
     print('iteration:',j, 'total loss',total_loss)
     totallosses.append(total_loss)
   print ('mean square loss',loss_fn(model.myforward(all_queries),all_queries))  
   print('Finished Training')
-  torch.save(model.state_dict(), Path1+r'\NLPMSEt.pth') 
+  torch.save(model.state_dict(), Path1+r'\NLPMSEfinal'+str(hidden1)+'-'+str(hidden2)+'.pth') 
   
 def build_and_train_netCOS(hidden1,hidden2,max_iterations, min_error, all_queries,all_imgs,batch_size):
   all_queries=Variable(torch.Tensor(all_queries))
@@ -1475,13 +1476,13 @@ def neural_model(all_queries,all_imgs,model_option,test_queries):
   if model_option==0:
     hidden1=900
     hidden2=800
-    batch_size=200
+    batch_size=500
     itr=15000
     if not test_queries:
       build_and_train_netMSE(hidden1,hidden2,itr, 0.01, all_queries,all_imgs,batch_size)
     model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
 
-    model.load_state_dict(torch.load(Path1+r"/"+r'\NLPMSEt.pth'))
+    model.load_state_dict(torch.load(Path1+r'\NLPMSEfinal'+str(hidden1)+'-'+str(hidden2)+'.pth'))
     #torch.save(model.state_dict(), Path1+r'\NLPMSE.pth') 
 
     model.eval()
@@ -1544,6 +1545,237 @@ def regression(all_queries,all_imgs,option, test_queries):
 
   return all_queries
         
+
+
+
+def load_test_adapt_resuts():
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  #for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+  #for name, dataset in [ ('test', testset)]:
+  
+  trig.eval()
+  test_queries = testset.get_test_queries()
+  
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_target_captions = []
+  
+      # compute test query features
+    
+  all_imgs = datasets.Features33K().Get_all_images()
+  all_captions = datasets.Features33K().Get_all_captions()
+  all_queries = datasets.Features33K().Get_all_queries()
+  all_target_captions = datasets.Features33K().Get_target_captions()
+  
+  
+  
+  hidden1=1150
+  hidden2=800
+  batch_size=500
+  max_iterations=20000
+  min_error=15
+  all_queries=Variable(torch.Tensor(all_queries))
+  all_imgs=variable(torch.tensor(all_imgs))
+  torch.manual_seed(707)
+  model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
+  torch.manual_seed(707)
+  #model=model.cuda()
+  model.load_state_dict(torch.load(Path1+r"/"+r'\NLPMSEtesta10000.pth'))
+  loss_fn = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+  #loss_fn=torch.nn.MSELoss()
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
+  epoch=max_iterations
+  losses=np.zeros((max_iterations))
+  for j in range(epoch):
+    total_loss=0
+    for l in range(m.ceil(all_imgs.shape[0]/batch_size)):
+      if all_imgs.shape[0]<(l+1)*batch_size:
+          upperl=all_imgs.shape[0]
+      else:
+          upperl=(l+1)*batch_size
+
+      item_batch = all_queries[l*batch_size:upperl,:]
+      target_batch=all_imgs[l*batch_size:upperl,:]
+      netoutbatch=model.myforward(item_batch)
+      loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
+      #loss=loss_fn(target_batch,netoutbatch)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss=',total_loss,'last batch loss=',loss)
+    losses[j]=total_loss
+    if(j%1000==0):
+      torch.save(model.state_dict(), Path1+r'\NLPMSEtesta'+str(j)+'.pth') 
+
+  print ('mean square loss',loss_fn(model.myforward(all_queries[:all_imgs.shape[0]]),all_imgs))  
+  print('Finished Training')
+  with open(Path1+r"/"+'loossesa.pkl', 'wb') as fp:
+          pickle.dump( losses, fp)
+
+  torch.save(model.state_dict(), Path1+r'\NLPMSEtestfinal.pth') 
+       
+    #torch.save(model.state_dict(), Path1+r'\NLPMSE.pth') 
+
+  model.eval()
+  all_queries=Variable(torch.Tensor(all_queries))
+ 
+  new_all_queries=model.myforward(all_queries)
+
+  new_all_queries = torch.tensor(new_all_queries,requires_grad=False)
+  new_all_queries=np.array(new_all_queries)
+
+  all_queries = torch.tensor(all_queries,requires_grad=False)
+  all_queries=np.array(all_queries)
+
+  # use training queries to approximate training retrieval performance
+  
+  # feature normalization
+  
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+    new_all_queries[i, :] /= np.linalg.norm(new_all_queries[i, :])
+
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  #nn_result = []
+  new_nn_result = []
+  #euc_new_nn_result=[]
+  for i in tqdm(range(all_queries.shape[0])):
+    #sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    new_sims = new_all_queries[i:(i+1), :].dot(all_imgs.T)
+    #euc_new_sims=np.sum(abs(all_imgs-all_queries[i, :]),axis=1)
+    if test_queries:
+      #sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      new_sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      #euc_new_sims[test_queries[i]['source_img_id']]=10e10
+
+    #nn_result.append(np.argsort(-sims[0, :])[:110])
+    new_nn_result.append(np.argsort(-new_sims[0, :])[:110])
+    #euc_new_nn_result.append(np.argsort(euc_new_sims)[:110])
+
+  # compute recalls
+  out = []
+  out2=[]
+  out3=[]
+  #nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  new_nn_result = [[all_captions[nn] for nn in nns] for nns in new_nn_result]
+  #euc_new_nn_result = [[all_captions[nn] for nn in nns] for nns in euc_new_nn_result]
+
+  for k in [1, 5, 10, 50, 100]:
+  #  r = 0.0
+  #  for i, nns in enumerate(euc_new_nn_result):
+  #    if all_target_captions[i] in nns[:k]:
+   #     r += 1
+   # r /= len(euc_new_nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+  #  out3.append(str(k) + ' ---> '+ str(r*100))
+    
+    r = 0.0
+    for i, nns in enumerate(new_nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(new_nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out2.append(str(k) + ' ---> '+ str(r*100))
+
+   # r = 0.0
+    #for i, nns in enumerate(nn_result):
+    #  if all_target_captions[i] in nns[:k]:
+    #    r += 1
+    #r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    #out.append(str(k) + ' ---> '+ str(r*100))
+
+    
+  print('Trig=',out,'neural model ', out2,'trig euc', out3)
+
+  
+def build_and_train_netCOS2(hidden1,hidden2,max_iterations, min_error, all_queries,all_imgs,batch_size):
+  all_queries=Variable(torch.Tensor(all_queries))
+  all_imgs=variable(torch.tensor(all_imgs))
+  torch.manual_seed(707)
+  model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
+  #model.load_state_dict(torch.load(Path1+r"/"+r'\NLP4COS172K1000.pth'))  #NLP4COS172K3000
+  torch.manual_seed(707)
+
+  #model=model.cuda()
+  loss_fn = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+  #criterion = nn.CosineSimilarity() 
+  #criterion=nn.CosineSimilarity(dim=1, eps=1e-6)
+ #loss.backward()
+
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.01)
+  epoch=max_iterations
+  
+  losses=np.zeros((max_iterations))
+  for j in range(epoch):
+    total_loss=0
+    for l in range(m.ceil(all_imgs.shape[0]/batch_size)):
+      if all_imgs.shape[0]<(l+1)*batch_size:
+          upperl=all_imgs.shape[0]
+      else:
+          upperl=(l+1)*batch_size
+
+      item_batch = all_queries[l*batch_size:upperl,:]
+      target_batch=all_imgs[l*batch_size:upperl,:]
+      netoutbatch=model.myforward(item_batch)
+      #loss = loss_fn(target_batch,netoutbatch)
+      loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
+      #loss=1-loss
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss=',total_loss,'last batch loss=',loss)
+    losses[j]=total_loss
+    if(j%1000==0):
+      torch.save(model.state_dict(), Path1+r'\NLP41COsa'+str(j)+'.pth') 
+
+  print ('mean square loss',loss_fn(model.myforward(all_queries[:all_imgs.shape[0]]),all_imgs))  
+  print('Finished Training')
+  with open(Path1+r"/"+'loossesa.pkl', 'wb') as fp:
+          pickle.dump( losses, fp)
+
+  torch.save(model.state_dict(), Path1+r'\NLP41COSafinal.pth') 
   
 if __name__ == '__main__': 
   #with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
@@ -1566,8 +1798,8 @@ if __name__ == '__main__':
   #test_on_saved_NN_CMP(0,0,0,'nn',0,1,0,700)
   #Reform_Training_Dataset()
   #results_temp()
-  ab_Mgetvaluesfilesaved(3)
-  #adapt_dataset(1000)
+  ab_Mgetvaluesfilesaved(2)
+  #load_test_adapt_resuts()
 
     
 
