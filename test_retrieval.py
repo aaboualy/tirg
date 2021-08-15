@@ -22,8 +22,12 @@ from scipy.spatial import distance
 import datasets
 import main2
 
-#Path1=r"D:\personal\master\MyCode\files"
-Path1=r"C:\MMaster\Files"
+Path1=r"D:\personal\master\MyCode\files"
+#Path1=r"C:\MMaster\Files"
+
+
+
+
 
 
 def test(opt, model, testset):
@@ -210,7 +214,529 @@ def testLoaded(opt, model, testset):
 
   return out
 
+def testLoadedRegModel(opt, model, testset,reg):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_queries1=[]
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_images()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries1 = datasets.Features33K().Get_all_queries()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+
+    
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries1 = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+
+  
+  all_queries=all_queries1
+  
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  all_queries =reg.predict(all_queries)
+    
+
+    
+  all_queries= np.array(all_queries)
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  #euc_new_nn_result=[]
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    #euc_new_sims=np.sum(abs(all_imgs-all_queries[i, :]),axis=1)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      #euc_new_sims[test_queries[i]['source_img_id']]=10e10
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+    #euc_new_nn_result.append(np.argsort(euc_new_sims)[:110])
+
+  # compute recalls
+  out = []
+  
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  #euc_new_nn_result = [[all_captions[nn] for nn in nns] for nns in euc_new_nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    # r = 0.0
+    # for i, nns in enumerate(euc_new_nn_result):
+    #   if all_target_captions[i] in nns[:k]:
+    #     r += 1
+    # r /= len(euc_new_nn_result)
+    # #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    # out.append('EUC:' +str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
+def testLoadedRandomForestRegressor(opt, model, testset,reg):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_queries1=[]
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_images()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries1 = datasets.Features33K().Get_all_queries()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+    # all_imgs = datasets.Features172K().Get_all_images()[140000:172048]
+    
+    # all_captions = datasets.Features172K().Get_all_captions()[140000:172048]
+    # all_queries1 = datasets.Features172K().Get_all_queries()[140000:172048]
+    # all_target_captions = datasets.Features172K().Get_all_captions()[140000:172048]
+
+    
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries1 = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+
+  
+  all_queries=all_queries1
+  
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  all_queries =reg.predict(all_queries)
+    
+
+    
+  all_queries= np.array(all_queries)
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  #euc_new_nn_result=[]
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    #euc_new_sims=np.sum(abs(all_imgs-all_queries[i, :]),axis=1)
+    # if test_queries:
+    #   sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      #euc_new_sims[test_queries[i]['source_img_id']]=10e10
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+    #euc_new_nn_result.append(np.argsort(euc_new_sims)[:110])
+
+  # compute recalls
+  out = []
+  
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  #euc_new_nn_result = [[all_captions[nn] for nn in nns] for nns in euc_new_nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    # r = 0.0
+    # for i, nns in enumerate(euc_new_nn_result):
+    #   if all_target_captions[i] in nns[:k]:
+    #     r += 1
+    # r /= len(euc_new_nn_result)
+    # #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    # out.append('EUC:' +str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
 def testLoadedBeta(opt, model, testset,beta):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_queries1=[]
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_images()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries1 = datasets.Features33K().Get_all_queries()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+
+    for j in range(len(all_queries1)): 
+      all_queries1[j, :] /= np.linalg.norm(all_queries1[j, :])
+      X1 = np.insert(all_queries1[j],0, 1)
+      X2=np.matmul(X1,beta) 
+      # with open (Path1+"\\ERRORtrainLoaded.txt", 'rb') as fp:
+      #   ERROR = pickle.load(fp) 
+      #   X2=X2+ERROR
+      all_queries.append(X2)
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries1 = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+    for j in range(len(all_queries1)): 
+      all_queries1[j, :] /= np.linalg.norm(all_queries1[j, :])
+      X1 = np.insert(all_queries1[j],0, 1)
+      X2=np.matmul(X1,beta) 
+      # with open (Path1+"\\ERRORtrainLoaded.txt", 'rb') as fp:
+      #   ERROR = pickle.load(fp) 
+      #   X2=X2+ERROR
+        
+      all_queries.append(X2)
+    
+  all_queries= np.array(all_queries)
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
+
+def testLoadedold(opt, model, testset):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_imagesold()
+    all_captions = datasets.Features33K().Get_all_captionsold()
+    all_queries = datasets.Features33K().Get_all_queriesold()
+    all_target_captions = datasets.Features33K().Get_target_captionsold()
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_imagesold()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captionsold()[:10000]
+    all_queries = datasets.Features172K().Get_all_queriesold()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captionsold()[:10000]
+    
+
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
+def testLoadedBetaold(opt, model, testset,beta):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_queries1=[]
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_imagesold()
+    all_captions = datasets.Features33K().Get_all_captionsold()
+    all_queries1 = datasets.Features33K().Get_all_queriesold()
+    all_target_captions = datasets.Features33K().Get_target_captionsold()
+
+    for j in range(len(all_queries1)): 
+      all_queries1[j, :] /= np.linalg.norm(all_queries1[j, :])
+      X1 = np.insert(all_queries1[j],0, 1)
+      X2=np.matmul(X1,beta) 
+      # with open (Path1+"\\ERRORtrainLoaded.txt", 'rb') as fp:
+      #   ERROR = pickle.load(fp) 
+      #   X2=X2+ERROR
+      all_queries.append(X2)
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_imagesold()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captionsold()[:10000]
+    all_queries1 = datasets.Features172K().Get_all_queriesold()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captionsold()[:10000]
+    for j in range(len(all_queries1)): 
+      all_queries1[j, :] /= np.linalg.norm(all_queries1[j, :])
+      X1 = np.insert(all_queries1[j],0, 1)
+      X2=np.matmul(X1,beta) 
+      # with open (Path1+"\\ERRORtrainLoaded.txt", 'rb') as fp:
+      #   ERROR = pickle.load(fp) 
+      #   X2=X2+ERROR
+        
+      all_queries.append(X2)
+    
+  all_queries= np.array(all_queries)
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
+
+
+
+
+
+
+
+def testLoadedNLP(opt, model, testset, model2):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_images()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries = datasets.Features33K().Get_all_queries()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+
+    all_queries=(torch.Tensor(all_queries))
+    all_queries=model2.myforward(all_queries).data.cpu().numpy()
+
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+
+    all_queries=(torch.Tensor(all_queries))
+    all_queries=model2.myforward(all_queries).data.cpu().numpy()
+    
+
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
+def testLoadedBetaWNLP(opt, model, testset,beta, model2):
   """Tests a model over the given testset."""
   model.eval()
   test_queries = testset.get_test_queries()
@@ -234,6 +760,8 @@ def testLoadedBeta(opt, model, testset,beta):
       X2=np.matmul(X1,beta) 
       all_queries.append(X2)
 
+    
+
   else:
     # use training queries to approximate training retrieval performance
     all_imgs = datasets.Features172K().Get_all_images()[:10000]
@@ -248,6 +776,9 @@ def testLoadedBeta(opt, model, testset,beta):
       all_queries.append(X2)
     
   all_queries= np.array(all_queries)
+
+  all_queries=(torch.Tensor(all_queries))
+  all_queries=model2.myforward(all_queries).data.cpu().numpy()
   # feature normalization
   # for i in range(all_queries.shape[0]):
   #   all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
@@ -290,6 +821,99 @@ def testLoadedBeta(opt, model, testset,beta):
       out += [('recall_top' + str(k) + '_correct_noun', r)]
 
   return out
+
+def testLoadedNLPwBeta(opt, model, testset,beta, model2):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_queries1=[]
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_images()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries1 = datasets.Features33K().Get_all_queries()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+
+    all_queries1=(torch.Tensor(all_queries1))
+    all_queries1=model2.myforward(all_queries1).data.cpu().numpy()
+
+    for j in range(len(all_queries1)): 
+      all_queries1[j, :] /= np.linalg.norm(all_queries1[j, :])
+      X1 = np.insert(all_queries1[j],0, 1)
+      X2=np.matmul(X1,beta) 
+      all_queries.append(X2)
+
+    
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries1 = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+
+    all_queries1=(torch.Tensor(all_queries1))
+    all_queries1=model2.myforward(all_queries1).data.cpu().numpy()
+
+    for j in range(len(all_queries1)): 
+      all_queries1[j, :] /= np.linalg.norm(all_queries1[j, :])
+      X1 = np.insert(all_queries1[j],0, 1)
+      X2=np.matmul(X1,beta) 
+      all_queries.append(X2)
+    
+  all_queries= np.array(all_queries)
+  
+  
+  # feature normalization
+  # for i in range(all_queries.shape[0]):
+  #   all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
 
 
 
