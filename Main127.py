@@ -441,6 +441,51 @@ def savesourcevalues():
   #print('172 Finished')
   print('33k Finished')
 
+def savesourcephixtvalues():
+
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  #trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+
+  #datasets.Features172K().SavetoFilesImageSource(Path1+r'/dataset172', trig, train,opt)
+  #datasets.Features33K().SavetoFiles2(Path1+r'/dataset33', trig, test,opt)
+  #datasets.Features33K().SavetoFiles3(Path1+r'/dataset33', trig, test,opt)
+
+  datasets.Features172K().SavetoFilesphixt(Path1+r'/dataset172', trig, train,opt)
+  datasets.Features33K().SavetoFilesphixt(Path1+r'/dataset33', trig, test,opt)
+  
+  print('172 Finished')
+  print('33k Finished')
+
 
 #################   get losses from NLP mean & Cosine Section   #################
 
@@ -1534,8 +1579,8 @@ def GetValuesRegModel():
     print(name,' As PaPer: ',asbook)
 
 def GetValuesRandomForestRegressor():
-  imgdata = datasets.Features172K().Get_all_images()#[:139999]
-  all_queries1 = datasets.Features172K().Get_all_queries()#[:139999]
+  imgdata = datasets.Features172K().Get_all_images()[:1000]
+  all_queries1 = datasets.Features172K().Get_all_queries()[:1000]
 
   for i in range(all_queries1.shape[0]):
     all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
@@ -1543,7 +1588,7 @@ def GetValuesRandomForestRegressor():
     imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
 
   print('1')
-  regr = RandomForestRegressor(max_depth=50, random_state=0)
+  regr = RandomForestRegressor(n_estimators=100,  random_state=0) #,min_samples_leaf=4,bootstrap=True,
   print('2')
   regr.fit(all_queries1, imgdata)
   print('3')
@@ -1630,9 +1675,120 @@ def getlossesMeanSquarelinear():
 
  
 
+################### Regphix #########################
+
+
+def GetValuesRegModelphix():
+
+  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
+  #   Beta = pickle.load(fp) 
+
+  imgdata = datasets.Features172K().Get_phixtarget()
+  all_queries1 = datasets.Features172K().Get_phix()
+
+  for i in range(all_queries1.shape[0]):
+    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
+  for i in range(imgdata.shape[0]):
+    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
+
+  reg = LinearRegression().fit(all_queries1, imgdata)
+
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
   
 
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+    
+    #betaNor = test_retrieval.testLoadedBetaRegModel(opt, trig, dataset,Beta,reg)
+    betaNor = test_retrieval.testLoadedRegModelphix(opt, trig, dataset,reg)
+    print(name,' Reg: ',betaNor)
 
+    # asbook = test_retrieval.test(opt, trig, dataset)
+    # print(name,' As PaPer: ',asbook)
+
+def GetValuesRandomForestRegressorphix():
+  imgdata = datasets.Features172K().Get_phixtarget()
+  all_queries1 = datasets.Features172K().Get_phix()
+
+  for i in range(all_queries1.shape[0]):
+    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
+  for i in range(imgdata.shape[0]):
+    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
+
+  print('1')
+  regr = RandomForestRegressor(max_depth=50, random_state=0)
+  print('2')
+  regr.fit(all_queries1, imgdata)
+  print('3')
+  
+
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+    
+    betaNor = test_retrieval.testLoadedRandomForestRegressorphix(opt, trig, dataset,regr)
+    print(name,' Random: ',betaNor)
+
+    # asbook = test_retrieval.testLoaded(opt, trig, dataset)
+    # print(name,' As PaPer: ',asbook)
 
 
 
@@ -1645,8 +1801,8 @@ def getlossesMeanSquarelinear():
 
 if __name__ == '__main__': 
     
-    #getbetatrainLoadedold()
     GetValuesRandomForestRegressor()
+
 
     
 

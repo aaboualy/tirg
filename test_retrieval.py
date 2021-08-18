@@ -654,6 +654,200 @@ def testLoadedBetaold(opt, model, testset,beta):
   return out
 
 
+def testLoadedRegModelphix(opt, model, testset,reg):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_queries1=[]
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_phixtarget()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries1 = datasets.Features33K().Get_phix()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+
+    
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_phixtarget()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries1 = datasets.Features172K().Get_phix()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+
+  
+  all_queries=all_queries1
+  
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  all_queries =reg.predict(all_queries)
+    
+
+    
+  all_queries= np.array(all_queries)
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  #euc_new_nn_result=[]
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    #euc_new_sims=np.sum(abs(all_imgs-all_queries[i, :]),axis=1)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      #euc_new_sims[test_queries[i]['source_img_id']]=10e10
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+    #euc_new_nn_result.append(np.argsort(euc_new_sims)[:110])
+
+  # compute recalls
+  out = []
+  
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  #euc_new_nn_result = [[all_captions[nn] for nn in nns] for nns in euc_new_nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    # r = 0.0
+    # for i, nns in enumerate(euc_new_nn_result):
+    #   if all_target_captions[i] in nns[:k]:
+    #     r += 1
+    # r /= len(euc_new_nn_result)
+    # #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    # out.append('EUC:' +str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
+def testLoadedRandomForestRegressorphix(opt, model, testset,reg):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
+
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_queries1=[]
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_phixtarget()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries1 = datasets.Features33K().Get_phix()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+    # all_imgs = datasets.Features172K().Get_all_images()[140000:172048]
+    
+    # all_captions = datasets.Features172K().Get_all_captions()[140000:172048]
+    # all_queries1 = datasets.Features172K().Get_all_queries()[140000:172048]
+    # all_target_captions = datasets.Features172K().Get_all_captions()[140000:172048]
+
+    
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_phixtarget()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries1 = datasets.Features172K().Get_phix()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()[:10000]
+
+  
+  all_queries=all_queries1
+  
+  # feature normalization
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  all_queries =reg.predict(all_queries)
+    
+
+    
+  all_queries= np.array(all_queries)
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  #euc_new_nn_result=[]
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    #euc_new_sims=np.sum(abs(all_imgs-all_queries[i, :]),axis=1)
+    # if test_queries:
+    #   sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      #euc_new_sims[test_queries[i]['source_img_id']]=10e10
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+    #euc_new_nn_result.append(np.argsort(euc_new_sims)[:110])
+
+  # compute recalls
+  out = []
+  
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  #euc_new_nn_result = [[all_captions[nn] for nn in nns] for nns in euc_new_nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    # r = 0.0
+    # for i, nns in enumerate(euc_new_nn_result):
+    #   if all_target_captions[i] in nns[:k]:
+    #     r += 1
+    # r /= len(euc_new_nn_result)
+    # #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    # out.append('EUC:' +str(k) + ' ---> '+ str(r*100))
+
+    if opt.dataset == 'mitstates':
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[0] in [c.split()[0] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_adj', r)]
+
+      r = 0.0
+      for i, nns in enumerate(nn_result):
+        if all_target_captions[i].split()[1] in [c.split()[1] for c in nns[:k]]:
+          r += 1
+      r /= len(nn_result)
+      out += [('recall_top' + str(k) + '_correct_noun', r)]
+
+  return out
+
+
 
 
 
