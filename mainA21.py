@@ -133,10 +133,11 @@ def ab_Mgetvaluesfilesaved():
   opt.batch_size =1
   opt.dataset='fashion200k'
   
-
-  for x in range(1000, 3001, 1000):
-    asbook1, model, euc_model = ab_MtestLoaded(opt, trig, testset,x)
-    print(x,': ',asbook1, '\n  model generated      ',model, '\n    euc model',euc_model )
+  for name, dataset in [ ('train', trainset),('test', testset)]:
+    for x in range(12000, 15001, 1000):
+      asbook1, model, euc_model = ab_MtestLoaded(opt, trig, dataset,x)
+      #print(x,': ',asbook1, '\n  model generated      ',model, '\n    euc model',euc_model )
+      print(name,'---',x,'---', 'model:',model  )
 
   # for name, dataset in [ ('train', trainset)]:
   #   R = test_retrieval.testLoaded(opt, trig, dataset)
@@ -237,14 +238,14 @@ def ab_MtestLoaded(opt, model, testset,option):
   return out, out2, out3
 
 def mymodels(all_queries,all_imgs,option):
-    hidden1=950
-    hidden2=850
+    hidden1=1050
+    hidden2=950
     batch_size=200
     itr=15000
     
     model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
 
-    model.load_state_dict(torch.load(Path1+r'\NLP2COS172K'+str(option)+'.pth'))
+    model.load_state_dict(torch.load(Path1+r'\NLP41COS172K'+str(option)+'.pth'))
     model.eval()
     all_queries=Variable(torch.Tensor(all_queries))
  
@@ -254,7 +255,5 @@ def mymodels(all_queries,all_imgs,option):
     
     return new_all_queries
 
-
-  
 if __name__ == '__main__': 
   ab_Mgetvaluesfilesaved()
