@@ -1579,8 +1579,12 @@ def GetValuesRegModel():
     print(name,' As PaPer: ',asbook)
 
 def GetValuesRandomForestRegressor():
-  imgdata = datasets.Features172K().Get_all_images()[:1000]
-  all_queries1 = datasets.Features172K().Get_all_queries()[:1000]
+  SizeI=50000
+  n_estimator=50
+  max_depths=25
+
+  imgdata = datasets.Features172K().Get_all_images()[:SizeI]
+  all_queries1 = datasets.Features172K().Get_all_queries()[:SizeI]
 
   for i in range(all_queries1.shape[0]):
     all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
@@ -1588,10 +1592,15 @@ def GetValuesRandomForestRegressor():
     imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
 
   print('1')
-  regr = RandomForestRegressor(n_estimators=100,  random_state=0) #,min_samples_leaf=4,bootstrap=True,
+  regr = RandomForestRegressor(n_estimators=n_estimator,  random_state=0,max_depth=max_depths,verbose=True,bootstrap=False) #,min_samples_leaf=4,bootstrap=True,
   print('2')
   regr.fit(all_queries1, imgdata)
   print('3')
+
+
+  filename = 'RFRN'+str(n_estimator)+'M'+str(max_depths)+'I'+str(SizeI)+'.pth'
+  pickle.dump(regr, open(Path1+'/'+filename, 'wb'))
+  regr = pickle.load(open(Path1+'/'+filename, 'rb'))
   
 
   trainset = datasets.Fashion200k(
@@ -1626,7 +1635,7 @@ def GetValuesRandomForestRegressor():
   opt.batch_size =1
   opt.dataset='fashion200k'
   
-  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+  for name, dataset in [ ('train', trainset)]: #('train', trainset),  ,('test', testset)
     
     betaNor = test_retrieval.testLoadedRandomForestRegressor(opt, trig, dataset,regr)
     print(name,' Random: ',betaNor)
@@ -1799,9 +1808,81 @@ def GetValuesRandomForestRegressorphix():
 # test  As PaPer:  ['1 ---> 14.04121863799283', '5 ---> 34.268219832735966', '10 ---> 42.41338112305854', '50 ---> 65.31660692951016', '100 ---> 73.66487455197132']
 
 
+
+
+
+######################### 2882021 ########################
+class ConNet(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.netmodel= torch.nn.Sequential(nn.Conv2d(1,3, kernel_size=(2,2)),nn.Conv2d(3,512, kernel_size=(2,2),stride=1))
+    self.f1=nn.Linear( 460800,512)
+  def myforward (self,inv):
+    outv=self.netmodel(inv)
+    outv = outv.view(outv.size(0), -1)
+    outv=self.f1(outv)
+    return outv
+
+def Newnetworkphi():
+  phix = datasets.Features172K().Get_phix()
+  phit = datasets.Features172K().Get_phit()
+  phitarget = datasets.Features172K().Get_phixtarget()
+  phit = np.concatenate(phit)
+  a=1
+  b=5
+  phix=phix*5
+  phit=phit*1
+  combinedxt=[]
+  min_error=0.01
+
+  for i in range(phix.shape[0]):
+    combinedxt.append([ [y for x in [phit[i], phix[i]] for y in x]])
+
+  model=ConNet()
+  torch.manual_seed(3)
+  loss_fn = torch.nn.MSELoss()
+  torch.manual_seed(3)
+  criterion=nn.MSELoss()
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
+  epoch=25000
+  losses=[]
+  totallosses=[]
+  
+  for j in range(epoch):
+    total_loss=0
+    for l in range(phix.shape[0]):
+      
+      combinedxt1024 = np.concatenate(combinedxt[l])
+      combinedxt32=combinedxt1024.reshape(1,1,32,32)
+      netoutbatch=model.myforward(torch.FloatTensor(combinedxt32))
+      target_batch=torch.FloatTensor(phitarget[l])
+      
+      loss = loss_fn(target_batch,netoutbatch)
+      losses.append(loss)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+      if (l%1000==0) :
+        print('Epoch:',j,' get images batch=',l,'loss',loss,end='\r')
+        
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    # if (j%1000==0) :
+    #   torch.save(model.state_dict(), Path1+r'\GNLPMSEt'+str(j)+r'.pth') 
+
+  #print ('NewModel:',loss_fn(model.myforward(all_queries),all_queries))  
+  print('Finished Training')
+  torch.save(model.state_dict(), Path1+r'\2CovLinear.pth') 
+
+  
+
+
 if __name__ == '__main__': 
     
-    GetValuesRandomForestRegressor()
+    Newnetworkphi()
 
 
     
