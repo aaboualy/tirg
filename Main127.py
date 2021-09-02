@@ -1815,8 +1815,8 @@ def GetValuesRandomForestRegressorphix():
 class ConNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.netmodel= torch.nn.Sequential(nn.Conv2d(1,3, kernel_size=(2,2)),nn.Conv2d(3,512, kernel_size=(2,2),stride=1))
-    self.f1=nn.Linear( 460800,512)
+    self.netmodel= torch.nn.Sequential(nn.Conv2d(1,3, kernel_size=(2,2)),nn.Conv2d(3,7, kernel_size=(2,2),stride=1))
+    self.f1=nn.Linear( 6300,512)
   def myforward (self,inv):
     outv=self.netmodel(inv)
     outv = outv.view(outv.size(0), -1)
@@ -1845,17 +1845,24 @@ def Newnetworkphi():
   criterion=nn.MSELoss()
   optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
   epoch=25000
+  batch_size=500
   losses=[]
   totallosses=[]
-  
+
+  combinedxt1024 = np.concatenate(combinedxt)
+  combinedxt32=combinedxt1024.reshape(phix.shape[0],1,32,32)
   for j in range(epoch):
     total_loss=0
-    for l in range(phix.shape[0]):
+    for l in range(int(combinedxt32.shape[0]/batch_size)):
       
-      combinedxt1024 = np.concatenate(combinedxt[l])
-      combinedxt32=combinedxt1024.reshape(1,1,32,32)
-      netoutbatch=model.myforward(torch.FloatTensor(combinedxt32))
-      target_batch=torch.FloatTensor(phitarget[l])
+      # for l in range(int(50000/batch_size)):      
+      # item_batch = all_queries[l*batch_size:(l+1)*batch_size-1,:]
+      # target_batch=all_imgs[l*batch_size:(l+1)*batch_size-1,:]
+
+      #combinedxt1024 = np.concatenate(combinedxt[l])
+      #combinedxt32=combinedxt1024.reshape(1,1,32,32)
+      netoutbatch=model.myforward(torch.FloatTensor(combinedxt32[l*batch_size:(l+1)*batch_size-1,:]))
+      target_batch=torch.FloatTensor(phitarget[l*batch_size:(l+1)*batch_size-1,:])
       
       loss = loss_fn(target_batch,netoutbatch)
       losses.append(loss)
