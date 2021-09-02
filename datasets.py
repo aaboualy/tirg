@@ -48,8 +48,8 @@ import argparse
 import datasets
 import img_text_composition_models
 
-Path1=r"D:\personal\master\MyCode\files"
-#Path1=r"C:\MMaster\Files"
+#ath1=r"D:\personal\master\MyCode\files"
+Path1=r"E:\MMstr" 
 
 class BaseDataset(torch.utils.data.Dataset):
   """Base class for a dataset."""

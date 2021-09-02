@@ -784,7 +784,9 @@ def build_and_train_netCOS(hidden1,hidden2,max_iterations, min_error, all_querie
   criterion=nn.CosineSimilarity(dim=1, eps=1e-6)
  #loss.backward()
 
-  optimizer=torch.optim.SGD(model.parameters(), lr=0.002)
+  optimizer=torch.optim.SGD(model.parameters(), lr=0.0025)
+  model.load_state_dict(torch.load(Path1+r"/"+r'\NLP3COS172K2000.pth'))
+
   epoch=max_iterations
 
   losses=[]
@@ -1481,7 +1483,7 @@ def neural_model(all_queries,all_imgs,model_option,test_queries):
       hidden1=1050
       hidden2=950
       batch_size=500
-      itr=15000
+      itr=35000
       if not test_queries:
         build_and_train_netCOS(hidden1,hidden2,itr, 0.01, all_queries,all_imgs,batch_size)
       model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
@@ -1548,9 +1550,9 @@ if __name__ == '__main__':
   #test_on_saved_NN_CMP(0,0,0,'nn',0,1,0,700)
   #Reform_Training_Dataset()
   #results_temp()
-  ab_Mgetvaluesfilesaved(3)
+  #ab_Mgetvaluesfilesaved(3)
   #adapt_dataset(1000)
-
+  print('Work')
     
 
    
