@@ -1828,12 +1828,16 @@ def Newnetworkphi():
   phit = datasets.Features172K().Get_phit()
   phitarget = datasets.Features172K().Get_phixtarget()
   phit = np.concatenate(phit)
-  a=1
-  b=5
-  phix=phix*5
-  phit=phit*1
-  combinedxt=[]
+  W1=1
+  W2=2
+  epoch=10000
+  batch_size=500
   min_error=0.01
+  glr=0.006
+  phix=phix*W2
+  phit=phit* W1
+  combinedxt=[]
+  
 
   for i in range(phix.shape[0]):
     combinedxt.append([ [y for x in [phit[i], phix[i]] for y in x]])
@@ -1843,9 +1847,8 @@ def Newnetworkphi():
   loss_fn = torch.nn.MSELoss()
   torch.manual_seed(3)
   criterion=nn.MSELoss()
-  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
-  epoch=25000
-  batch_size=500
+  optimizer=torch.optim.SGD(model.parameters(), lr=glr)
+  
   losses=[]
   totallosses=[]
 
@@ -1861,8 +1864,8 @@ def Newnetworkphi():
 
       #combinedxt1024 = np.concatenate(combinedxt[l])
       #combinedxt32=combinedxt1024.reshape(1,1,32,32)
-      netoutbatch=model.myforward(torch.FloatTensor(combinedxt32[l*batch_size:(l+1)*batch_size-1,:]))
-      target_batch=torch.FloatTensor(phitarget[l*batch_size:(l+1)*batch_size-1,:])
+      netoutbatch=model.myforward(torch.FloatTensor(combinedxt32[l*batch_size:(l+1)*batch_size,:]))
+      target_batch=torch.FloatTensor(phitarget[l*batch_size:(l+1)*batch_size,:])
       
       loss = loss_fn(target_batch,netoutbatch)
       losses.append(loss)
@@ -1877,12 +1880,12 @@ def Newnetworkphi():
       break
     print('iteration:',j, 'total loss',total_loss)
     totallosses.append(total_loss)
-    # if (j%1000==0) :
-    #   torch.save(model.state_dict(), Path1+r'\GNLPMSEt'+str(j)+r'.pth') 
+    if (j%1000==0) :
+       torch.save(model.state_dict(), Path1+r'\2lr006w12'+str(j)+r'.pth') 
 
   #print ('NewModel:',loss_fn(model.myforward(all_queries),all_queries))  
   print('Finished Training')
-  torch.save(model.state_dict(), Path1+r'\2CovLinear.pth') 
+  torch.save(model.state_dict(), Path1+r'\2CovLinearflr006w12.pth') 
 
   
 
