@@ -34,112 +34,36 @@ import PIL
 import argparse
 import datasets
 import img_text_composition_models
-#Path1=r"C:\MMaster\Files"
-Path1=r"D:\personal\master\MyCode\files"
+Path1=r"C:\MMaster\Files"
+
 
 #################  Support Functions Section   #################
-def Reform_Training_Dataset():
-  
-  
-  train = datasets.Fashion200k(
-        path=Path1,
-        split='train',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
+
+
 
   
-  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
-  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  
+def load_dataset(size_limit, config):
+  with open(Path1+r"/"+'\\phase2\\Features33Kphit.txt', 'rb') as fp:
+    phittest=pickle.load( fp)
 
-  opt = argparse.ArgumentParser()
-  opt.add_argument('--batch_size', type=int, default=2)
-  opt.add_argument('--dataset', type=str, default='fashion200k')
-  opt.batch_size =1
-  opt.dataset='fashion200k'
-  trig.eval()
-  test_queries = train.get_test_queries()
+  with open(Path1+r"/"+'\\phase2\\Features33Kphix.txt', 'rb') as fp:
+    phixtest=pickle.load( fp)
+  with open(Path1+r"/"+'\\phase2\\Features33Kphixtarget.txt', 'rb') as fp:
+    phixtesttarget=pickle.load( fp)
+  with open(Path1+r"/"+'\\phase2\\Features172Kphit.txt', 'rb') as fp:
+    phittrain=pickle.load( fp)
+  with open(Path1+r"/"+'\\phase2\\Features172Kphix.txt', 'rb') as fp:
+    phixtrain=pickle.load( fp)
+  with open(Path1+r"/"+'\\phase2\\Features172Kphixtarget.txt', 'rb') as fp:
+    phixtraintarget=pickle.load( fp)
 
-  all_imgs = []
-  all_captions = []
-  all_queries = []
-  all_target_captions = []
-  all_captions=[]
- # compute test query features
-    # use training queries to approximate training retrieval performance
-  imgs0 = []
-  imgs = []
-  mods = []
-  for i in range(len(train)):
-  #for i in range(50):
-    
-    item = train[i]
-    imgs = [item['source_img_data']]
-    mods = [item['mod']['str']]
-    imgs = torch.stack(imgs).float()
-    imgs = torch.autograd.Variable(imgs)
-    f = trig.compose_img_text(imgs, mods).data.cpu().numpy() #.cuda()
-    all_queries += [f]
-    imgs0 = [item['target_img_data']]
-    imgs0 = torch.stack(imgs0).float()
-    imgs0 = torch.autograd.Variable(imgs0)
-    imgs0 = trig.extract_img_feature(imgs0).data.cpu().numpy() #.cuda()
-    all_imgs += [imgs0]
-    all_captions += [item['source_caption']]
-    all_target_captions += [item['target_caption']]
-  all_imgs = np.concatenate(all_imgs)
-  all_queries = np.concatenate(all_queries)
-  with open(Path1+r"/"+'test_queries1806172k.pkl', 'wb') as fp:
-    pickle.dump(test_queries, fp)
+  phittest=phittest[0:int(size_limit)]
+  phixtest=phixtest[:size_limit,:]
+  phixtesttarget=phixtesttarget[:size_limit,:]
+  phittain=phittrain[:size_limit]
+  phixtrain=phixtrain[:size_limit,:]
+  phixtraintarget=phixtraintarget[:size_limit,:]
 
-  with open(Path1+r"/"+'all_queries1806172k.pkl', 'wb') as fp:
-    pickle.dump(all_queries, fp)
-  with open(Path1+r"/"+'all_imgs1806172k.pkl', 'wb') as fp:
-    pickle.dump(all_imgs, fp)
-  with open(Path1+r"/"+'all_captions1806172k.pkl', 'wb') as fp:
-    pickle.dump(all_captions, fp)
-  with open(Path1+r"/"+'all_target_captions1806172k.pkl', 'wb') as fp:
-    pickle.dump(all_target_captions, fp)
-
-def adapt_dataset(size_limit):
-  with open(Path1+r"/"+'test_queries1806172k.pkl', 'rb') as fp:
-    test_queries=pickle.load( fp)
-
-  with open(Path1+r"/"+'all_queries1806172k.pkl', 'rb') as fp:
-    all_queries=pickle.load( fp)
-  with open(Path1+r"/"+'all_imgs1806172k.pkl', 'rb') as fp:
-    all_imgs=pickle.load( fp)
-   #with open(Path1+r"/"+'all_captions1806172k.pkl', 'rb') as fp:
-    #all_captions=pickle.load( fp)
-  with open(Path1+r"/"+'all_target_captions1806172k.pkl', 'rb') as fp:
-    all_target_captions=pickle.load( fp)
-  size_limit=len(all_target_captions)
-
-  new_all_imgs=np.zeros((size_limit,512))
-
-  for i in range(size_limit):
-    if (sum(new_all_imgs[i,:])==0):
-      l=[]
-      t=all_target_captions[i]
-      l+=[i]
-      for  j in range(i+1,size_limit):
-        if (all_target_captions[i]==all_target_captions[j]):
-          l+=[j]
-    
-      tmp1=np.zeros((1,512))
-      for j in range(len(l)):
-        tmp1+=all_imgs[l[j],:]
-      tmp1=tmp1/len(l)
-      for j in range(len(l)):
-        new_all_imgs[l[j],:]=tmp1
-    
-  with open(Path1+r"/"+'new_all_imgs2006172k.pkl', 'wb') as fp:
-    pickle.dump(new_all_imgs, fp)
   
 def print_results(sourceFile,out,test_train,normal_beta,create_load,filename,normal_normalize, set_size_divider, dot_eucld):
   print(' Experiment setup : ', file = sourceFile)
@@ -1095,6 +1019,7 @@ def ab_OtestLoaded(opt, model, testset):
 
   return out
 
+ 
 def ab_Ogetvaluesfilesaved():
 
   trainset = datasets.Fashion200k(
@@ -1136,7 +1061,8 @@ def ab_Ogetvaluesfilesaved():
 
     asbook = ab_Otest(opt, trig, dataset)
     print(name,' As PaPer: ',asbook)
-    
+     
+
 def ab_Otest(opt, model, testset):
   """Tests a model over the given testset."""
   model.eval()
@@ -1294,6 +1220,8 @@ def ab_Mgetvaluesfilesaved(option):
     
     asbook1, model, euc_model = ab_MtestLoaded(opt, trig, dataset,option)
     print(name,' Loaded As PaPer: ',asbook1, '\n  model generated      ',model, '\n    euc model',euc_model )
+
+     
 
 def ab_MtestLoaded(opt, model, testset,option):
   """Tests a model over the given testset."""
@@ -1457,9 +1385,9 @@ def     mymodels(all_queries,all_imgs,all_target_captions,option,test_queries):
 
 def neural_model(all_queries,all_imgs,model_option,test_queries):
   if model_option==0:
-    hidden1=1050
-    hidden2=950
-    batch_size=500
+    hidden1=900
+    hidden2=800
+    batch_size=200
     itr=15000
     if not test_queries:
       build_and_train_netMSE(hidden1,hidden2,itr, 0.01, all_queries,all_imgs,batch_size)
@@ -1482,7 +1410,7 @@ def neural_model(all_queries,all_imgs,model_option,test_queries):
       hidden1=1050
       hidden2=950
       batch_size=500
-      itr=35000
+      itr=15000
       if not test_queries:
         build_and_train_netCOS(hidden1,hidden2,itr, 0.02, all_queries,all_imgs,batch_size)
       model=NLR2(all_queries.shape[1],all_imgs.shape[1],hidden1,hidden2)
@@ -1530,29 +1458,7 @@ def regression(all_queries,all_imgs,option, test_queries):
         
   
 if __name__ == '__main__': 
-  #with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
-  #  all_queries=pickle.load( fp)
-  #all_queries=all_queries[:10000,:]
-  #with open(Path1+r"/"+'all_imgs172k.pkl', 'rb') as fp:
-  #  all_imgs=pickle.load( fp)
-  #all_imgs=all_imgs[:10000,:]
-  #build_and_train_net(1000,5000, 0.01, all_queries,all_imgs,1000)
- 
-  #with open(Path1+r"/"+'all_queries172k.pkl', 'rb') as fp:
-  #  all_queries=pickle.load( fp)
-  #with open(Path1+r"/"+'all_imgs172k.pkl', 'rb') as fp:
-  #  all_imgs=pickle.load( fp)
-  #build_and_train_net(700,1000, 50, all_queries,all_imgs,200)
-  #def build_and_train_net(hiddensize,max_iterations, min_error, all_queries,all_imgs,batch_size):
-  #test_on_saved_NN_CMP(test_train,normal_beta_NN,create_load,filename,normal_normalize,sz,dot_eucld,hiddensize):
-  #fn='NLP3.pth'
-  #test_on_saved_NN_CMP(1,2,0,'nn',0,17.2,0,1000,fn)
-  #test_on_saved_NN_CMP(0,0,0,'nn',0,1,0,700)
-  #Reform_Training_Dataset()
-  #results_temp()
-  #ab_Mgetvaluesfilesaved(3)
-  #adapt_dataset(1000)
-  print('Work')
+  load_dataset(10000,1)
     
 
    
