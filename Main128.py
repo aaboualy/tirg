@@ -1816,10 +1816,11 @@ class ConNet(nn.Module):
   def __init__(self):
     super().__init__()
     self.netmodel= torch.nn.Sequential(nn.Conv2d(1,3, kernel_size=(2,2)),nn.Conv2d(3,7, kernel_size=(2,2),stride=1))
-    self.f1=nn.Linear( 6300,512)
+    self.f1=nn.Linear( 6300+1024,512)
   def myforward (self,inv):
     outv=self.netmodel(inv)
     outv = outv.view(outv.size(0), -1)
+    outv=[outv,inv]
     outv=self.f1(outv)
     return outv
 
@@ -1828,10 +1829,14 @@ def Newnetworkphi():
   phit = datasets.Features172K().Get_phit()
   phitarget = datasets.Features172K().Get_phixtarget()
   phit = np.concatenate(phit)
-  a=1
-  b=5
-  phix=phix*5
-  phit=phit*1
+  Weight_image_features=1
+  Weight_text_features=2
+  phix=phix*Weight_image_features
+  phit=phit*Weight_text_features
+  learning_rate=0.005
+  epoch=25000
+  batch_size=500
+
   combinedxt=[]
   min_error=0.01
 
@@ -1843,9 +1848,7 @@ def Newnetworkphi():
   loss_fn = torch.nn.MSELoss()
   torch.manual_seed(3)
   criterion=nn.MSELoss()
-  optimizer=torch.optim.SGD(model.parameters(), lr=0.001)
-  epoch=25000
-  batch_size=500
+  optimizer=torch.optim.SGD(model.parameters(), lr=learning_rate)
   losses=[]
   totallosses=[]
 
@@ -1854,13 +1857,7 @@ def Newnetworkphi():
   for j in range(epoch):
     total_loss=0
     for l in range(int(combinedxt32.shape[0]/batch_size)):
-      
-      # for l in range(int(50000/batch_size)):      
-      # item_batch = all_queries[l*batch_size:(l+1)*batch_size-1,:]
-      # target_batch=all_imgs[l*batch_size:(l+1)*batch_size-1,:]
-
-      #combinedxt1024 = np.concatenate(combinedxt[l])
-      #combinedxt32=combinedxt1024.reshape(1,1,32,32)
+     
       netoutbatch=model.myforward(torch.FloatTensor(combinedxt32[l*batch_size:(l+1)*batch_size,:]))
       target_batch=torch.FloatTensor(phitarget[l*batch_size:(l+1)*batch_size,:])
       
@@ -1877,8 +1874,8 @@ def Newnetworkphi():
       break
     print('iteration:',j, 'total loss',total_loss)
     totallosses.append(total_loss)
-    # if (j%1000==0) :
-    #   torch.save(model.state_dict(), Path1+r'\GNLPMSEt'+str(j)+r'.pth') 
+    if (j%1000==0) :
+       torch.save(model.state_dict(), Path1+r'\2w21lr005'+str(j)+r'.pth') 
 
   #print ('NewModel:',loss_fn(model.myforward(all_queries),all_queries))  
   print('Finished Training')

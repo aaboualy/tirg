@@ -937,22 +937,22 @@ class Features172K():
       return data
 
   def Get_all_captionsold(self):
-    with open (Path1+r"/dataset172/"+'Features172Kall_captionsold.txt', 'rb') as fp:
+    with open (Path1+r"/phase2/"+'Features172Kall_captionsold.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
  
   def Get_phix(self):
-    with open (Path1+r"/dataset172/"+'Features172Kphix.txt', 'rb') as fp:
+    with open (Path1+r"/phase2/"+'Features172Kphix.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
 
   def Get_phixtarget(self):
-    with open (Path1+r"/dataset172/"+'Features172Kphixtarget.txt', 'rb') as fp:
+    with open (Path1+r"/phase2/"+'Features172Kphixtarget.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
 
   def Get_phit(self):
-    with open (Path1+r"/dataset172/"+'Features172Kphit.txt', 'rb') as fp:
+    with open (Path1+r"/phase2/"+'Features172Kphit.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
 
