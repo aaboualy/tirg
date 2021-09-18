@@ -21,9 +21,11 @@ from tqdm import tqdm as tqdm
 from scipy.spatial import distance
 import datasets
 import main2
+import torchvision
 
-Path1=r"D:\personal\master\MyCode\files"
-#Path1=r"C:\MMaster\Files"
+
+#Path1=r"D:\personal\master\MyCode\files"
+Path1=r"C:\MMaster\Files"
 
 
 
@@ -1934,3 +1936,77 @@ def train_network_on_saved(test_train,create_load,normal_normalize,filename,sz,d
  
   return out
 
+def Phase2_networks_tests(test_train,all_queries):
+  
+  if test_train==0:
+   test_queries = datasets.Fashion200k(path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ])).test_queries
+   all_imgs = datasets.Features172K().Get_phixtarget()
+   all_captions= datasets.Features172K().Get_all_captions
+   all_target_captions=datasets.Features172K().Get_all_captions
+
+   
+  else:
+   test_queries = datasets.Fashion200k(path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ])).test_queries
+   all_imgs=datasets.Features33K().Get_all_images
+   all_captions=datasets.Features33K().Get_target_captions
+   all_target_captions=datasets.Features33K().Get_target_captions
+   
+    #################################
+      
+    
+    
+    
+  # feature normalization
+  all_imgs=np.concatenate(all_imgs)
+  for i in range(int(all_queries.shape[0])):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  for i in range(int(all_imgs.shape[0])):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  sims=np.zeros((1,int(all_imgs.shape[0])))
+
+  for i in tqdm(range(int(all_queries.shape[0]))):
+    sims = all_queries[i:(i+1), :].dot(all_imgs[:int(all_imgs.shape[0])].T)
+    
+    if test_train==0:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    
+    nn_result.append(np.argsort(-sims[0, :])[:105])
+    
+  all_imgs=[]
+  all_queries=[]
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+  print(out)  
+  
+ 
+  return out

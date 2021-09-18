@@ -37,7 +37,7 @@ from sklearn.metrics import mean_squared_error
 
 
 
-Path1=r"D:\personal\master\MyCode\files"
+Path1=r"C:\MMaster\Files"
 
 #################  Support Functions Section   #################
 
@@ -1882,17 +1882,58 @@ def Newnetworkphi():
     totallosses.append(total_loss)
     if (j%1000==0) :
        torch.save(model.state_dict(), Path1+r'\2lr006w12'+str(j)+r'.pth') 
-
+       with open(Path1+r"/"+'losses.txt', 'wb') as fp:
+        pickle.dump(totallosses, fp)
   #print ('NewModel:',loss_fn(model.myforward(all_queries),all_queries))  
   print('Finished Training')
   torch.save(model.state_dict(), Path1+r'\2CovLinearflr006w12.pth') 
 
-  
+def test_model(file_name):
+   test_model=ConNet()
+   test_model.load_state_dict(torch.load(Path1+r'\2lr006w123000.pth' , map_location=torch.device('cpu') ))
+   test_model.eval()
+   phix = datasets.Features172K().Get_phix()
+   phit = datasets.Features172K().Get_phit()
+   phitarget = datasets.Features172K().Get_phixtarget()
+   phix=phix[0:100000,:]
+   phit = np.concatenate(phit)
 
+   phit=phit[0:100000,:]
+   phitarget=phitarget[0:100000,:]
 
+   W1=1
+   W2=2
+   phix=phix*W2
+   phit=phit* W1
+   combinedxt=[phit,phix]
+   combinedxt1024 = np.concatenate(combinedxt,axis=1)
+   combinedxt32=combinedxt1024.reshape(phix.shape[0],1,32,32)
+   combinedxt.clear()
+   combinedxt1024=[]
+   combinedxt32=torch.FloatTensor(combinedxt32)
+   net_combined=test_model.myforward(combinedxt32)
+   combinedxt32=[]
+   net_combined = Variable(net_combined, requires_grad=False)
+
+   net_combined=np.array(net_combined)
+   combined_all=[phix, phit, net_combined]
+   phix=[]
+   phit=[]
+   
+   combined_all=np.concatenate(combined_all,axis=1)
+   reg = LinearRegression().fit(combined_all, phitarget)
+   new_target=reg.predict(combined_all)
+   mse= np.average(np.square((new_target-phitarget)))
+   print('mse ',mse)
+   out=test_retrieval.Phase2_networks_tests(1,new_target)
+   print(out)
+   
+
+   
 if __name__ == '__main__': 
     
-    Newnetworkphi()
+  #  Newnetworkphi()
+  test_model("2lr006w121000.pth")
 
 
     
