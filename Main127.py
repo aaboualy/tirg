@@ -1952,7 +1952,7 @@ def Newnetworkphi2():
   #phit = np.concatenate(phit)
   W1=1
   W2=1
-  epoch=1600000
+  epoch=60000
   batch_size=500
   min_error=0.01
   glr=0.006
