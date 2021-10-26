@@ -1930,12 +1930,93 @@ def test_model(file_name):
    print(out)
    
 
+
+################### 25102021 #########################
+
+class trinamodulem(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.netmodel= torch.nn.Sequential(nn.Conv2d(1,3, kernel_size=(2,2)),nn.Conv2d(3,7, kernel_size=(2,2),stride=1))
+    self.f1=nn.Linear( 2940,512)
+  def myforward (self,inv):
+    outv=self.netmodel(inv)
+    outv = outv.view(outv.size(0), -1)
+    outv=self.f1(outv)
+    return outv
+
+
+def Newnetworkphi2():
+  phix = datasets.Features172K().Get_phix()
+  #phit = datasets.Features172K().Get_phit()
+  phitarget = datasets.Features172K().Get_phixtarget()
+  #phit = np.concatenate(phit)
+  W1=1
+  W2=1
+  epoch=1600000
+  batch_size=500
+  min_error=0.01
+  glr=0.006
+  phix=phix*W2
+  #phit=phit* W1
+  combinedxt=[]
+  
+
+  for i in range(phix.shape[0]):
+    combinedxt.append(phix[i])
+
+  model=trinamodulem()
+  torch.manual_seed(3)
+  loss_fn = torch.nn.MSELoss()
+  #torch.manual_seed(3)
+  criterion=nn.MSELoss()
+  optimizer=torch.optim.SGD(model.parameters(), lr=glr)
+  
+  losses=[]
+  totallosses=[]
+
+  combinedxt1024 = np.concatenate(combinedxt)
+  combinedxt32=combinedxt1024.reshape(phix.shape[0],1,32,16)
+  for j in range(epoch):
+    total_loss=0
+    for l in range(int(combinedxt32.shape[0]/batch_size)):
+      
+      # for l in range(int(50000/batch_size)):      
+      # item_batch = all_queries[l*batch_size:(l+1)*batch_size-1,:]
+      # target_batch=all_imgs[l*batch_size:(l+1)*batch_size-1,:]
+
+      #combinedxt1024 = np.concatenate(combinedxt[l])
+      #combinedxt32=combinedxt1024.reshape(1,1,32,32)
+      netoutbatch=model.myforward(torch.FloatTensor(combinedxt32[l*batch_size:(l+1)*batch_size,:]))
+      target_batch=torch.FloatTensor(phitarget[l*batch_size:(l+1)*batch_size,:])
+      
+      loss = loss_fn(target_batch,netoutbatch)
+      losses.append(loss)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+      if (l%1000==0) :
+        print('Epoch:',j,' get images batch=',l,'loss',loss,end='\r')
+        
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    if (j%1000==0) :
+       torch.save(model.state_dict(), Path1+r'\2lr006w12'+str(j)+r'.pth') 
+       with open(Path1+r"/"+'losses.txt', 'wb') as fp:
+        pickle.dump(totallosses, fp)
+  #print ('NewModel:',loss_fn(model.myforward(all_queries),all_queries))  
+  print('Finished Training')
+  torch.save(model.state_dict(), Path1+r'\CovPhix.pth') 
+
+
+
    
 if __name__ == '__main__': 
     
-  #  Newnetworkphi()
-  for x in range(0, 3001, 1000):
-     test_model("2lr006w12"+str(x)+".pth")
+  #Newnetworkphi()
+  Newnetworkphi2()
 
 
     
