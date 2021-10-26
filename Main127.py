@@ -37,7 +37,8 @@ from sklearn.metrics import mean_squared_error
 
 
 
-Path1=r"C:\MMaster\Files"
+#Path1=r"C:\MMaster\Files"
+Path1=r"D:\personal\master\MyCode\files"
 
 #################  Support Functions Section   #################
 
@@ -1890,7 +1891,7 @@ def Newnetworkphi():
 
 def test_model(file_name):
    test_model=ConNet()
-   test_model.load_state_dict(torch.load(Path1+r'\2lr006w123000.pth' , map_location=torch.device('cpu') ))
+   test_model.load_state_dict(torch.load(Path1+r'/'+file_name , map_location=torch.device('cpu') ))
    test_model.eval()
    phix = datasets.Features172K().Get_phix()
    phit = datasets.Features172K().Get_phit()
@@ -1933,7 +1934,8 @@ def test_model(file_name):
 if __name__ == '__main__': 
     
   #  Newnetworkphi()
-  test_model("2lr006w121000.pth")
+  for x in range(0, 3001, 1000):
+     test_model("2lr006w12"+str(x)+".pth")
 
 
     

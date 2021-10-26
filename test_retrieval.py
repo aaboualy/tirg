@@ -24,8 +24,8 @@ import main2
 import torchvision
 
 
-#Path1=r"D:\personal\master\MyCode\files"
-Path1=r"C:\MMaster\Files"
+Path1=r"D:\personal\master\MyCode\files"
+#Path1=r"C:\MMaster\Files"
 
 
 
@@ -1949,8 +1949,8 @@ def Phase2_networks_tests(test_train,all_queries):
                                               [0.229, 0.224, 0.225])
         ])).test_queries
    all_imgs = datasets.Features172K().Get_phixtarget()
-   all_captions= datasets.Features172K().Get_all_captions
-   all_target_captions=datasets.Features172K().Get_all_captions
+   all_captions= datasets.Features172K().Get_all_captions()
+   all_target_captions=datasets.Features172K().Get_all_captions()
 
    
   else:
@@ -1963,15 +1963,12 @@ def Phase2_networks_tests(test_train,all_queries):
             torchvision.transforms.Normalize([0.485, 0.456, 0.406],
                                               [0.229, 0.224, 0.225])
         ])).test_queries
-   all_imgs=datasets.Features33K().Get_all_images
-   all_captions=datasets.Features33K().Get_target_captions
-   all_target_captions=datasets.Features33K().Get_target_captions
+   all_imgs=datasets.Features33K().Get_all_images()
+   all_captions=datasets.Features33K().Get_target_captions()
+   all_target_captions=datasets.Features33K().Get_target_captions()
    
     #################################
       
-    
-    
-    
   # feature normalization
   all_imgs=np.concatenate(all_imgs)
   for i in range(int(all_queries.shape[0])):
