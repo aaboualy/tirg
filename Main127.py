@@ -37,8 +37,8 @@ from sklearn.metrics import mean_squared_error
 
 
 
-#Path1=r"C:\MMaster\Files"
-Path1=r"D:\personal\master\MyCode\files"
+Path1=r"C:\MMaster\Files"
+#Path1=r"D:\personal\master\MyCode\files"
 
 #################  Support Functions Section   #################
 
@@ -424,7 +424,7 @@ def savesourcevalues():
 
   trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
   #trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  #trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
 
   opt = argparse.ArgumentParser()
   opt.add_argument('--batch_size', type=int, default=2)
@@ -436,10 +436,14 @@ def savesourcevalues():
   #datasets.Features33K().SavetoFiles2(Path1+r'/dataset33', trig, test,opt)
   #datasets.Features33K().SavetoFiles3(Path1+r'/dataset33', trig, test,opt)
 
-  datasets.Features172K().SavetoFilesold(Path1+r'/dataset172', trig, train,opt)
-  datasets.Features33K().SavetoFilesold(Path1+r'/dataset33', trig, test,opt)
+  #datasets.Features172K().SavetoFilesold(Path1+r'/dataset172', trig, train,opt)
+  #datasets.Features33K().SavetoFilesold(Path1+r'/dataset33', trig, test,opt)
   
-  #print('172 Finished')
+  datasets.Features172K().SavetoFilesNoModule(Path1+r'/dataset172', trig, train,opt)
+  datasets.Features33K().SavetoFilesNoModule(Path1+r'/dataset33', trig, test,opt)
+  
+
+  print('172 Finished')
   print('33k Finished')
 
 def savesourcephixtvalues():
@@ -2013,12 +2017,70 @@ def Newnetworkphi2():
 
 
 
+##################  1112021 #################
+
+def GetValuesRegModel():
+
+  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
+  #   Beta = pickle.load(fp) 
+
+  imgdata = datasets.Features172K().Get_all_images()
+  all_queries1 = datasets.Features172K().Get_all_queries()
+
+  for i in range(all_queries1.shape[0]):
+    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
+  for i in range(imgdata.shape[0]):
+    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
+
+  reg = LinearRegression().fit(all_queries1, imgdata)
+
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+    
+    #betaNor = test_retrieval.testLoadedBetaRegModel(opt, trig, dataset,Beta,reg)
+    betaNor = test_retrieval.testLoadedRegModel(opt, trig, dataset,reg)
+    print(name,' BetaNormalized: ',betaNor)
+
+    asbook = test_retrieval.test(opt, trig, dataset)
+    print(name,' As PaPer: ',asbook)
+
+
+
    
 if __name__ == '__main__': 
     
-  #Newnetworkphi()
-  Newnetworkphi2()
-
+  savesourcevalues()
 
     
 
