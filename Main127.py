@@ -1936,8 +1936,8 @@ def test_model(file_name):
 class trinamodulem(nn.Module):
   def __init__(self):
     super().__init__()
-    self.netmodel= torch.nn.Sequential(nn.Conv2d(1,3, kernel_size=(2,2)),nn.Conv2d(3,7, kernel_size=(2,2),stride=1))
-    self.f1=nn.Linear( 2940,512)
+    self.netmodel= torch.nn.Sequential(nn.Conv2d(1,3, kernel_size=(2,2)),nn.Conv2d(3,4, kernel_size=(2,2),stride=1))
+    self.f1=nn.Linear( 1680,512)
   def myforward (self,inv):
     outv=self.netmodel(inv)
     outv = outv.view(outv.size(0), -1)
@@ -1952,7 +1952,7 @@ def Newnetworkphi2():
   #phit = np.concatenate(phit)
   W1=1
   W2=1
-  epoch=60000
+  epoch=10000
   batch_size=500
   min_error=0.01
   glr=0.006
@@ -1997,6 +1997,7 @@ def Newnetworkphi2():
       total_loss+=loss
       if (l%1000==0) :
         print('Epoch:',j,' get images batch=',l,'loss',loss,end='\r')
+    
         
     if (total_loss<min_error):
       break
