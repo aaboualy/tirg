@@ -382,26 +382,6 @@ def testLoadedWithoutModeRegModel(opt, model, testset,reg):
 
   return out
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def testLoadedRegModel(opt, model, testset,reg):
   """Tests a model over the given testset."""
   model.eval()
@@ -495,6 +475,26 @@ def testLoadedRegModel(opt, model, testset,reg):
       out += [('recall_top' + str(k) + '_correct_noun', r)]
 
   return out
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def testLoadedRandomForestRegressor(opt, model, testset,reg):
   """Tests a model over the given testset."""

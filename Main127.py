@@ -2017,9 +2017,9 @@ def Newnetworkphi2():
 
 
 
-##################  1112021 #################
+##################  1112021 -- Lienear Reg Approche #################
 
-def GetValuesRegModel():
+def GetValuesRegModelNoModel():
 
   # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
   #   Beta = pickle.load(fp) 
@@ -2075,12 +2075,142 @@ def GetValuesRegModel():
     asbook = test_retrieval.testLoadedWithoutModel(opt, trig, dataset)
     print(name,' As PaPer: ',asbook)
 
+def GetValuesRegModel():
+
+  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
+  #   Beta = pickle.load(fp) 
+
+  #imgdata = datasets.Features172K().Get_all_imagesWithoutModelTrig()
+  #all_queries1 = datasets.Features172K().Get_all_queriesWithoutModelTrig()
+
+  imgdata = datasets.Features172K().Get_all_images()
+  all_queries1 = datasets.Features172K().Get_all_queries()
+
+  for i in range(all_queries1.shape[0]):
+    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
+  for i in range(imgdata.shape[0]):
+    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
+
+  reg = LinearRegression().fit(all_queries1, imgdata)
+
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+    
+    #betaNor = test_retrieval.testLoadedBetaRegModel(opt, trig, dataset,Beta,reg)
+    betaNor = test_retrieval.testLoadedRegModel(opt, trig, dataset,reg)
+    print(name,' BetaNormalized: ',betaNor)
+
+    # asbook = test_retrieval.testLoaded(opt, trig, dataset)
+    # print(name,' As PaPer: ',asbook)
+
+class LRM(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.f1=nn.Linear( 512,512)
+  def myforward (self,inv):
+    outv=self.f1(inv)
+    return outv
+
+
+def LRMTraining():
+  
+  imgdata = datasets.Features172K().Get_all_images()
+  all_queries = datasets.Features172K().Get_all_queries()
+  all_queries1=  all_queries
+  imgdata1=imgdata
+
+  for i in range(all_queries1.shape[0]):
+    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
+  for i in range(imgdata1.shape[0]):
+    imgdata1[i, :] /= np.linalg.norm(imgdata1[i, :])
+
+  reg = LinearRegression().fit(all_queries1, imgdata1)
+
+  all_queries =reg.predict(all_queries)
+
+
+  epoch=50000
+  batch_size=500
+  min_error=0.01
+  glr=0.006
+  
+  model=LRM()
+  torch.manual_seed(3)
+  loss_fn = torch.nn.MSELoss()
+  criterion=nn.MSELoss()
+  optimizer=torch.optim.SGD(model.parameters(), lr=glr)
+  
+  losses=[]
+  totallosses=[]
+
+  
+
+  for j in range(epoch):
+    total_loss=0
+    for l in range(int(all_queries.shape[0]/batch_size)):
+      
+      netoutbatch=model.myforward(torch.FloatTensor(all_queries[l*batch_size:(l+1)*batch_size,:]))
+      target_batch=torch.FloatTensor(imgdata[l*batch_size:(l+1)*batch_size,:])
+      
+      loss = loss_fn(target_batch,netoutbatch)
+      losses.append(loss)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+      if (l%5000==0) :
+        print('Epoch:',j,' get images batch=',l,'loss',loss,end='\r')
+    
+        
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    if (j%1000==0) :
+       with open(Path1+r"/"+'losses.txt', 'wb') as fp:
+        pickle.dump(totallosses, fp)
+  print('Finished Training')
+  torch.save(model.state_dict(), Path1+r'\LAModel.pth') 
+
+
+
 
 
    
 if __name__ == '__main__': 
     
-  GetValuesRegModel()
+  LRMTraining()
 
     
 
