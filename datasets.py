@@ -954,6 +954,8 @@ class Features172K():
 
    
 
+  ################## Get Feature Extracted by Trig Model ############################ 
+
   def Get_all_queries(self):
     with open (Path1+r"/dataset172/"+'Features172Kall_queries.txt', 'rb') as fp:
       data = pickle.load(fp) 
@@ -968,6 +970,44 @@ class Features172K():
     with open (Path1+r"/dataset172/"+'Features172Kall_captions.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
+ 
+  ################## Get Feature Extracted by Trig with out Model ############################ 
+
+
+  def Get_all_queriesWithoutModelTrig(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_queriesNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_imagesWithoutModelTrig(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_imgsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_captionsWithoutModelTrig(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_captionsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  ################## Get Feature Extracted by Resnet and LSTM Model ############################ 
+
+  
+  def Get_phix(self):
+    with open (Path1+r"/dataset172/"+'Features172Kphix.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_phixtarget(self):
+    with open (Path1+r"/dataset172/"+'Features172Kphixtarget.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_phit(self):
+    with open (Path1+r"/dataset172/"+'Features172Kphit.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  ################# Get Feature Extracted by Trig Model  OLD One (Wrong ) ############################
 
   def Get_all_queriesold(self):
     with open (Path1+r"/dataset172/"+'Features172Kall_queriesold.txt', 'rb') as fp:
@@ -984,21 +1024,6 @@ class Features172K():
       data = pickle.load(fp) 
       return data
  
-  def Get_phix(self):
-    with open (Path1+r"/dataset172/"+'Features172Kphix.txt', 'rb') as fp:
-      data = pickle.load(fp) 
-      return data
-
-  def Get_phixtarget(self):
-    with open (Path1+r"/dataset172/"+'Features172Kphixtarget.txt', 'rb') as fp:
-      data = pickle.load(fp) 
-      return data
-
-  def Get_phit(self):
-    with open (Path1+r"/dataset172/"+'Features172Kphit.txt', 'rb') as fp:
-      data = pickle.load(fp) 
-      return data
-
 
 class Features33K():
   def __init__(self):
@@ -1269,6 +1294,8 @@ class Features33K():
 
 
 
+  ################## Get Feature Extracted by Trig Model ############################ 
+
 
   def Get_all_queries(self):
       with open (Path1+r"/dataset33/"+'Features33Kall_queries.txt', 'rb') as fp:
@@ -1290,6 +1317,35 @@ class Features33K():
       data = pickle.load(fp) 
       return data
 
+
+
+  ################## Get Feature Extracted by Trig with out Model ############################ 
+
+
+  def Get_all_queriesWithoutModelTrig(self):
+      with open (Path1+r"/dataset33/"+'Features33Kall_queriesNoModule.txt', 'rb') as fp:
+        data = pickle.load(fp) 
+        return data
+
+  def Get_all_imagesWithoutModelTrig(self):
+    with open (Path1+r"/dataset33/"+'Features33Kall_imgsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_captionsWithoutModelTrig(self):
+    with open (Path1+r"/dataset33/"+'Features33Kall_captionsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+  
+  def Get_target_captionsWithoutModelTrig(self):
+    with open (Path1+r"/dataset33/"+'Features33Kall_target_captionsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+
+  ################## Get Feature Extracted by Resnet and LSTM Model for all 33K ############################ 
+
+
   def Get_all_target(self):
       with open (Path1+r"/dataset33/"+'Features33Kall_target.txt', 'rb') as fp:
         data = pickle.load(fp) 
@@ -1299,6 +1355,29 @@ class Features33K():
       with open (Path1+r"/dataset33/"+'Features33Kallsource_imgfeature.txt', 'rb') as fp:
         data = pickle.load(fp) 
         return data
+
+
+
+  ################## Get Feature Extracted by Resnet and LSTM Model ############################ 
+
+  
+  def Get_phix(self):
+    with open (Path1+r"/dataset33/"+'Features33Kphix.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_phixtarget(self):
+    with open (Path1+r"/dataset33/"+'Features33Kphixtarget.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_phit(self):
+    with open (Path1+r"/dataset33/"+'Features33Kphit.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+  
+
+  ################# Old Model of trig (wrong one)
 
   def Get_all_queriesold(self):
       with open (Path1+r"/dataset33/"+'Features33Kall_queriesold.txt', 'rb') as fp:
@@ -1317,20 +1396,5 @@ class Features33K():
   
   def Get_target_captionsold(self):
     with open (Path1+r"/dataset33/"+'Features33Kall_target_captionsold.txt', 'rb') as fp:
-      data = pickle.load(fp) 
-      return data
-
-  def Get_phix(self):
-    with open (Path1+r"/dataset33/"+'Features33Kphix.txt', 'rb') as fp:
-      data = pickle.load(fp) 
-      return data
-
-  def Get_phixtarget(self):
-    with open (Path1+r"/dataset33/"+'Features33Kphixtarget.txt', 'rb') as fp:
-      data = pickle.load(fp) 
-      return data
-
-  def Get_phit(self):
-    with open (Path1+r"/dataset33/"+'Features33Kphit.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data

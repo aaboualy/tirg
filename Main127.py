@@ -2024,8 +2024,8 @@ def GetValuesRegModel():
   # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
   #   Beta = pickle.load(fp) 
 
-  imgdata = datasets.Features172K().Get_all_images()
-  all_queries1 = datasets.Features172K().Get_all_queries()
+  imgdata = datasets.Features172K().Get_all_imagesWithoutModelTrig()
+  all_queries1 = datasets.Features172K().Get_all_queriesWithoutModelTrig()
 
   for i in range(all_queries1.shape[0]):
     all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
@@ -2057,7 +2057,7 @@ def GetValuesRegModel():
         ]))
 
   trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
-  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  #trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
   
 
   opt = argparse.ArgumentParser()
@@ -2069,10 +2069,10 @@ def GetValuesRegModel():
   for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
     
     #betaNor = test_retrieval.testLoadedBetaRegModel(opt, trig, dataset,Beta,reg)
-    betaNor = test_retrieval.testLoadedRegModel(opt, trig, dataset,reg)
+    betaNor = test_retrieval.testLoadedWithoutModeRegModel(opt, trig, dataset,reg)
     print(name,' BetaNormalized: ',betaNor)
 
-    asbook = test_retrieval.test(opt, trig, dataset)
+    asbook = test_retrieval.testLoadedWithoutModel(opt, trig, dataset)
     print(name,' As PaPer: ',asbook)
 
 
@@ -2080,7 +2080,7 @@ def GetValuesRegModel():
    
 if __name__ == '__main__': 
     
-  savesourcevalues()
+  GetValuesRegModel()
 
     
 
