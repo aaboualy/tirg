@@ -2160,7 +2160,7 @@ def LRMTraining():
   all_queries =reg.predict(all_queries)
 
 
-  epoch=50000
+  epoch=30000
   batch_size=500
   min_error=0.01
   glr=0.006
@@ -2189,15 +2189,17 @@ def LRMTraining():
       loss.backward()
       optimizer.step()
       total_loss+=loss
-      if (l%5000==0) :
+      if (l%100==0) :
         print('Epoch:',j,' get images batch=',l,'loss',loss,end='\r')
     
         
     if (total_loss<min_error):
       break
-    print('iteration:',j, 'total loss',total_loss)
+    
+    print('Epoch:',j, ' total loss',total_loss)
     totallosses.append(total_loss)
-    if (j%1000==0) :
+    if (j%10000==0) :
+       torch.save(model.state_dict(), Path1+r'\LAModel'+str(j)+'.pth')
        with open(Path1+r"/"+'losses.txt', 'wb') as fp:
         pickle.dump(totallosses, fp)
   print('Finished Training')
