@@ -2206,13 +2206,77 @@ def LRMTraining():
   torch.save(model.state_dict(), Path1+r'\LAModel.pth') 
 
 
+def GetValuesRegModelPlusFFL():
+
+  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
+  #   Beta = pickle.load(fp) 
+
+  #imgdata = datasets.Features172K().Get_all_imagesWithoutModelTrig()
+  #all_queries1 = datasets.Features172K().Get_all_queriesWithoutModelTrig()
+
+  imgdata = datasets.Features172K().Get_all_images()
+  all_queries1 = datasets.Features172K().Get_all_queries()
+
+  for i in range(all_queries1.shape[0]):
+    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
+  for i in range(imgdata.shape[0]):
+    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
+
+  reg = LinearRegression().fit(all_queries1, imgdata)
+
+  trainset = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  
+  FFL= LRM()
+  
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+  
+  
+  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+    for x in range(10000, 20000, 10000):
+      FFL.load_state_dict(torch.load(Path1+r'\LAModel'+str(x)+'.pth' , map_location=torch.device('cpu') ))
+      FFL.eval()
+      #betaNor = test_retrieval.testLoadedBetaRegModel(opt, trig, dataset,Beta,reg)
+      #betaNor = test_retrieval.testLoadedRegModelPlusFFL(opt, trig, dataset,reg,FFL)
+      #print(name,' LR: '+str(x)+' :',betaNor)
+
+      asbook = test_retrieval.test(opt, trig, dataset)
+      print(name,' As PaPer: ',asbook)
 
 
 
    
 if __name__ == '__main__': 
     
-  LRMTraining()
+  GetValuesRegModelPlusFFL()
 
     
 

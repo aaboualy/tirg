@@ -327,7 +327,7 @@ class Fashion200k1(BaseDataset):
           caption2imgids[c] = []
         caption2imgids[c].append(i)
     self.caption2imgids = caption2imgids
-    print(len(caption2imgids), 'unique cations')
+    #print(len(caption2imgids), 'unique cations')
 
     # parent captions are 1-word shorter than their children
     parent2children_captions = {}
@@ -355,7 +355,7 @@ class Fashion200k1(BaseDataset):
     for img in self.imgs:
       if img['modifiable']:
         num_modifiable_imgs += 1
-    print('Modifiable images', num_modifiable_imgs)
+    #print('Modifiable images', num_modifiable_imgs)
 
   def caption_index_sample_(self, idx):
     while not self.imgs[idx]['modifiable']:
@@ -596,7 +596,7 @@ class Fashion200k(BaseDataset):
             'modifiable': False
         }
         self.imgs += [img]
-    print ('Test Fashion200k:', len(self.imgs), 'images')
+    #print ('Test Fashion200k:', len(self.imgs), 'images')
     global testimagedata
     testimagedata=self.imgs
     # generate query for training or testing
@@ -660,7 +660,7 @@ class Fashion200k(BaseDataset):
           caption2imgids[c] = []
         caption2imgids[c].append(i)
     self.caption2imgids = caption2imgids
-    print (len(caption2imgids), 'unique cations')
+    #print (len(caption2imgids), 'unique cations')
 
     # parent captions are 1-word shorter than their children
     parent2children_captions = {}
@@ -689,7 +689,7 @@ class Fashion200k(BaseDataset):
     for img in self.imgs:
       if img['modifiable']:
         num_modifiable_imgs += 1
-    print ('Modifiable images', num_modifiable_imgs)
+    #print ('Modifiable images', num_modifiable_imgs)
 
   def caption_index_sample_(self, idx):
     while not self.imgs[idx]['modifiable']:
