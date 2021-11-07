@@ -2155,12 +2155,12 @@ def LRMTraining():
   for i in range(imgdata1.shape[0]):
     imgdata1[i, :] /= np.linalg.norm(imgdata1[i, :])
 
-  reg = LinearRegression().fit(all_queries1, imgdata1)
+  #reg = LinearRegression().fit(all_queries1, imgdata1)
 
-  all_queries =reg.predict(all_queries)
+  #all_queries =reg.predict(all_queries)
 
 
-  epoch=30000
+  epoch=50000
   batch_size=500
   min_error=0.01
   glr=0.006
@@ -2199,11 +2199,11 @@ def LRMTraining():
     print('Epoch:',j, ' total loss',total_loss)
     totallosses.append(total_loss)
     if (j%10000==0) :
-       torch.save(model.state_dict(), Path1+r'\LAModel'+str(j)+'.pth')
-       with open(Path1+r"/"+'losses.txt', 'wb') as fp:
-        pickle.dump(totallosses, fp)
+       torch.save(model.state_dict(), Path1+r'\FFLModel'+str(j)+'.pth')
+      #  with open(Path1+r"/"+'losses.txt', 'wb') as fp:
+      #   pickle.dump(totallosses, fp)
   print('Finished Training')
-  torch.save(model.state_dict(), Path1+r'\LAModel.pth') 
+  torch.save(model.state_dict(), Path1+r'\FFLModel.pth') 
 
 
 
