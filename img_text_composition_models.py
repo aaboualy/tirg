@@ -96,7 +96,7 @@ class ImgEncoderTextEncoderBase(ImgTextCompositionBase):
     super(ImgEncoderTextEncoderBase, self).__init__()
 
     # img model
-    img_model = torchvision.models.resnet18(pretrained=False)#.cuda()
+    img_model = torchvision.models.resnet18(pretrained=True)#.cuda()
 
     class GlobalAvgPool2d(torch.nn.Module):
 
