@@ -2261,15 +2261,15 @@ def GetValuesRegModelPlusFFL():
   
   
   for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
-    for x in range(10000, 20000, 10000):
-      FFL.load_state_dict(torch.load(Path1+r'\LAModel'+str(x)+'.pth' , map_location=torch.device('cpu') ))
+    for x in range(10000, 20001, 10000):
+      FFL.load_state_dict(torch.load(Path1+r'\FFLModel'+str(x)+'.pth' , map_location=torch.device('cpu') ))
       FFL.eval()
       #betaNor = test_retrieval.testLoadedBetaRegModel(opt, trig, dataset,Beta,reg)
-      #betaNor = test_retrieval.testLoadedRegModelPlusFFL(opt, trig, dataset,reg,FFL)
-      #print(name,' LR: '+str(x)+' :',betaNor)
+      betaNor = test_retrieval.testLoadedRegModelPlusFFL(opt, trig, dataset,reg,FFL)
+      print(name,' FFL: '+str(x)+' :',betaNor)
 
-      asbook = test_retrieval.test(opt, trig, dataset)
-      print(name,' As PaPer: ',asbook)
+      # asbook = test_retrieval.test(opt, trig, dataset)
+      # print(name,' As PaPer: ',asbook)
 
 
 

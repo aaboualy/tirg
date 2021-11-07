@@ -515,7 +515,7 @@ def testLoadedRegModelPlusFFL(opt, model, testset,reg,FFL):
 
   
   # all_queries =reg.predict(all_queries)
-  # all_queries=FFL.myforward(torch.FloatTensor(all_queries)).data.cpu().numpy()
+  all_queries=FFL.myforward(torch.FloatTensor(all_queries)).data.cpu().numpy()
     
 
     
