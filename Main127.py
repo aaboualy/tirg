@@ -2272,11 +2272,78 @@ def GetValuesRegModelPlusFFL():
       # print(name,' As PaPer: ',asbook)
 
 
+###################################################################3
+
+
+class ConNet_text(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.netmodel= torch.nn.Sequential(nn.Conv1d(1,2, 3,stride=1),nn.Conv1d(2,3, kernel_size=3,stride=1),nn.MaxPool1d(3))
+    self.l1=nn.Linear( 1019,1024)
+    self.l2=nn.Linear(1024,512)
+  
+  def myforward_text (self,inv):
+    outv=self.netmodel(inv)
+    outv = outv.view(outv.size(0), -1)
+    invsq= tf.squeeze(inv)
+    sz=outv.size()
+    szinpv=inv.size() 
+    tmp=torch.zeros([sz[0],sz[1]+szinpv[2]])
+    tmp[:,0:sz[1]]=outv
+    tmp[:,sz[1]:sz[1]+szinpv[2]]=invsq
+    outv=tmp
+    outv=self.l2(torch.sigmoid(self.l1(outv)))
+    return outv
+
+  
+def traingmodel(): 
+  phix = datasets.Features172K().Get_phix()
+  #phit = datasets.Features172K().Get_phit()
+  phitarget = datasets.Features172K().Get_phixtarget()
+  epoch=5000
+  batch_size=500
+  min_error=0.01
+  glr=0.006
+  totallosses=[]  
+  phix=phix.reshape(phix.shape[0],1,512)
+  model_img=ConNet_text()
+  torch.manual_seed(3)
+  loss_fn = torch.nn.MSELoss()
+  torch.manual_seed(3)
+  optimizer=torch.optim.SGD(model_img.parameters(), lr=glr)
+  losses=[]
+  totallosses=[]
+  for j in range(epoch):
+    total_loss=0
+    for l in range(int(phix.shape[0]/batch_size)):
+      
+      netoutbatch=model_img.myforward_text(torch.FloatTensor(phix[l*batch_size:(l+1)*batch_size,:]))
+      target_batch=torch.FloatTensor(phitarget[l*batch_size:(l+1)*batch_size,:])
+      loss = loss_fn(target_batch,netoutbatch)
+      losses.append(loss)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+      if (l%1000==0) :
+        print('Epoch img:',j,' get images batch=',l,'loss',loss,end='\r')
+        
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    if (j%1000==0) :
+       torch.save(model_img.state_dict(), Path1+r'\4Dilr006w12'+str(j)+r'.pth') 
+       with open(Path1+r"/"+'losses_4iDmg.txt', 'wb') as fp:
+        pickle.dump(totallosses, fp)
+  #print ('NewModel:',loss_fn(model.myforward(all_queries),all_queries))  
+  print('Finished Training img')
+  torch.save(model_img.state_dict(), Path1+r'\4iDCovLinearflr006w12.pth')
 
    
 if __name__ == '__main__': 
     
-  GetValuesRegModelPlusFFL()
+  traingmodel()
 
     
 
