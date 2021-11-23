@@ -1195,7 +1195,8 @@ def resultsNLPCosWOPbetaNLP():
 class NLR2(nn.Module):
   def __init__(self,netin,netout,nethidden1,nethidden2):
     super().__init__()
-    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.Sigmoid(),torch.nn.Linear(nethidden1, nethidden2),torch.nn.Linear(nethidden2, netout))
+    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.Sigmoid(),torch.nn.Linear(nethidden1, nethidden2),
+    torch.nn.Linear(nethidden2, netout))
   def myforward (self,inv):
     outv=self.netmodel(inv)
     return outv
