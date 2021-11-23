@@ -472,8 +472,8 @@ def savesourcephixtvalues():
 
 
   trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
-  #trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  #trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
 
   opt = argparse.ArgumentParser()
   opt.add_argument('--batch_size', type=int, default=2)
@@ -481,12 +481,17 @@ def savesourcephixtvalues():
   opt.batch_size =1
   opt.dataset='fashion200k'
 
+
+  #datasets.Features172K().SavetoFiles(Path1+r'/dataset172', trig, train,opt)
   #datasets.Features172K().SavetoFilesImageSource(Path1+r'/dataset172', trig, train,opt)
   #datasets.Features33K().SavetoFiles2(Path1+r'/dataset33', trig, test,opt)
   #datasets.Features33K().SavetoFiles3(Path1+r'/dataset33', trig, test,opt)
 
-  datasets.Features172K().SavetoFilesphixt(Path1+r'/dataset172', trig, train,opt)
-  datasets.Features33K().SavetoFilesphixt(Path1+r'/dataset33', trig, test,opt)
+  #datasets.Features172K().SavetoFilesphixt(Path1+r'/dataset172', trig, train,opt)
+  #datasets.Features33K().SavetoFilesphixt(Path1+r'/dataset33', trig, test,opt)
+
+  datasets.Features172K().SavetoFilesCaptionImages(Path1+r'/dataset172', trig, train,opt)
+  datasets.Features33K().SavetoFilesCaptionImages(Path1+r'/dataset33', trig, test,opt)
   
   print('172 Finished')
   print('33k Finished')
@@ -2344,7 +2349,8 @@ def traingmodel():
    
 if __name__ == '__main__': 
     
-  traingmodel()
+  #traingmodel()
+  savesourcephixtvalues()
 
     
 

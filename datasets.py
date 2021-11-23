@@ -950,6 +950,42 @@ class Features172K():
     with open(Path+r"/"+'Features172Kphixtarget.txt', 'wb') as fp:
       pickle.dump(all_imgs, fp)
 
+  def SavetoFilesCaptionImages(self,Path,model,testset,opt):
+    model.eval()
+    all_imgs = []
+    all_captions = []
+    all_queries = []
+    all_target_captions = []
+
+    imgs0 = []
+    imgs = []
+    mods = []
+    for i in range(172048):#172048
+      print('get images=',i,end='\r')
+      item = testset[i]
+      imgs = [item['source_caption']]
+      imgs0= [item['target_caption']]
+
+      f=model.extract_text_feature(imgs).data.cpu().numpy()
+      f2=model.extract_text_feature(imgs0).data.cpu().numpy()
+      all_captions += [f]
+      all_target_captions += [f2]
+      imgs=[]
+      imgs0=[]
+
+
+      
+    all_captions = np.concatenate(all_captions)
+    all_target_captions = np.concatenate(all_target_captions)
+
+    with open(Path+r"/"+'Features172Kall_queriesphicaptions.txt', 'wb') as fp:
+      pickle.dump(all_captions, fp)
+
+    with open(Path+r"/"+'Features172Kall_imgsphicaptions.txt', 'wb') as fp:
+      pickle.dump(all_target_captions, fp)
+
+    
+
     
 
    
@@ -1082,6 +1118,45 @@ class Features33K():
     
     with open(Path+r"/"+'Features33Kall_target_captions.txt', 'wb') as fp:
       pickle.dump(all_target_captions, fp)
+
+  def SavetoFilesCaptionImages(self,Path,model,testset,opt):
+    model.eval()
+    all_imgs = []
+    all_captions = []
+    all_queries = []
+    all_target_captions = []
+
+    imgs0 = []
+    imgs = []
+    mods = []
+    test_queries = testset.get_test_queries()
+    for t in tqdm(test_queries):
+      
+      imgs = [t['source_caption']]
+      imgs0 = [t['target_caption']]
+      f=model.extract_text_feature(imgs).data.cpu().numpy()
+      f2=model.extract_text_feature(imgs0).data.cpu().numpy()
+      all_captions += [f]
+      all_target_captions += [f2]
+      imgs=[]
+      imgs0=[]
+
+
+      
+    all_captions = np.concatenate(all_captions)
+    all_target_captions = np.concatenate(all_target_captions)
+
+
+
+    
+    with open(Path+r"/"+'Features33Kall_queriesphicaptions.txt', 'wb') as fp:
+      pickle.dump(all_captions, fp)
+
+    with open(Path+r"/"+'Features33Kall_imgsphicaptions.txt', 'wb') as fp:
+      pickle.dump(all_target_captions, fp)
+
+    
+
 
   def SavetoFilesNoModule(self,Path,model,testset,opt):
     model.eval()
