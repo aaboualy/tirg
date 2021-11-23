@@ -2286,7 +2286,7 @@ class ConNet_text(nn.Module):
   def myforward_text (self,inv):
     outv=self.netmodel(inv)
     outv = outv.view(outv.size(0), -1)
-    invsq= tf.squeeze(inv)
+    invsq= torch.squeeze(inv)
     sz=outv.size()
     szinpv=inv.size() 
     tmp=torch.zeros([sz[0],sz[1]+szinpv[2]])
