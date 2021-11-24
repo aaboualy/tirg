@@ -1006,7 +1006,18 @@ class Features172K():
     with open (Path1+r"/dataset172/"+'Features172Kall_captions.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
- 
+  
+  def Get_all_query_captions(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_queriesphicaptions.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_target_captions(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_imgsphicaptions.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+
   ################## Get Feature Extracted by Trig with out Model ############################ 
 
 
@@ -1392,7 +1403,15 @@ class Features33K():
       data = pickle.load(fp) 
       return data
 
+  def Get_all_query_captions(self):
+    with open (Path1+r"/dataset172/"+'Features33Kall_queriesphicaptions.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
 
+  def Get_all_target_captions(self):
+    with open (Path1+r"/dataset172/"+'Features33Kall_imgsphicaptions.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
 
   ################## Get Feature Extracted by Trig with out Model ############################ 
 
