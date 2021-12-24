@@ -327,7 +327,7 @@ class Fashion200k1(BaseDataset):
           caption2imgids[c] = []
         caption2imgids[c].append(i)
     self.caption2imgids = caption2imgids
-    print(len(caption2imgids), 'unique cations')
+    #print(len(caption2imgids), 'unique cations')
 
     # parent captions are 1-word shorter than their children
     parent2children_captions = {}
@@ -355,7 +355,7 @@ class Fashion200k1(BaseDataset):
     for img in self.imgs:
       if img['modifiable']:
         num_modifiable_imgs += 1
-    print('Modifiable images', num_modifiable_imgs)
+    #print('Modifiable images', num_modifiable_imgs)
 
   def caption_index_sample_(self, idx):
     while not self.imgs[idx]['modifiable']:
@@ -596,7 +596,7 @@ class Fashion200k(BaseDataset):
             'modifiable': False
         }
         self.imgs += [img]
-    print ('Test Fashion200k:', len(self.imgs), 'images')
+    #print ('Test Fashion200k:', len(self.imgs), 'images')
     global testimagedata
     testimagedata=self.imgs
     # generate query for training or testing
@@ -660,7 +660,7 @@ class Fashion200k(BaseDataset):
           caption2imgids[c] = []
         caption2imgids[c].append(i)
     self.caption2imgids = caption2imgids
-    print (len(caption2imgids), 'unique cations')
+    #print (len(caption2imgids), 'unique cations')
 
     # parent captions are 1-word shorter than their children
     parent2children_captions = {}
@@ -689,7 +689,7 @@ class Fashion200k(BaseDataset):
     for img in self.imgs:
       if img['modifiable']:
         num_modifiable_imgs += 1
-    print ('Modifiable images', num_modifiable_imgs)
+    #print ('Modifiable images', num_modifiable_imgs)
 
   def caption_index_sample_(self, idx):
     while not self.imgs[idx]['modifiable']:
@@ -796,6 +796,49 @@ class Features172K():
       pickle.dump(all_imgs, fp)
 
     with open(Path+r"/"+'Features172Kall_captions.txt', 'wb') as fp:
+      pickle.dump(all_captions, fp)
+
+  def SavetoFilesNoModule(self,Path,model,testset,opt):
+    model.eval()
+    all_imgs = []
+    all_captions = []
+    all_queries = []
+    all_target_captions = []
+
+    imgs0 = []
+    imgs = []
+    mods = []
+    for i in range(172048):#172048
+      print('get images=',i,end='\r')
+      item = testset[i]
+      imgs += [item['source_img_data']]
+      mods += [item['mod']['str']]
+      if len(imgs) >= opt.batch_size or i == 9999:
+        imgs = torch.stack(imgs).float()
+        imgs = torch.autograd.Variable(imgs)
+        f = model.compose_img_text(imgs, mods).data.cpu().numpy() #.cuda()
+        all_queries += [f]
+        imgs = []
+        mods = []
+      imgs0 += [item['target_img_data']]
+      if len(imgs0) >= opt.batch_size or i == 9999:
+        imgs0 = torch.stack(imgs0).float()
+        imgs0 = torch.autograd.Variable(imgs0)
+        imgs0 = model.extract_img_feature(imgs0).data.cpu().numpy() #.cuda()
+        all_imgs += [imgs0]
+        imgs0 = []
+      all_captions += [item['target_caption']]
+      all_target_captions += [item['target_caption']]
+    all_imgs = np.concatenate(all_imgs)
+    all_queries = np.concatenate(all_queries)
+
+    with open(Path+r"/"+'Features172Kall_queriesNoModule.txt', 'wb') as fp:
+      pickle.dump(all_queries, fp)
+
+    with open(Path+r"/"+'Features172Kall_imgsNoModule.txt', 'wb') as fp:
+      pickle.dump(all_imgs, fp)
+
+    with open(Path+r"/"+'Features172Kall_captionsNoModule.txt', 'wb') as fp:
       pickle.dump(all_captions, fp)
 
   def SavetoFilesold(self,Path,model,testset,opt):
@@ -907,9 +950,47 @@ class Features172K():
     with open(Path+r"/"+'Features172Kphixtarget.txt', 'wb') as fp:
       pickle.dump(all_imgs, fp)
 
+  def SavetoFilesCaptionImages(self,Path,model,testset,opt):
+    model.eval()
+    all_imgs = []
+    all_captions = []
+    all_queries = []
+    all_target_captions = []
+
+    imgs0 = []
+    imgs = []
+    mods = []
+    for i in range(172048):#172048
+      print('get images=',i,end='\r')
+      item = testset[i]
+      imgs = [item['source_caption']]
+      imgs0= [item['target_caption']]
+
+      f=model.extract_text_feature(imgs).data.cpu().numpy()
+      f2=model.extract_text_feature(imgs0).data.cpu().numpy()
+      all_captions += [f]
+      all_target_captions += [f2]
+      imgs=[]
+      imgs0=[]
+
+
+      
+    all_captions = np.concatenate(all_captions)
+    all_target_captions = np.concatenate(all_target_captions)
+
+    with open(Path+r"/"+'Features172Kall_queriesphicaptions.txt', 'wb') as fp:
+      pickle.dump(all_captions, fp)
+
+    with open(Path+r"/"+'Features172Kall_imgsphicaptions.txt', 'wb') as fp:
+      pickle.dump(all_target_captions, fp)
+
+    
+
     
 
    
+
+  ################## Get Feature Extracted by Trig Model ############################ 
 
   def Get_all_queries(self):
     with open (Path1+r"/dataset172/"+'Features172Kall_queries.txt', 'rb') as fp:
@@ -925,34 +1006,51 @@ class Features172K():
     with open (Path1+r"/dataset172/"+'Features172Kall_captions.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
-
-  def Get_all_queriesold(self):
-    with open (Path1+r"/dataset172/"+'Features172Kall_queriesold.txt', 'rb') as fp:
+  
+  def Get_all_query_captions(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_queriesphicaptions.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
 
-  def Get_all_imagesold(self):
-    with open (Path1+r"/dataset172/"+'Features172Kall_imgsold.txt', 'rb') as fp:
+  def Get_all_target_captions(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_imgsphicaptions.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
 
-  def Get_all_captionsold(self):
-    with open (Path1+r"/phase2/"+'Features172Kall_captionsold.txt', 'rb') as fp:
+
+  ################## Get Feature Extracted by Trig with out Model ############################ 
+
+
+  def Get_all_queriesWithoutModelTrig(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_queriesNoModule.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
- 
+
+  def Get_all_imagesWithoutModelTrig(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_imgsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_captionsWithoutModelTrig(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_captionsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  ################## Get Feature Extracted by Resnet and LSTM Model ############################ 
+
+  
   def Get_phix(self):
-    with open (Path1+r"/phase2/"+'Features172Kphix.txt', 'rb') as fp:
+    with open (Path1+r"/dataset172/"+'Features172Kphix.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
 
   def Get_phixtarget(self):
-    with open (Path1+r"/phase2/"+'Features172Kphixtarget.txt', 'rb') as fp:
+    with open (Path1+r"/dataset172/"+'Features172Kphixtarget.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
 
   def Get_phit(self):
-    with open (Path1+r"/phase2/"+'Features172Kphit.txt', 'rb') as fp:
+    with open (Path1+r"/dataset172/"+'Features172Kphit.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
   def Get_phit_image_caption(self):
@@ -976,6 +1074,23 @@ class Features172K():
 
 
 
+  ################# Get Feature Extracted by Trig Model  OLD One (Wrong ) ############################
+
+  def Get_all_queriesold(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_queriesold.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_imagesold(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_imgsold.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_captionsold(self):
+    with open (Path1+r"/dataset172/"+'Features172Kall_captionsold.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+ 
 
 class Features33K():
   def __init__(self):
@@ -1034,6 +1149,99 @@ class Features33K():
     
     with open(Path+r"/"+'Features33Kall_target_captions.txt', 'wb') as fp:
       pickle.dump(all_target_captions, fp)
+
+  def SavetoFilesCaptionImages(self,Path,model,testset,opt):
+    model.eval()
+    all_imgs = []
+    all_captions = []
+    all_queries = []
+    all_target_captions = []
+
+    imgs0 = []
+    imgs = []
+    mods = []
+    test_queries = testset.get_test_queries()
+    for t in tqdm(test_queries):
+      
+      imgs = [t['source_caption']]
+      imgs0 = [t['target_caption']]
+      f=model.extract_text_feature(imgs).data.cpu().numpy()
+      f2=model.extract_text_feature(imgs0).data.cpu().numpy()
+      all_captions += [f]
+      all_target_captions += [f2]
+      imgs=[]
+      imgs0=[]
+
+
+      
+    all_captions = np.concatenate(all_captions)
+    all_target_captions = np.concatenate(all_target_captions)
+
+
+
+    
+    with open(Path+r"/"+'Features33Kall_queriesphicaptions.txt', 'wb') as fp:
+      pickle.dump(all_captions, fp)
+
+    with open(Path+r"/"+'Features33Kall_imgsphicaptions.txt', 'wb') as fp:
+      pickle.dump(all_target_captions, fp)
+
+    
+
+
+  def SavetoFilesNoModule(self,Path,model,testset,opt):
+    model.eval()
+    all_imgs = []
+    all_captions = []
+    all_queries = []
+    all_target_captions = []
+
+    imgs0 = []
+    imgs = []
+    mods = []
+    test_queries = testset.get_test_queries()
+    for t in tqdm(test_queries):
+      imgs += [testset.get_img(t['source_img_id'])]
+      mods += [t['mod']['str']]
+      if len(imgs) >= opt.batch_size or t is test_queries[-1]:
+        if 'torch' not in str(type(imgs[0])):
+          imgs = [torch.from_numpy(d).float() for d in imgs]
+        imgs = torch.stack(imgs).float()
+        imgs = torch.autograd.Variable(imgs)#.cuda()
+        f = model.compose_img_text(imgs, mods).data.cpu().numpy()
+        all_queries += [f]
+        imgs = []
+        mods = []
+    all_queries = np.concatenate(all_queries)
+    all_target_captions = [t['target_caption'] for t in test_queries]
+
+    # compute all image features
+    imgs = []
+    for i in tqdm(range(len(testset.imgs))):
+      imgs += [testset.get_img(i)]
+      if len(imgs) >= opt.batch_size or i == len(testset.imgs) - 1:
+        if 'torch' not in str(type(imgs[0])):
+          imgs = [torch.from_numpy(d).float() for d in imgs]
+        imgs = torch.stack(imgs).float()
+        imgs = torch.autograd.Variable(imgs)#.cuda()
+        imgs = model.extract_img_feature(imgs).data.cpu().numpy()
+        all_imgs += [imgs]
+        imgs = []
+    all_imgs = np.concatenate(all_imgs)
+    all_captions = [img['captions'][0] for img in testset.imgs]
+
+    with open(Path+r"/"+'Features33Kall_queriesNoModule.txt', 'wb') as fp:
+      pickle.dump(all_queries, fp)
+
+    with open(Path+r"/"+'Features33Kall_imgsNoModule.txt', 'wb') as fp:
+      pickle.dump(all_imgs, fp)
+
+    with open(Path+r"/"+'Features33Kall_captionsNoModule.txt', 'wb') as fp:
+      pickle.dump(all_captions, fp)
+    
+    with open(Path+r"/"+'Features33Kall_target_captionsNoModule.txt', 'wb') as fp:
+      pickle.dump(all_target_captions, fp)
+
 
   def SavetoFilesold(self,Path,model,testset,opt):
     model.eval()
@@ -1192,6 +1400,8 @@ class Features33K():
 
 
 
+  ################## Get Feature Extracted by Trig Model ############################ 
+
 
   def Get_all_queries(self):
       with open (Path1+r"/dataset33/"+'Features33Kall_queries.txt', 'rb') as fp:
@@ -1213,6 +1423,43 @@ class Features33K():
       data = pickle.load(fp) 
       return data
 
+  def Get_all_query_captions(self):
+    with open (Path1+r"/dataset172/"+'Features33Kall_queriesphicaptions.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_target_captions(self):
+    with open (Path1+r"/dataset172/"+'Features33Kall_imgsphicaptions.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  ################## Get Feature Extracted by Trig with out Model ############################ 
+
+
+  def Get_all_queriesWithoutModelTrig(self):
+      with open (Path1+r"/dataset33/"+'Features33Kall_queriesNoModule.txt', 'rb') as fp:
+        data = pickle.load(fp) 
+        return data
+
+  def Get_all_imagesWithoutModelTrig(self):
+    with open (Path1+r"/dataset33/"+'Features33Kall_imgsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_captionsWithoutModelTrig(self):
+    with open (Path1+r"/dataset33/"+'Features33Kall_captionsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+  
+  def Get_target_captionsWithoutModelTrig(self):
+    with open (Path1+r"/dataset33/"+'Features33Kall_target_captionsNoModule.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+
+  ################## Get Feature Extracted by Resnet and LSTM Model for all 33K ############################ 
+
+
   def Get_all_target(self):
     with open (Path1+r"/dataset33/"+'Features33Kall_target.txt', 'rb') as fp:
       data = pickle.load(fp) 
@@ -1222,6 +1469,29 @@ class Features33K():
       with open (Path1+r"/dataset33/"+'Features33Kallsource_imgfeature.txt', 'rb') as fp:
         data = pickle.load(fp) 
         return data
+
+
+
+  ################## Get Feature Extracted by Resnet and LSTM Model ############################ 
+
+  
+  def Get_phix(self):
+    with open (Path1+r"/dataset33/"+'Features33Kphix.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_phixtarget(self):
+    with open (Path1+r"/dataset33/"+'Features33Kphixtarget.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_phit(self):
+    with open (Path1+r"/dataset33/"+'Features33Kphit.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+  
+
+  ################# Old Model of trig (wrong one)
 
   def Get_all_queriesold(self):
       with open (Path1+r"/dataset33/"+'Features33Kall_queriesold.txt', 'rb') as fp:
@@ -1240,20 +1510,5 @@ class Features33K():
   
   def Get_target_captionsold(self):
     with open (Path1+r"/dataset33/"+'Features33Kall_target_captionsold.txt', 'rb') as fp:
-      data = pickle.load(fp) 
-      return data
-
-  def Get_phix(self):
-    with open (Path1+r"/dataset33/"+'Features33Kphix.txt', 'rb') as fp:
-      data = pickle.load(fp) 
-      return data
-
-  def Get_phixtarget(self):
-    with open (Path1+r"/dataset33/"+'Features33Kphixtarget.txt', 'rb') as fp:
-      data = pickle.load(fp) 
-      return data
-
-  def Get_phit(self):
-    with open (Path1+r"/dataset33/"+'Features33Kphit.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data

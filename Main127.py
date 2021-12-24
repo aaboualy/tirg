@@ -429,7 +429,7 @@ def savesourcevalues():
 
   trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
   #trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  #trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
 
   opt = argparse.ArgumentParser()
   opt.add_argument('--batch_size', type=int, default=2)
@@ -441,10 +441,14 @@ def savesourcevalues():
   #datasets.Features33K().SavetoFiles2(Path1+r'/dataset33', trig, test,opt)
   #datasets.Features33K().SavetoFiles3(Path1+r'/dataset33', trig, test,opt)
 
-  datasets.Features172K().SavetoFilesold(Path1+r'/dataset172', trig, train,opt)
-  datasets.Features33K().SavetoFilesold(Path1+r'/dataset33', trig, test,opt)
+  #datasets.Features172K().SavetoFilesold(Path1+r'/dataset172', trig, train,opt)
+  #datasets.Features33K().SavetoFilesold(Path1+r'/dataset33', trig, test,opt)
   
-  #print('172 Finished')
+  datasets.Features172K().SavetoFilesNoModule(Path1+r'/dataset172', trig, train,opt)
+  datasets.Features33K().SavetoFilesNoModule(Path1+r'/dataset33', trig, test,opt)
+  
+
+  print('172 Finished')
   print('33k Finished')
 
 def savesourcephixtvalues():
@@ -473,8 +477,8 @@ def savesourcephixtvalues():
 
 
   trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
-  #trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  #trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
 
   opt = argparse.ArgumentParser()
   opt.add_argument('--batch_size', type=int, default=2)
@@ -482,12 +486,17 @@ def savesourcephixtvalues():
   opt.batch_size =1
   opt.dataset='fashion200k'
 
+
+  #datasets.Features172K().SavetoFiles(Path1+r'/dataset172', trig, train,opt)
   #datasets.Features172K().SavetoFilesImageSource(Path1+r'/dataset172', trig, train,opt)
   #datasets.Features33K().SavetoFiles2(Path1+r'/dataset33', trig, test,opt)
   #datasets.Features33K().SavetoFiles3(Path1+r'/dataset33', trig, test,opt)
 
-  datasets.Features172K().SavetoFilesphixt(Path1+r'/dataset172', trig, train,opt)
-  datasets.Features33K().SavetoFilesphixt(Path1+r'/dataset33', trig, test,opt)
+  #datasets.Features172K().SavetoFilesphixt(Path1+r'/dataset172', trig, train,opt)
+  #datasets.Features33K().SavetoFilesphixt(Path1+r'/dataset33', trig, test,opt)
+
+  datasets.Features172K().SavetoFilesCaptionImages(Path1+r'/dataset172', trig, train,opt)
+  datasets.Features33K().SavetoFilesCaptionImages(Path1+r'/dataset33', trig, test,opt)
   
   print('172 Finished')
   print('33k Finished')
@@ -1196,7 +1205,8 @@ def resultsNLPCosWOPbetaNLP():
 class NLR2(nn.Module):
   def __init__(self,netin,netout,nethidden1,nethidden2):
     super().__init__()
-    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.Sigmoid(),torch.nn.Linear(nethidden1, nethidden2),torch.nn.Linear(nethidden2, netout))
+    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.Sigmoid(),torch.nn.Linear(nethidden1, nethidden2),
+    torch.nn.Linear(nethidden2, netout))
   def myforward (self,inv):
     outv=self.netmodel(inv)
     return outv
@@ -2177,7 +2187,7 @@ def phase2_network_combined_one():
 
 def test_model(file_name):
    test_model=ConNet()
-   test_model.load_state_dict(torch.load(Path1+r'\2lr006w123000.pth' , map_location=torch.device('cpu') ))
+   test_model.load_state_dict(torch.load(Path1+r'/'+file_name , map_location=torch.device('cpu') ))
    test_model.eval()
    phix = datasets.Features172K().Get_phix()
    phit = datasets.Features172K().Get_phit()
