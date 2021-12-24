@@ -1425,7 +1425,7 @@ class Features33K():
       data = pickle.load(fp) 
       return data
 
-
+################# Get Img and Text Features Without Tirg
 class Feature172KOrg():
   def __init__(self):
     super(Feature172KOrg, self).__init__()
