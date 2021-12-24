@@ -1,4 +1,10 @@
+from numpy.core.fromnumeric import argsort, squeeze
+from tensorflow.python.ops.array_ops import zeros
+from tensorflow.python.ops.gen_array_ops import concat
 import torch
+from torch import tensor
+from torch.functional import norm
+#from torch._C import float32
 import torchvision
 import torchvision.transforms as tvt
 import torch.nn as nn
@@ -37,9 +43,8 @@ from sklearn.metrics import mean_squared_error
 
 
 
-Path1=r"C:\MMaster\Files"
-#Path1=r"D:\personal\master\MyCode\files"
-
+Path1=r"C:\MMaster\Files\phase2"
+path2=r"C:\MMaster\Files"
 #################  Support Functions Section   #################
 
 def dataset(batch_size_all):
@@ -1209,6 +1214,14 @@ class NLR2(nn.Module):
     outv=self.netmodel(inv)
     return outv
 
+class NLR3(nn.Module):
+  def __init__(self,netin,netout,nethidden):
+    super().__init__()
+    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Sigmoid(),torch.nn.Linear(nethidden, netout))
+  def myforward (self,inv):
+    outv=self.netmodel(inv)
+    return outv
+
 def build_and_train_netMSE():
 
 
@@ -1837,11 +1850,284 @@ class ConNet(nn.Module):
     outv=self.f1(outv)
     return outv
 
-def Newnetworkphi():
-  phix = datasets.Features172K().Get_phix()
-  phit = datasets.Features172K().Get_phit()
-  phitarget = datasets.Features172K().Get_phixtarget()
+class ConNet_img_text(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.netmodel= torch.nn.Sequential(nn.Conv1d(1,2, 3,stride=1),nn.Conv1d(2,3, kernel_size=3,stride=1),nn.MaxPool1d(4))
+    self.l1=nn.Linear( 893,1024)
+    self.l2=nn.Linear(1024,512)
+  def myforward (self,inv):
+    outv=self.netmodel(inv)
+    outv = outv.view(outv.size(0), -1)
+    invsq= torch.squeeze(inv)
+    sz=outv.size()
+    szinpv=inv.size() 
+    tmp=torch.zeros([sz[0],sz[1]+szinpv[2]])
+    tmp[:,0:sz[1]]=outv
+    tmp[:,sz[1]:sz[1]+szinpv[2]]=invsq
+    outv=tmp
+    outv=self.l2(torch.sigmoid(self.l1(outv)))
+    return outv
+
+class ConNet_text(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.netmodel= torch.nn.Sequential(nn.Conv1d(1,2, 3,stride=1),nn.Conv1d(2,3, kernel_size=3,stride=1),nn.MaxPool1d(3))
+    self.l1=nn.Linear( 1019,1024)
+    self.l2=nn.Linear(1024,512)
+  def myforward_text (self,inv):
+    outv=self.netmodel(inv)
+    outv = outv.view(outv.size(0), -1)
+    invsq= torch.squeeze(inv)
+    sz=outv.size()
+    szinpv=inv.size() 
+    tmp=torch.zeros([sz[0],sz[1]+szinpv[2]])
+    tmp[:,0:sz[1]]=outv
+    tmp[:,sz[1]:sz[1]+szinpv[2]]=invsq
+    outv=tmp
+    outv=self.l2(torch.sigmoid(self.l1(outv)))
+    return outv
+
+class ConNet_img(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.netmodel= torch.nn.Sequential(nn.Conv1d(1,3, kernel_size=(5)),nn.Conv1d(3,7, kernel_size=(5),stride=1))
+    self.l1=nn.Linear( 3528,1024)
+    self.l2=nn.Linear(1024,512)
+
+  def myforward_img (self,inv):
+    outv=torch.relu(inv)
+
+    outv=self.netmodel(outv)
+    outv = outv.view(outv.size(0), -1)
+    outv=self.l2(torch.tanh(self.l1(outv)))
+    return outv
+###########################################training network method #######################333
+#######################################################################3333333333333
+def phase2_text_img_phi(model,phix,phix_target,iterations,totallosses,batch_size,loss_fn,optimizer,min_error):
+  for j in range(iterations):
+    total_loss=0
+    for l in range(int(phix.shape[0]/batch_size)):
+      
+      netoutbatch=model.myforward(torch.FloatTensor(phix[l*batch_size:(l+1)*batch_size,:]))
+      target_batch=torch.FloatTensor(phix_target[l*batch_size:(l+1)*batch_size,:])
+      loss = loss_fn(target_batch,netoutbatch)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+              
+    if (total_loss<min_error):
+      break
+    print('iteration:',j, 'total loss=',total_loss,'batch_loss=', loss)
+    totallosses.append(total_loss)
+  return model,totallosses,total_loss      
+
+############################################################################################
+#############################################################################################333
+
+def phase2_two_network_model_train():
+  
+  phix=datasets.Features172K().Get_phix()
+  phit=datasets.Features172K().Get_phit()
+  phix_target=datasets.Features172K().Get_phixtarget()
+  phix=phix.reshape(phix.shape[0],1,512)
+  phit=torch.tensor(phit)
+  phit=phit.reshape(phit.shape[0],1,512)
+
+  epoch=10
+  iterations=1000
+  batch_size=700
+  min_error=0.01
+  glr=0.003
+  first_time_flag=0
+  for i in range(epoch):
+
+  #############################################################3
+  ###################img#########################
+    print('image network')
+    if first_time_flag==0:
+      model_img=ConNet_img_text()
+      torch.manual_seed(300)
+      loss_fn = torch.nn.MSELoss()
+      optimizer=torch.optim.SGD(model_img.parameters(), lr=glr)
+      totallosses_img=[]
+    model_img,totallosses_img,total_loss_img=phase2_text_img_phi(model_img,phix,phix_target,iterations,totallosses_img,batch_size,loss_fn,optimizer,min_error)
+    print('text network')
+    if first_time_flag==0:
+      model_text=ConNet_img_text()
+      torch.manual_seed(70)
+      loss_fn = torch.nn.MSELoss()
+      optimizer=torch.optim.SGD(model_text.parameters(), lr=glr)
+      totallosses_text=[]
+      first_time_flag=1
+    model_text,totallosses_text,total_loss_text=phase2_text_img_phi(model_text,phit,phix_target,iterations,totallosses_text,batch_size,loss_fn,optimizer,min_error)
+    if (total_loss_img<min_error and total_loss_text<min_error):
+      break
+    print('Epoch:',i, 'total loss',total_loss_img,total_loss_text)
+    torch.save(model_img.state_dict(), Path1+r'\phase2_img'+str(i)+r'.pth') 
+    with open(Path1+r"/"+'phase2_losses_img.txt', 'wb') as fp:
+        pickle.dump(totallosses_img, fp)
+    torch.save(model_text.state_dict(), Path1+r'\phase2_text'+str(i)+r'.pth') 
+    with open(Path1+r"/"+'phase2_losses_text.txt', 'wb') as fp:
+        pickle.dump(totallosses_text, fp)
+
+  ###############################end img#########################33#########################
+   
+def get_joint_results (img_model_file,text_model_file,model, testset,flag):
+  model.eval()
+  test_queries = testset.get_test_queries()
+  
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_images() #[:20000]
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries = datasets.Features33K().Get_all_queries() #[:20000]
+    all_target_captions = datasets.Features33K().Get_target_captions()
+    if flag==1:
+      phi=datasets.Features33K().Get_phix()
+    else:
+      if flag==2:
+        phi = datasets.Features33K().Get_phit()
+      else:
+        phi_img=datasets.Features33K().Get_phix()
+        phi_text=datasets.Features33K().Get_phit()
+
+
+    if flag!=3:
+      phi=phi.reshape(phi.shape[0],1,512)
+    else:
+      phi_img=phi_img.reshape(phi_img.shape[0],1,512)
+      phi_text = np.concatenate(phi_text)
+      phi_text=phi_text.reshape(phi_text.shape[0],1,512)
+
+
+    if flag==3:
+      new_all_queries_img=phase2_models_single(phi_img,img_model_file,1)
+      new_all_queries_text=phase2_models_single(phi_text,text_model_file,2)
+
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_images()[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions()[:10000]
+    all_queries = datasets.Features172K().Get_all_queries()[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions()  #[:10000]
+    if flag==1:
+      phi = datasets.Features172K().Get_phix()
+    if flag ==2:
+      phi= datasets.Features172K().Get_phit()
+      phi=phi.reshape(phi.shape[0],1,512)
+      new_all_queries_img=phase2_models_single(phi,img_model_file,flag)
+
+    if flag==3:
+      phi_img = datasets.Features172K().Get_phix()[:10000]
+      phi_text= datasets.Features172K().Get_phit()[:10000]
+      phi_img=phi_img.reshape(phi_img.shape[0],1,512)
+      phi_text = np.concatenate(phi_text)
+      phi_text=phi_text.reshape(phi_text.shape[0],1,512)
+      new_all_queries_img=phase2_models_single(phi_img,img_model_file,1)
+      new_all_queries_text=phase2_models_single(phi_text,text_model_file,2)
+
+  # feature normalization
+  
+  for i in range(all_queries.shape[0]):
+    new_all_queries_img[i, :] /= np.linalg.norm(new_all_queries_img[i, :])
+    new_all_queries_text[i, :] /= np.linalg.norm(new_all_queries_text[i, :])
+
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result_img = []
+  nn_result_text = []
+  joint_result=[]
+  for i in tqdm(range(all_queries.shape[0])):
+    sims_img = new_all_queries_img[i:(i+1), :].dot(all_imgs.T)
+    sims_text = new_all_queries_text[i:(i+1), :].dot(all_imgs.T)
+    if test_queries:
+      sims_img[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      sims_text[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+    temp_img=np.argsort(-sims_img[0, :])[:105]
+    temp_text=np.argsort(-sims_text[0, :])[:105]
+    nn_result_img.append(temp_img)
+    nn_result_text.append(temp_text)
+    joint_result.append(get_joint_list(temp_img,temp_text))
+
+    nn_result_img.append(np.argsort(-sims_img[0, :])[:105])
+    nn_result_text.append(np.argsort(-sims_text[0, :])[:105])
+    #joint_result=get_joint_list(nn_result_img,nn_result_text)
+  # compute recalls
+  out = []
+  out2=[]
+  out3=[]
+  with open(Path1+r"/"+'jointresultsrecallimages.txt', 'wb') as fp:
+        pickle.dump(joint_result, fp)
+  nn_result_img = [[all_captions[nn] for nn in nns] for nns in nn_result_img]
+  nn_result_text = [[all_captions[nn] for nn in nns] for nns in nn_result_text]
+  joint_result = [[all_captions[nn] for nn in nns] for nns in joint_result]
+
+
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(joint_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(joint_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out3.append(str(k) + ' ---> '+ str(r*100))
+
+    
+    r = 0.0
+    for i, nns in enumerate(nn_result_img):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result_img)
+    #out2 += [('recall_top' + str(k) + '_correct_composition', r)]
+    out2.append(str(k) + ' ---> '+ str(r*100))
+
+    r = 0.0
+    for i, nns in enumerate(nn_result_text):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result_text)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+  print('text:', out )
+  print('cmi:', out2 )
+  
+  return out, out2, out3
+def get_joint_list(nn_result_img,nn_result_text):
+  joint_list_temp=[]
+  ln=0
+  required_len=nn_result_img.shape[0]
+  for i in range(nn_result_img.shape[0]):
+    if nn_result_img[i] in nn_result_text:
+      joint_list_temp.append(nn_result_img[i])
+      ln +=1
+      if ln>=required_len:
+        break
+  if len(joint_list_temp)<required_len:
+    for i in range(nn_result_img.shape[0]):
+      if nn_result_img[i] not in joint_list_temp:
+        joint_list_temp.append(nn_result_img[i])
+        ln +=1
+        if ln>=required_len:
+          break
+  return joint_list_temp
+def phase2_network_combined_one():
+  phix = datasets.Features33K().Get_phix()
+  phit = datasets.Features33K().Get_phit()
+  phitarget = datasets.Features33K().Get_all_target()
   phit = np.concatenate(phit)
+  print(phitarget.shape[0])
+
   W1=1
   W2=2
   epoch=10000
@@ -1895,8 +2181,8 @@ def Newnetworkphi():
     print('iteration:',j, 'total loss',total_loss)
     totallosses.append(total_loss)
     if (j%1000==0) :
-       torch.save(model.state_dict(), Path1+r'\2lr006w12'+str(j)+r'.pth') 
-       with open(Path1+r"/"+'losses.txt', 'wb') as fp:
+       torch.save(model.state_dict(), Path1+r'\3lr006w12'+str(j)+r'.pth') 
+       with open(Path1+r"/"+'losses_2.txt', 'wb') as fp:
         pickle.dump(totallosses, fp)
   #print ('NewModel:',loss_fn(model.myforward(all_queries),all_queries))  
   print('Finished Training')
@@ -1930,6 +2216,8 @@ def test_model(file_name):
    net_combined = Variable(net_combined, requires_grad=False)
 
    net_combined=np.array(net_combined)
+   out=test_retrieval.Phase2_networks_tests(1,net_combined)
+
    combined_all=[phix, phit, net_combined]
    phix=[]
    phit=[]
@@ -1942,165 +2230,7 @@ def test_model(file_name):
    out=test_retrieval.Phase2_networks_tests(1,new_target)
    print(out)
    
-
-
-################### 25102021 #########################
-
-class trinamodulem(nn.Module):
-  def __init__(self):
-    super().__init__()
-    self.netmodel= torch.nn.Sequential(nn.Conv2d(1,3, kernel_size=(2,2)),nn.Conv2d(3,4, kernel_size=(2,2),stride=1))
-    self.f1=nn.Linear( 1680,512)
-  def myforward (self,inv):
-    outv=self.netmodel(inv)
-    outv = outv.view(outv.size(0), -1)
-    outv=self.f1(outv)
-    return outv
-
-
-def Newnetworkphi2():
-  phix = datasets.Features172K().Get_phix()
-  #phit = datasets.Features172K().Get_phit()
-  phitarget = datasets.Features172K().Get_phixtarget()
-  #phit = np.concatenate(phit)
-  W1=1
-  W2=1
-  epoch=10000
-  batch_size=500
-  min_error=0.01
-  glr=0.006
-  phix=phix*W2
-  #phit=phit* W1
-  combinedxt=[]
-  
-
-  for i in range(phix.shape[0]):
-    combinedxt.append(phix[i])
-
-  model=trinamodulem()
-  torch.manual_seed(3)
-  loss_fn = torch.nn.MSELoss()
-  #torch.manual_seed(3)
-  criterion=nn.MSELoss()
-  optimizer=torch.optim.SGD(model.parameters(), lr=glr)
-  
-  losses=[]
-  totallosses=[]
-
-  combinedxt1024 = np.concatenate(combinedxt)
-  combinedxt32=combinedxt1024.reshape(phix.shape[0],1,32,16)
-  for j in range(epoch):
-    total_loss=0
-    for l in range(int(combinedxt32.shape[0]/batch_size)):
-      
-      # for l in range(int(50000/batch_size)):      
-      # item_batch = all_queries[l*batch_size:(l+1)*batch_size-1,:]
-      # target_batch=all_imgs[l*batch_size:(l+1)*batch_size-1,:]
-
-      #combinedxt1024 = np.concatenate(combinedxt[l])
-      #combinedxt32=combinedxt1024.reshape(1,1,32,32)
-      netoutbatch=model.myforward(torch.FloatTensor(combinedxt32[l*batch_size:(l+1)*batch_size,:]))
-      target_batch=torch.FloatTensor(phitarget[l*batch_size:(l+1)*batch_size,:])
-      
-      loss = loss_fn(target_batch,netoutbatch)
-      losses.append(loss)
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
-      total_loss+=loss
-      if (l%1000==0) :
-        print('Epoch:',j,' get images batch=',l,'loss',loss,end='\r')
-    
-        
-    if (total_loss<min_error):
-      break
-    print('iteration:',j, 'total loss',total_loss)
-    totallosses.append(total_loss)
-    if (j%1000==0) :
-       torch.save(model.state_dict(), Path1+r'\2lr006w12'+str(j)+r'.pth') 
-       with open(Path1+r"/"+'losses.txt', 'wb') as fp:
-        pickle.dump(totallosses, fp)
-  #print ('NewModel:',loss_fn(model.myforward(all_queries),all_queries))  
-  print('Finished Training')
-  torch.save(model.state_dict(), Path1+r'\CovPhix.pth') 
-
-
-
-##################  1112021 -- Lienear Reg Approche #################
-
-def GetValuesRegModelNoModel():
-
-  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
-  #   Beta = pickle.load(fp) 
-
-  imgdata = datasets.Features172K().Get_all_imagesWithoutModelTrig()
-  all_queries1 = datasets.Features172K().Get_all_queriesWithoutModelTrig()
-
-  for i in range(all_queries1.shape[0]):
-    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
-  for i in range(imgdata.shape[0]):
-    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
-
-  reg = LinearRegression().fit(all_queries1, imgdata)
-
-  trainset = datasets.Fashion200k(
-        path=Path1,
-        split='train',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-  
-  testset = datasets.Fashion200k(
-        path=Path1,
-        split='test',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-
-  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
-  #trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  
-
-  opt = argparse.ArgumentParser()
-  opt.add_argument('--batch_size', type=int, default=2)
-  opt.add_argument('--dataset', type=str, default='fashion200k')
-  opt.batch_size =1
-  opt.dataset='fashion200k'
-  
-  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
-    
-    #betaNor = test_retrieval.testLoadedBetaRegModel(opt, trig, dataset,Beta,reg)
-    betaNor = test_retrieval.testLoadedWithoutModeRegModel(opt, trig, dataset,reg)
-    print(name,' BetaNormalized: ',betaNor)
-
-    asbook = test_retrieval.testLoadedWithoutModel(opt, trig, dataset)
-    print(name,' As PaPer: ',asbook)
-
-def GetValuesRegModel():
-
-  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
-  #   Beta = pickle.load(fp) 
-
-  #imgdata = datasets.Features172K().Get_all_imagesWithoutModelTrig()
-  #all_queries1 = datasets.Features172K().Get_all_queriesWithoutModelTrig()
-
-  imgdata = datasets.Features172K().Get_all_images()
-  all_queries1 = datasets.Features172K().Get_all_queries()
-
-  for i in range(all_queries1.shape[0]):
-    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
-  for i in range(imgdata.shape[0]):
-    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
-
-  reg = LinearRegression().fit(all_queries1, imgdata)
+def Phase2_test_models_get_orignal(img_model_file,text_model_file,flag):
 
   trainset = datasets.Fashion200k(
         path=Path1,
@@ -2134,227 +2264,885 @@ def GetValuesRegModel():
   opt.batch_size =1
   opt.dataset='fashion200k'
   
-  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+  #for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
+  #for name, dataset in [ ('test', testset)]:
+  for name, dataset in [ ('train', trainset)]:
+     #('train', trainset), 
+
     
-    #betaNor = test_retrieval.testLoadedBetaRegModel(opt, trig, dataset,Beta,reg)
-    betaNor = test_retrieval.testLoadedRegModel(opt, trig, dataset,reg)
-    print(name,' BetaNormalized: ',betaNor)
+    #asbook1, model, euc_model = phase2_main_test_gate(opt, trig, dataset,model_file_name,flag)
+    asbook1, model = get_joint_results(img_model_file,text_model_file,trig, dataset,flag)
+    print(name,' Loaded As PaPer: ',asbook1, '\n  model generated      ',model, '\n  ' )
 
-    # asbook = test_retrieval.testLoaded(opt, trig, dataset)
-    # print(name,' As PaPer: ',asbook)
+     
 
-class LRM(nn.Module):
-  def __init__(self):
-    super().__init__()
-    self.f1=nn.Linear( 512,512)
-  def myforward (self,inv):
-    outv=self.f1(inv)
-    return outv
-
-
-def LRMTraining():
+def phase2_main_test_gate(opt, model, testset,model_file_name,flag):
+  """Tests a model over the given testset."""
+  model.eval()
+  test_queries = testset.get_test_queries()
   
-  imgdata = datasets.Features172K().Get_all_images()
-  all_queries = datasets.Features172K().Get_all_queries()
-  all_queries1=  all_queries
-  imgdata1=imgdata
+  all_imgs = []
+  all_captions = []
+  all_queries = []
+  all_target_captions = []
+  if test_queries:
+    # compute test query features
+    
+    all_imgs = datasets.Features33K().Get_all_images()
+    all_captions = datasets.Features33K().Get_all_captions()
+    all_queries = datasets.Features33K().Get_all_queries()
+    all_target_captions = datasets.Features33K().Get_target_captions()
+    if flag==1:
+      phi=datasets.Features33K().Get_phix()
+    else:
+      phi = datasets.Features33K().Get_phit()
+    phi=phi.reshape(phi.shape[0],1,512)
 
-  for i in range(all_queries1.shape[0]):
-    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
-  for i in range(imgdata1.shape[0]):
-    imgdata1[i, :] /= np.linalg.norm(imgdata1[i, :])
+    new_all_queries=phase2_models_single(phi,model_file_name,flag)
 
-  #reg = LinearRegression().fit(all_queries1, imgdata1)
+  else:
+    # use training queries to approximate training retrieval performance
+    all_imgs = datasets.Features172K().Get_all_images() #[:10000]
+    
+    all_captions = datasets.Features172K().Get_all_captions() #[:10000]
+    all_queries = datasets.Features172K().Get_all_queries() #[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions() #[:10000]
+    if flag==1:
+      phi = datasets.Features172K().Get_phix()
+    if flag ==2:
+      phi= datasets.Features172K().Get_phit()
+    phi=phi.reshape(phi.shape[0],1,512)
 
-  #all_queries =reg.predict(all_queries)
+    new_all_queries=phase2_models_single(phi,model_file_name,flag)
 
 
-  epoch=50000
-  batch_size=500
-  min_error=0.01
-  glr=0.006
+  # feature normalization
+  diff=new_all_queries-all_queries
+  diff=diff**2
+  diff=np.sum(diff,axis=1)
+  print(np.mean(diff))
+
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+    new_all_queries[i, :] /= np.linalg.norm(new_all_queries[i, :])
+
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  new_nn_result = []
+  euc_new_nn_result=[]
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    new_sims = new_all_queries[i:(i+1), :].dot(all_imgs.T)
+    euc_new_sims=np.sum(abs(all_imgs-all_queries[i, :]),axis=1)
+    if test_queries:
+      sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      new_sims[0, test_queries[i]['source_img_id']] = -10e10  # remove query image
+      euc_new_sims[test_queries[i]['source_img_id']]=10e10
+
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+    new_nn_result.append(np.argsort(-new_sims[0, :])[:110])
+    euc_new_nn_result.append(np.argsort(euc_new_sims)[:110])
+
+  # compute recalls
+  out = []
+  out2=[]
+  out3=[]
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  new_nn_result = [[all_captions[nn] for nn in nns] for nns in new_nn_result]
+  euc_new_nn_result = [[all_captions[nn] for nn in nns] for nns in euc_new_nn_result]
+
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
   
-  model=LRM()
-  torch.manual_seed(3)
+    for i, nns in enumerate(euc_new_nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(euc_new_nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out3.append(str(k) + ' ---> '+ str(r*100))
+    
+    r = 0.0
+    for i, nns in enumerate(new_nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(new_nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out2.append(str(k) + ' ---> '+ str(r*100))
+
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    
+  return out, out2, out3
+def phase2_models_single(phi,model_file_name,flag):
+   if flag==1 :
+    test_model=ConNet_img()
+   else:
+    test_model=ConNet_text()
+   test_model.load_state_dict(torch.load(Path1+r'\\'+model_file_name , map_location=torch.device('cpu') ))
+   test_model.eval()
+   phi=phi.reshape(phi.shape[0],1,512)
+
+   phi=torch.FloatTensor(phi)
+
+   if flag==1:
+    predict_phi=test_model.myforward_img(phi)
+   if flag==2:
+     predict_phi=test_model.myforward_text(phi) 
+   predict_phi = Variable(predict_phi, requires_grad=False)
+   predict_phi=np.array(predict_phi)
+   return predict_phi
+
+
+def phase2_models(phix,phit,model_file_name):
+   test_model=ConNet_img()
+   test_model.load_state_dict(torch.load(Path1+r'\\'+model_file_name , map_location=torch.device('cpu') ))
+   test_model.eval()
+   #phix=phix[0:100000,:]
+   phit = np.concatenate(phit)
+   #phit=phit[0:100000,:]
+   W1=1
+   W2=2
+   phix=phix*W2
+   phit=phit* W1
+   combinedxt=[phit,phix]
+   combinedxt = np.concatenate(combinedxt,axis=1)
+   combinedxt=combinedxt.reshape(phix.shape[0],1,32,32)
+   combinedxt=torch.FloatTensor(combinedxt)
+   net_combined=test_model.myforward(combinedxt)
+   net_combined = Variable(net_combined, requires_grad=False)
+   net_combined=np.array(net_combined)
+   return net_combined
+
+def CBIR(input_id,recall_type, recall_length,model_file,train):
+  # test recall function visually
+  # input_id   is the image under test sequence number
+  # recall_type image, text, combined
+  # Model_file if neural model_file
+    figcount=7
+    fig,ax=plt.subplots(1,figcount)
+    display_image (train,input_id,ax,0)
+    im=train[input_id]
+
+    target_id =im['target_img_id']
+    combined_text='img:'+im['source_caption']+' Target:' + im['target_caption']+' mod:' + im['mod']['str']
+    display_image(train,target_id,ax,1)
+    fig.suptitle(combined_text)
+
+    model_img=ConNet_text()
+    model_img.load_state_dict(torch.load(Path1+r'\\'+model_file , map_location=torch.device('cpu') ))
+    all_imgs = datasets.Features172K().Get_all_images() #[:10000]
+    all_captions = datasets.Features172K().Get_all_captions() #[:10000]
+    all_target_captions = datasets.Features172K().Get_all_captions() #[:10000]
+    phix = datasets.Features172K().Get_phix()[input_id]
+    phix=phix.reshape(1,1,512)
+    
+    netout=model_img.myforward_text(torch.FloatTensor(phix))
+    #netout=torch.squeeze(netout)
+    #phix /= np.linalg.norm(phix)
+    
+    #for i in range(all_imgs.shape[0]):
+    #  all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+    nn_result = []
+    netout= torch.autograd.Variable(netout)
+
+    netout=np.array(netout)
+    #all_imgs=torch.FloatTensor(all_imgs)
+    #netout[0,:]/=np.linalg.norm(netout[0,:])
+    #sims = netout[0,:].dot(all_imgs.T)
+    #sims=phix[0,0,:].dot(all_imgs.T)
+    #nn_result.append(np.argsort(-sims[ :])[:recall_length])
+    nn_result=get_distance_feature(all_imgs[input_id,:],all_imgs,512,2,target_id)
+    recalled_image_ids=nn_result
+    recalled_image_ids=np.array(recalled_image_ids)
+    #for i in range(5):
+      
+    #  display_image (train,recalled_image_ids[i,1],ax,i+2)
+  
+  # compute recalls
+    out = []
+    id_list=[]
+    nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+    r=0
+    plt.show()
+
+    if all_target_captions[input_id] in nn_result[:recall_length]:
+      r += 1
+    print('recalled list',recalled_image_ids,'Found count=',r, 'Found List=',id_list)
+    
+    return r
+def display_image (dataset,id,ax,i):
+  query_img=dataset.get_img(id)
+  im=ax[i].imshow(query_img.data.swapaxes(0,1).swapaxes(1,2))
+
+
+
+def get_distance_feature(netout,all_imgs,vec_len,req_len_per_feature,target_id):
+  nn_result=[]
+  min=0
+  for i in range (vec_len):
+    #sims = netout[0,:].dot(all_imgs.T)
+    sims=((all_imgs.T)[i]-netout[i])**2
+    tmp=np.argsort(sims[ :])
+    index=np.where(tmp==target_id)
+    if index[0]<min:
+      min=index[0]
+    nn_result.append(tmp[:req_len_per_feature])
+    #nn_result.append(np.argsort(sims[ :])[:req_len_per_feature])
+
+  print(min)
+
+  return nn_result
+  
+
+
+
+def select_best_saved_model():
+  base_net=ConNet_img_text()
   loss_fn = torch.nn.MSELoss()
-  criterion=nn.MSELoss()
-  optimizer=torch.optim.SGD(model.parameters(), lr=glr)
-  
-  losses=[]
-  totallosses=[]
-
-  
-
-  for j in range(epoch):
-    total_loss=0
-    for l in range(int(all_queries.shape[0]/batch_size)):
-      
-      netoutbatch=model.myforward(torch.FloatTensor(all_queries[l*batch_size:(l+1)*batch_size,:]))
-      target_batch=torch.FloatTensor(imgdata[l*batch_size:(l+1)*batch_size,:])
-      
-      loss = loss_fn(target_batch,netoutbatch)
-      losses.append(loss)
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
-      total_loss+=loss
-      if (l%100==0) :
-        print('Epoch:',j,' get images batch=',l,'loss',loss,end='\r')
-    
-        
-    if (total_loss<min_error):
-      break
-    
-    print('Epoch:',j, ' total loss',total_loss)
-    totallosses.append(total_loss)
-    if (j%10000==0) :
-       torch.save(model.state_dict(), Path1+r'\FFLModel'+str(j)+'.pth')
-      #  with open(Path1+r"/"+'losses.txt', 'wb') as fp:
-      #   pickle.dump(totallosses, fp)
-  print('Finished Training')
-  torch.save(model.state_dict(), Path1+r'\FFLModel.pth') 
-
-
-def GetValuesRegModelPlusFFL():
-
-  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
-  #   Beta = pickle.load(fp) 
-
-  #imgdata = datasets.Features172K().Get_all_imagesWithoutModelTrig()
-  #all_queries1 = datasets.Features172K().Get_all_queriesWithoutModelTrig()
-
-  imgdata = datasets.Features172K().Get_all_images()
-  all_queries1 = datasets.Features172K().Get_all_queries()
-
-  for i in range(all_queries1.shape[0]):
-    all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
-  for i in range(imgdata.shape[0]):
-    imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
-
-  reg = LinearRegression().fit(all_queries1, imgdata)
-
-  trainset = datasets.Fashion200k(
-        path=Path1,
-        split='train',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-  
-  testset = datasets.Fashion200k(
-        path=Path1,
-        split='test',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-
-  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in trainset.get_all_texts()],512)
-  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  
-  FFL= LRM()
-  
-  
-
-  opt = argparse.ArgumentParser()
-  opt.add_argument('--batch_size', type=int, default=2)
-  opt.add_argument('--dataset', type=str, default='fashion200k')
-  opt.batch_size =1
-  opt.dataset='fashion200k'
-  
-  
-  for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
-    for x in range(10000, 20001, 10000):
-      FFL.load_state_dict(torch.load(Path1+r'\FFLModel'+str(x)+'.pth' , map_location=torch.device('cpu') ))
-      FFL.eval()
-      #betaNor = test_retrieval.testLoadedBetaRegModel(opt, trig, dataset,Beta,reg)
-      betaNor = test_retrieval.testLoadedRegModelPlusFFL(opt, trig, dataset,reg,FFL)
-      print(name,' FFL: '+str(x)+' :',betaNor)
-
-      # asbook = test_retrieval.test(opt, trig, dataset)
-      # print(name,' As PaPer: ',asbook)
-
-
-###################################################################3
-
-
-class ConNet_text(nn.Module):
-  def __init__(self):
-    super().__init__()
-    self.netmodel= torch.nn.Sequential(nn.Conv1d(1,2, 3,stride=1),nn.Conv1d(2,3, kernel_size=3,stride=1),nn.MaxPool1d(3))
-    self.l1=nn.Linear( 1019,1024)
-    self.l2=nn.Linear(1024,512)
-  
-  def myforward_text (self,inv):
-    outv=self.netmodel(inv)
-    outv = outv.view(outv.size(0), -1)
-    invsq= torch.squeeze(inv)
-    sz=outv.size()
-    szinpv=inv.size() 
-    tmp=torch.zeros([sz[0],sz[1]+szinpv[2]])
-    tmp[:,0:sz[1]]=outv
-    tmp[:,sz[1]:sz[1]+szinpv[2]]=invsq
-    outv=tmp
-    outv=self.l2(torch.sigmoid(self.l1(outv)))
-    return outv
-
-  
-def traingmodel(): 
-  phix = datasets.Features172K().Get_phix()
-  #phit = datasets.Features172K().Get_phit()
-  phitarget = datasets.Features172K().Get_phixtarget()
-  epoch=5000
-  batch_size=500
-  min_error=0.01
-  glr=0.006
-  totallosses=[]  
+  phix=datasets.Features172K().Get_phix()[:20000]
+  phit=datasets.Features172K().Get_phit()[:20000]
+  phix_target=datasets.Features172K().Get_phixtarget()[:20000]
   phix=phix.reshape(phix.shape[0],1,512)
-  model_img=ConNet_text()
-  torch.manual_seed(3)
+  phit=torch.tensor(phit)
+  phit=phit.reshape(phit.shape[0],1,512)
+
+  for i in range(3):
+    base_net.load_state_dict(torch.load(Path1+r'\phase2_img'+str(i)+r'.pth', map_location=torch.device('cpu') ))
+    netoutbatch=base_net.myforward(torch.FloatTensor(phix))
+    target_batch=torch.FloatTensor(phix_target)
+    loss = loss_fn(target_batch,netoutbatch)
+    print('loss for model image',i, 'is ', loss)
+    base_net.load_state_dict(torch.load(Path1+r'\phase2_text'+str(i)+r'.pth', map_location=torch.device('cpu') ))
+    netoutbatch=base_net.myforward(torch.FloatTensor(phit))
+    target_batch=torch.FloatTensor(phix_target)
+    loss = loss_fn(target_batch,netoutbatch)
+    print('loss for model text',i, 'is ', loss)
+
+def save_out_of_conv_step():
+  base_net=ConNet_img_text()
+  phix=datasets.Features172K().Get_phix()
+  phit=datasets.Features172K().Get_phit()
+  phix=phix.reshape(phix.shape[0],1,512)
+  phit=torch.tensor(phit)
+  phit=phit.reshape(phit.shape[0],1,512)
+
+  i=0
+  base_net.load_state_dict(torch.load(Path1+r'\phase2_img'+str(i)+r'.pth', map_location=torch.device('cpu') ))
+  netoutbatch=base_net.myforward(torch.FloatTensor(phix))
+  with open(Path1+r"/"+'conv_step_img.txt', 'wb') as fp:
+    pickle.dump(netoutbatch, fp)
+
+  base_net.load_state_dict(torch.load(Path1+r'\phase2_text'+str(i)+r'.pth', map_location=torch.device('cpu') ))
+  netoutbatch=base_net.myforward(torch.FloatTensor(phit))
+  with open(Path1+r"/"+'conv_step_text.txt', 'wb') as fp:
+    pickle.dump(netoutbatch, fp)
+
+########################################bulid train MLP##############################
+def bulid_train_MLP_layer():
+  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
+  #   Beta = pickle.load(fp) 
+
+  with open(Path1+r"/"+'conv_step_img.txt', 'rb') as fp:
+    input1 = pickle.load(fp)
+  with open(Path1+r"/"+'conv_step_text.txt', 'rb') as fp:
+    input2 = pickle.load(fp)
+
+  input1 = torch.autograd.Variable(input1)
+  input2 = torch.autograd.Variable(input2)
+
+
+
+  input1=numpy.array(input1)
+  input2=numpy.array(input2)
+  inp=np.concatenate([input1,input2],1)
+  input1=[]
+  input2=[]
+  hidden1=1500
+  hidden2=980
+  batch_size=200
+  max_iterations=25000
+  min_error=50
+    
+
+
+  target= datasets.Features172K().Get_phixtarget()
+  
+  model_mlp=NLR2(inp.shape[1],target.shape[1],hidden1,hidden2)
+ 
+  torch.manual_seed(300)
   loss_fn = torch.nn.MSELoss()
-  torch.manual_seed(3)
-  optimizer=torch.optim.SGD(model_img.parameters(), lr=glr)
+  
+ 
+
+  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=0.002)
+  epoch=max_iterations
+  s=0
   losses=[]
   totallosses=[]
   for j in range(epoch):
     total_loss=0
+    
+    for l in range(int(inp.shape[0]/batch_size)):
+      
+      item_batch = inp[l*batch_size+s:(l+1)*batch_size+s,:]
+      target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
+      netoutbatch=model_mlp.myforward(torch.tensor(item_batch))
+      loss = loss_fn(torch.tensor(target_batch),netoutbatch)
+      losses.append(loss)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+    if (total_loss<min_error):
+      break
+    print('iteration:',j,'MSE loss ',loss, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    s+=1
+    if s==48:
+       s=0
+    if (j%100==0) :
+      torch.save(model_mlp.state_dict(), Path1+r'\mlp_3_2_net'+str(j)+r'.pth') 
+      with open(Path1+r"/"+'loosses28112021.pkl', 'wb') as fp:
+          pickle.dump( losses, fp)
+
+
+  print('Finished Training')
+  torch.save(model_mlp.state_dict(), Path1+r'\mlp_3_2_net_Final.pth') 
+
+def test_Model_performance(file_index):
+  with open(Path1+r"/"+'conv_step_img.txt', 'rb') as fp:
+    input1 = pickle.load(fp)
+  with open(Path1+r"/"+'conv_step_text.txt', 'rb') as fp:
+    input2 = pickle.load(fp)
+
+  input1 = torch.autograd.Variable(input1)
+  input2 = torch.autograd.Variable(input2)
+  input1=numpy.array(input1)
+  input2=numpy.array(input2)
+  inp=np.concatenate([input1,input2],1)
+  hidden1=1400
+  hidden2=980
+  all_imgs= datasets.Features172K().Get_phix()
+  
+
+  model_mlp=NLR2(inp.shape[1],all_imgs.shape[1],hidden1,hidden2)
+  model_mlp.load_state_dict(torch.load( Path1+r'\mlp_3_net'+str(file_index)+r'.pth', map_location=torch.device('cpu') ))
+  all_queries=model_mlp.myforward(torch.FloatTensor(inp))
+  all_queries=torch.autograd.Variable(all_queries)
+  all_queries=numpy.array(all_queries)[:5000]
+
+  inp=[]
+  all_captions=datasets.Features172K().Get_all_captions()
+  for i in range(all_queries.shape[0]):
+    all_queries[i, :] /= np.linalg.norm(all_queries[i, :])
+  with open (Path1+"/train_all_target_captions.txt", 'rb') as fp:
+    all_target_captions = pickle.load(fp) 
+
+  #all_target_captions=get_target_captions_train()
+  for i in range(all_imgs.shape[0]):
+    all_imgs[i, :] /= np.linalg.norm(all_imgs[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  nn_result1=[]
+  nn_result2=[]
+  for i in tqdm(range(all_queries.shape[0])):
+    sims = all_queries[i:(i+1), :].dot(all_imgs.T)
+    sims1=input1[i:(i+1),:].dot(all_imgs.T)
+    sims2=input2[i:(i+1),:].dot(all_imgs.T)
+
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+    nn_result1.append(np.argsort(-sims1[0, :])[:110])
+    nn_result2.append(np.argsort(-sims2[0, :])[:110])
+
+    
+  # compute recalls
+  out = []
+  out1=[]
+  out2=[]
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  nn_result1 = [[all_captions[nn] for nn in nns1] for nns1 in nn_result1]
+  nn_result2 = [[all_captions[nn] for nn in nns2] for nns2 in nn_result2]
+  
+  for k in [1, 5, 10, 50, 100]:
+    
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+    r = 0.0
+    for i, nns1 in enumerate(nn_result1):
+      if all_target_captions[i] in nns1[:k]:
+        r += 1
+    r /= len(nn_result1)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out1.append(str(k) + ' ---> '+ str(r*100))
+    
+    r = 0.0
+    for i, nns2 in enumerate(nn_result2):
+      if all_target_captions[i] in nns2[:k]:
+        r += 1
+    r /= len(nn_result2)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out2.append(str(k) + ' ---> '+ str(r*100))
+
+    
+  return out, out1, out2
+def resume_train_MLP(file_index):
+  
+  with open(Path1+r"/"+'conv_step_img.txt', 'rb') as fp:
+    input1 = pickle.load(fp)
+  with open(Path1+r"/"+'conv_step_text.txt', 'rb') as fp:
+    input2 = pickle.load(fp)
+
+  input1 = torch.autograd.Variable(input1)
+  input2 = torch.autograd.Variable(input2)
+  input1=numpy.array(input1)
+  input2=numpy.array(input2)
+  inp=np.concatenate([input1,input2],1)
+  hidden1=1400
+  hidden2=980
+  input1=[]
+  input2=[]
+  target= datasets.Features172K().Get_phixtarget()
+
+
+  model_mlp=NLR2(inp.shape[1],target.shape[1],hidden1,hidden2)
+  model_mlp.load_state_dict(torch.load( Path1+r'\mlp_3_net'+str(file_index)+r'.pth', map_location=torch.device('cpu') ))
+  batch_size=16
+  
+  min_error=50
+  loss_fn = torch.nn.MSELoss()
+  
+  losses=[]
+  totallosses=[]
+  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=0.003)
+  epoch=25000
+
+  for j in range(epoch):
+    total_loss=0
+    for l in range(int(inp.shape[0]/batch_size)):
+      
+      item_batch = inp[l*batch_size:(l+1)*batch_size,:]
+      target_batch=target[l*batch_size:(l+1)*batch_size,:]
+      netoutbatch=model_mlp.myforward(torch.tensor(item_batch))
+      loss = loss_fn(torch.tensor(target_batch),netoutbatch)
+      losses.append(loss)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+    if (total_loss<min_error):
+      break
+    print('iteration:',j,'MSE loss ',loss, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    if (j%100==0) :
+      torch.save(model_mlp.state_dict(), Path1+r'\mlp_3_net'+str(j+file_index+1)+r'.pth') 
+      with open(Path1+r"/"+'loosses24112021resume300.pkl', 'wb') as fp:
+          pickle.dump( losses, fp)
+
+
+  print('Finished Training')
+  torch.save(model_mlp.state_dict(), Path1+r'\mlp_3_net_Final.pth') 
+
+def get_target_captions_train(count):
+  trainset = datasets.Fashion200k(
+        path=path2,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  all_target_captions=[]
+
+  i=0
+  for Data in tqdm(trainset):
+    all_target_captions.append (Data['target_caption'])
+    i+=1
+    if (i>count):
+      break
+  return all_target_captions
+
+def bulid_train_semantic_Hup():
+  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
+  #   Beta = pickle.load(fp) 
+
+  phit_caption=datasets.Features172K().Get_phit_image_caption()
+  phix=datasets.Features172K().Get_phix()
+  phix=Variable(torch.Tensor(phix))
+  phit_caption=Variable(torch.Tensor(phit_caption))
+
+  hidden1=1024
+  hidden2=750
+  batch_size=100
+  max_iterations=25000
+  min_error=15
+    
+
+
+  
+  model_mlp=NLR2(phit_caption.shape[1],phix.shape[1],hidden1,hidden2)
+ 
+  torch.manual_seed(300)
+  loss_fn=torch.nn.CosineSimilarity()
+  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=0.002)
+  epoch=max_iterations
+  s=0
+  losses=[]
+  totallosses=[]
+  for j in range(epoch):
+    total_loss=0
+    
     for l in range(int(phix.shape[0]/batch_size)):
       
-      netoutbatch=model_img.myforward_text(torch.FloatTensor(phix[l*batch_size:(l+1)*batch_size,:]))
-      target_batch=torch.FloatTensor(phitarget[l*batch_size:(l+1)*batch_size,:])
-      loss = loss_fn(target_batch,netoutbatch)
-      losses.append(loss)
+      item_batch = phit_caption[l*batch_size+s:(l+1)*batch_size+s,:]
+
+      target_batch=phit_caption[l*batch_size+s:(l+1)*batch_size+s,:]
+      netoutbatch=model_mlp.myforward(item_batch)
+      loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
+
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
+      losses.append(loss)
+      optimizer.step()
       total_loss+=loss
-      if (l%1000==0) :
-        print('Epoch img:',j,' get images batch=',l,'loss',loss,end='\r')
-        
     if (total_loss<min_error):
       break
-    print('iteration:',j, 'total loss',total_loss)
+    print('iteration:',j,'COS similarity loss ',loss, 'total loss',total_loss)
     totallosses.append(total_loss)
-    if (j%1000==0) :
-       torch.save(model_img.state_dict(), Path1+r'\4Dilr006w12'+str(j)+r'.pth') 
-       with open(Path1+r"/"+'losses_4iDmg.txt', 'wb') as fp:
-        pickle.dump(totallosses, fp)
-  #print ('NewModel:',loss_fn(model.myforward(all_queries),all_queries))  
-  print('Finished Training img')
-  torch.save(model_img.state_dict(), Path1+r'\4iDCovLinearflr006w12.pth')
+    s+=1
+    if s==48:
+       s=0
+    if (j%100==0) :
+      torch.save(model_mlp.state_dict(), Path1+r'\mlp_semantichup_net'+str(j)+r'.pth') 
+      with open(Path1+r"/"+'loossessemantichup.pkl', 'wb') as fp:
+          pickle.dump( losses, fp)
 
-   
+
+  print('Finished Training')
+  torch.save(model_mlp.state_dict(), Path1+r'\mlp_semantichup_net_Final.pth') 
+def save_semantic_hup_output():
+  phit_query_caption=datasets.Features172K().Get_phit()
+  phix=datasets.Features172K().Get_phix()
+  phix=Variable(torch.Tensor(phix))
+  phit_query_caption=Variable(torch.Tensor(phit_query_caption))
+
+  hidden1=1024
+  hidden2=750
+  model_mlp=NLR2(phit_query_caption.shape[2],phix.shape[1],hidden1,hidden2)
+  model_mlp.load_state_dict(torch.load( Path1+r'\mlp_semantichup_net_Final.pth', map_location=torch.device('cpu') ))
+  semantic_query_caption=model_mlp.myforward(phit_query_caption)
+  with open(Path1+r'\semantic_query_caption.txt', 'wb') as fp:
+    pickle.dump(semantic_query_caption, fp)
+  input1 = torch.autograd.Variable(semantic_query_caption)
+  input1=torch.squeeze(input1)
+  input2 = torch.autograd.Variable(phix)
+  input1=numpy.array(input1)
+  input2=numpy.array(input2)
+  inp=np.concatenate([input1,input2],1)
+
+  with open(Path1+r'\squery_with_phix.txt', 'wb') as fp:
+    pickle.dump(inp, fp)
+
+
+def bulid_train_final_net_with_semantic_Hup():
+  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
+  #   Beta = pickle.load(fp) 
+
+  inp=datasets.Features172K().Get_squery_caption_with_phix()
+  target=datasets.Features172K().Get_phixtarget()
+  inp=Variable(torch.Tensor(inp))
+  target=Variable(torch.Tensor(target))
+
+  hidden=900
+  batch_size=500
+  max_iterations=25000
+  min_error=12
+  model_mlp=NLR3(inp.shape[1],target.shape[1],hidden)
+ 
+  torch.manual_seed(30)
+  loss_fn=torch.nn.CosineSimilarity()
+  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=0.002)
+  epoch=max_iterations
+  s=0
+  sweep_range=inp.shape[0]%batch_size
+
+  losses=[]
+  totallosses=[]
+  for j in range(epoch):
+    total_loss=0
+    
+    for l in range(int(inp.shape[0]/batch_size)):
+      
+      item_batch = inp[l*batch_size+s:(l+1)*batch_size+s,:]
+
+      target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
+      netoutbatch=model_mlp.myforward(item_batch)
+      loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
+
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      losses.append(loss)
+      optimizer.step()
+      total_loss+=loss
+    if (total_loss<min_error):
+      break
+    print('iteration:',j,'COS similarity loss ',loss, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    s+=1
+    if s==sweep_range:
+       s=0
+    if (j%500==0) :
+      torch.save(model_mlp.state_dict(), Path1+r'\3final_net_with_Shup'+str(j)+r'.pth') 
+      with open(Path1+r"/"+'3lossesfinal_net_with_Shup.pkl', 'wb') as fp:
+          pickle.dump( losses, fp)
+
+
+  print('Finished Training')
+  torch.save(model_mlp.state_dict(), Path1+r'\3final_net_with_Shup_Final.pth') 
+
+
+def resume_train_final_net_with_semantic_Hup(start_no):
+  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
+  #   Beta = pickle.load(fp) 
+
+  inp=datasets.Features172K().Get_squery_caption_with_phix()
+  target=datasets.Features172K().Get_phixtarget()
+  inp=Variable(torch.Tensor(inp))
+  target=Variable(torch.Tensor(target))
+
+  hidden=900
+  batch_size=500
+  max_iterations=25000
+  min_error=12
+  model_mlp=NLR3(inp.shape[1],target.shape[1],hidden)
+  model_mlp.load_state_dict(torch.load( Path1+r'\3final_net_with_Shup'+str(start_no)+r'.pth', map_location=torch.device('cpu') ))
+ 
+  loss_fn=torch.nn.CosineSimilarity()
+  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=0.001)
+  epoch=max_iterations
+
+  s=0
+  sweep_range=inp.shape[0]%batch_size
+  totallosses=[]
+  for j in range(epoch):
+    total_loss=0
+    
+    for l in range(int(inp.shape[0]/batch_size)):
+      
+      item_batch = inp[l*batch_size+s:(l+1)*batch_size+s,:]
+
+      target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
+      netoutbatch=model_mlp.myforward(item_batch)
+      loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
+
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      #losses.append(loss)
+      optimizer.step()
+      total_loss+=loss
+    if (total_loss<min_error):
+      break
+    print('iteration:',j,'COS similarity loss ',loss, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    s+=1
+    if s==sweep_range:
+       s=0
+    if (j%200==0) :
+      torch.save(model_mlp.state_dict(), Path1+r'\3final_net_with_Shup'+str(j+start_no)+r'.pth') 
+      with open(Path1+r"/"+'3lossesfinal_net_with_Shup'+str(start_no)+'.pkl', 'wb') as fp:
+          pickle.dump( totallosses, fp)
+
+
+  print('Finished Training')
+  torch.save(model_mlp.state_dict(), Path1+r'\3final_net_with_Shup_Final.pth') 
+
+def semantic_Model_performance(file_no):
+  inp=datasets.Features172K().Get_squery_caption_with_phix()
+  target=datasets.Features172K().Get_phixtarget()
+  inp=Variable(torch.Tensor(inp))
+  all_captions=datasets.Features172K().Get_all_captions()
+  all_target_captions=datasets.Features172K().Get_all_target_captions()
+
+  hidden1=2024
+  hidden2=1024
+  model_mlp=NLR2(inp.shape[1],target.shape[1],hidden1,hidden2)
+  model_mlp.load_state_dict(torch.load( Path1+r'\final_net_with_Shup'+str(file_no)+r'.pth', map_location=torch.device('cpu') ))
+
+  netout=model_mlp.myforward(inp)
+  netout = torch.autograd.Variable(netout)
+  #target = torch.autograd.Variable(target)
+
+  netout=numpy.array(netout)
+  #target=numpy.array(target)
+
+  for i in range(netout.shape[0]):
+    netout[i,:]/=np.linalg.norm(netout[i, :])
+  for i in range(target.shape[0]):
+    target[i,:]/=np.linalg.norm(target[i, :])
+  
+  print('test normalization', np.linalg.norm(target[1, :]),np.linalg.norm(netout[1, :]))
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  
+  for i in tqdm(range(int(netout.shape[0]/20))):
+    sims = netout[i:(i+1), :].dot(target.T)
+    
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+  
+    
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  
+  
+  for k in [1, 5, 10, 50, 100]:
+    
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+    r = 0.0
+
+    
+  return out 
+def regression_study(st):
+  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
+  #   Beta = pickle.load(fp) 
+
+  inp1=datasets.Features172K().Get_phix()  #[:40000,:] 
+  inp2=datasets.Features172K().Get_phit()
+  inp2=np.concatenate(inp2)
+  #inp2=inp2[:40000,:]
+  all_target_captions=datasets.Features172K().Get_all_target_captions()
+  target=datasets.Features172K().Get_phixtarget() #[:40000,:]
+
+  captions_target_list=[]
+  if st == 0:
+    for i in range(len(all_target_captions)):
+      itemlist=[j for j,x in enumerate(all_captions) if x==all_target_captions[i]]
+
+      captions_target_list.append(itemlist)
+    with open(Path1+r"/"+'target_captions_all_captions.pckl', 'wb') as fp:
+      pickle.dump(captions_target_list, fp)
+  else:
+    with open (Path1+r"/"+'target_captions_all_captions.pckl','rb') as fp:
+      captions_target_list = pickle.load(fp)
+
+  reg1 = LinearRegression().fit(inp1, target)
+  reg2 = LinearRegression().fit(inp2, target)
+  newinp1=reg1.predict(inp1)
+  newinp2=reg2.predict(inp2)
+  newinp=np.concatenate((newinp1,newinp2),axis=1)
+  reg3 = LinearRegression().fit(newinp, target)
+  target_sout=reg3.predict(newinp)
+  cnt=np.zeros(5)
+  rng=[1,5,10,50,100]
+  rng=np.array(rng)
+  for i in range(np.shape(target_sout)[0]):
+    tlist=argsort((np.square(inp1-target_sout[i,:])).sum(1))[:100]
+    if (i%200==0):
+      print(set(captions_target_list[i]).intersection(set(tlist)))
+    for j in range(5):
+      if (set(captions_target_list[i]).intersection(set(tlist[:j]))) !=set():
+       cnt[j] +=1
+    if (i%100 ==0):
+      print('counts',cnt, 'percent',100*cnt/(i+1), 'index = ',i+1)
+    
+  print('precent= ',rng ,' are of values ',100*cnt/np.shape(target_sout)[0])
+def datasets_check():
+  phit=datasets.Features172K().Get_phit()    # ok
+  target=datasets.Features172K().Get_phixtarget()   #ok
+  phix=datasets.Features172K().Get_phix()      #ok
+  all_captions=datasets.Features172K().Get_all_captions() #ok
+  all_target_captions=datasets.Features172K().Get_all_target_captions()  # not ok 55001 only
+  phitcaption=datasets.Features172K().Get_phit_image_caption()   # ok
+
+  phit=datasets.Features33K().Get_phit()  # ok
+  target=datasets.Features33K().Get_phixtarget()  # not ok 29+k
+  phix=datasets.Features33K().Get_phix()    # ok
+  all_captions=datasets.Features33K().Get_all_captions()  # not ok 29+k
+  x=0
+  all_target_captions=datasets.Features33K().Get_all_target_captions() # ont implemented
+  phitcaption=datasets.Features33K().Get_phit_image_caption()     # not implemented
+
 if __name__ == '__main__': 
     
-  #traingmodel()
-  savesourcephixtvalues()
+  #phase2_network()  img_model_file,text_model_file,flag  
+  #asbook1, model=Phase2_test_models_get_orignal("4iCovLinearflr006w12.pth","4Dtlr006w124000.pth",3)
+  #name="joint"
+  #print(name,' L oaded As PaPer: ',asbook1, '\n  model generated      ',model, '\n  ' )
+  datasets_check()
 
+  ###########phase2_two_network_model_train()
+  #############select_best_saved_model()
+  #for i in range(5):
+
+    #print(semantic_Model_performance(i*100))
+  #resume_train_final_net_with_semantic_Hup(4500)
+  #regression_study(1)
+  
+  #bulid_train_final_net_with_semantic_Hup()
+  #save_semantic_hup_output()
+  #bulid_train_semantic_Hup()
+
+  #bulid_train_MLP_layer()
+  #resume_train_MLP(300)
+  #print('results :' , test_Model_performance(401))
+  #all_target_captions=get_target_captions_train(55000)
+  #with open(Path1+r"/"+'train_all_target_captions.txt', 'wb') as fp:
+  #  pickle.dump(all_target_captions, fp)
+
+  
+  
+
+
+  #model_file='4Dilr006w124000.pth'
+  #k=0
+  #path2=path2=r"C:\MMaster\Files"
+  
+  #dataset_used = datasets.Fashion200k(
+  #      path=path2,
+  #      path=path2,
+  #      split='train',
+  #      transform=torchvision.transforms.Compose([
+  #          torchvision.transforms.Resize(224),
+  #          torchvision.transforms.CenterCrop(224),
+  #          torchvision.transforms.ToTensor(),
+  #          torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+  #                                           [0.229, 0.224, 0.225])
+  #      ]))
+
+  #for i in range(0,170000,500):
+  #  k+= CBIR(i,1, 500,model_file,dataset_used)
+
+  #print('total found is ',k)
+
+  
     
 
 
