@@ -955,6 +955,26 @@ class Features172K():
     with open (Path1+r"/phase2/"+'Features172Kphit.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
+  def Get_phit_image_caption(self):
+    with open (Path1+r"/phase2/"+'Features172Kall_queriesphicaptions.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+  
+  def Get_semantic_query_caption(self):
+    with open (Path1+r"/phase2/"+'semantic_query_caption.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+  def Get_squery_caption_with_phix(self):
+    with open (Path1+r"/phase2/"+'squery_with_phix.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_target_captions(self):
+    with open (Path1+r"/phase2/"+'train_all_target_captions.txt', 'rb') as fp:
+      all_target_captions = pickle.load(fp)
+      return  all_target_captions
+
+
 
 
 class Features33K():
@@ -1194,9 +1214,9 @@ class Features33K():
       return data
 
   def Get_all_target(self):
-      with open (Path1+r"/dataset33/"+'Features33Kall_target.txt', 'rb') as fp:
-        data = pickle.load(fp) 
-        return data
+    with open (Path1+r"/dataset33/"+'Features33Kall_target.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
 
   def Get_all_source_imgafeatured(self):
       with open (Path1+r"/dataset33/"+'Features33Kallsource_imgfeature.txt', 'rb') as fp:
