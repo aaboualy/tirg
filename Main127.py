@@ -490,8 +490,11 @@ def savesourcephixtvalues():
   #datasets.Features172K().SavetoFilesphixt(Path1+r'/dataset172', trig, train,opt)
   #datasets.Features33K().SavetoFilesphixt(Path1+r'/dataset33', trig, test,opt)
 
-  datasets.Features172K().SavetoFilesCaptionImages(Path1+r'/dataset172', trig, train,opt)
-  datasets.Features33K().SavetoFilesCaptionImages(Path1+r'/dataset33', trig, test,opt)
+  # datasets.Features172K().SavetoFilesCaptionImages(Path1+r'/dataset172', trig, train,opt)
+  # datasets.Features33K().SavetoFilesCaptionImages(Path1+r'/dataset33', trig, test,opt)
+
+  datasets.Features172K().SavetoFilesphixt(Path1+r'/dataset172Org', trig, train,opt)
+  datasets.Features33K().SavetoFilesphixt(Path1+r'/dataset33Org', trig, test,opt)
   
   print('172 Finished')
   print('33k Finished')
