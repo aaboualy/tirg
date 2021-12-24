@@ -20,7 +20,7 @@ import torch
 from tqdm import tqdm as tqdm
 from scipy.spatial import distance
 import datasets
-import main2
+from BK import main2
 import torchvision
 
 
