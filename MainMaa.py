@@ -43,7 +43,7 @@ from sklearn.metrics import mean_squared_error
 
 
 
-Path1=r"C:\MMaster\Files\phase2"
+Path1=r"C:\MMaster\Files"
 path2=r"C:\MMaster\Files"
 
 
@@ -67,10 +67,55 @@ def PrintSizeDatasets():
     print('All Imgs Captions Unique Lenght 33K:',len(datasets.Features33KOrg().PhitAllImagesCaptions))
 
 
+def savesourcevalues():
+
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  #trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  #trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+
+  
+  
+  datasets.Feature172KOrg().SavetoFilesphixt(Path1+r'/dataset172Org', trig, train,opt)
+  print('172 Finished')
+  
+  datasets.Features33KOrg().SavetoFilesphixt(Path1+r'/dataset33Org', trig, test,opt)
+  
+
+  
+  print('33k Finished')
 
 
 if __name__ == '__main__': 
-    PrintSizeDatasets()
+    savesourcevalues()
     
     
   
