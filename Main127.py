@@ -3030,6 +3030,7 @@ def semantic_Model_performance(file_no):
 
     
   return out 
+#######################################################################################################
 def regression_study(st):
   # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
   #   Beta = pickle.load(fp) 
@@ -3062,7 +3063,8 @@ def regression_study(st):
       print('counts',cnt, 'percent',100*cnt/(i+1), 'index = ',i+1)
     
   print('precent= ',rng ,' are of values ',100*cnt/np.shape(target_sout)[0])
-def datasets_check():
+############################################################################################################333333333333333333
+def datasets_size_check():
     print('Querys Imgs Lenght 172k:',len(datasets.Feature172KOrg().PhixQueryImg))
     print('Querys Captions Lenght 172k:',len(datasets.Feature172KOrg().PhitQueryCaption))
     print('Querys Modifier Text Lenght 172k:',len(datasets.Feature172KOrg().PhitQueryMod))
@@ -3093,14 +3095,18 @@ def save_captions_values():
                                               [0.229, 0.224, 0.225])
        ]))
   all_target_captions =[]
-  all_cap=datasets.Features172K().Get_all_captions()
-  all_tar_cap=datasets.Features172K().Get_all_target_captions()
   train.caption_index_init_()
+  all_target_ids=[]
   print(len(train))
-  for t in(train):
+
+  for t in tqdm(train):
     all_target_captions += [t['target_caption']]
+    all_target_ids +=[t['target_img_id']]
+    
   with open(Path1+r"/"+'Features172Kall_target_captions.pckl', 'wb') as fp:
     pickle.dump(all_target_captions, fp)
+  with open(Path1+r"/"+'Features172Kall_target_ids.pckl', 'wb') as fp:
+    pickle.dump(all_target_ids, fp)
 
   return 
   test_dataset = datasets.Fashion200k(
@@ -3137,7 +3143,7 @@ def save_captions_values():
   
 
   print('172 Finished')
-  
+#########################################################################333#########################
 def prepare_dataset():
     with open(Path1+r"/"+'Features33Kall_image_caption.pckl', 'rb') as fp:
       all_img_captions_test=pickle.load( fp)
@@ -3173,7 +3179,7 @@ def prepare_dataset():
       captions_target_list.append(itemlist)
     with open(Path1+r"/"+'target_captions_all_captions172k.pckl', 'wb') as fp:
       pickle.dump(captions_target_list, fp)
-
+#######################################################################################################################
 def print_element(no):
   
     train = datasets.Fashion200k(
@@ -3192,7 +3198,7 @@ def print_element(no):
     combined_text='img:'+im['source_caption']+' Target:' + im['target_caption']+' mod:' + im['mod']['str']
     print('element =',no,'target id ',target_id)
     print(combined_text)
-
+######################################################################################################3
 def inspect_case():
   with open(Path1+r"/"+'Features172Kall_image_caption.pckl', 'rb') as fp:
     all_img_captions_train=pickle.load( fp)
@@ -3205,9 +3211,43 @@ def inspect_case():
   print_element(0)
   print_element(50377)
   print_element(118871)
-    
+#####################################################################################################################
+def validate_data_set():
+  #with open(Path1+r"/"+'Features172Kall_image_caption.pckl', 'rb') as fp:
+  #  all_img_captions_train=pickle.load( fp)
+  all_img_captions_train=datasets.Feature172KOrg().all_captions_text
+  all_target_captions_train=datasets.Feature172KOrg().all_target_captions_text
+  phix=datasets.Feature172KOrg().PhixQueryImg
+  phit=datasets.Feature172KOrg().PhitQueryMod
+  all_ids_l=datasets.Feature172KOrg().all_ids
+  img_ids=[]
+  all_target_ids=[]
+  for t in (all_ids_l):
+    all_target_ids +=[t['target_id']]
+    img_ids +=[t['source_img_id']]
+
+  target=datasets.Feature172KOrg().PhixTargetImg
+  #with open(Path1+r"/"+'Features172Kall_target_captions.pckl', 'rb') as fp:
+  #  all_target_captions_train=pickle.load(fp)
+  #with open(Path1+r"/"+'Features172Kall_target_captions.pckl', 'rb') as fp:
+  #  all_target_captions=pickle.load( fp)
+  #with open(Path1+r"/"+'Features172Kall_target_ids.pckl', 'rb') as fp:
+  #  all_target_ids=pickle.load( fp)
+  #phix=datasets.Features172K().Get_phix()   #[:40000,:] 
+  #phit=datasets.Features172K().Get_phit()  #[:40000,:] 
+  #phit=np.concatenate(phit)
+  #inp2=inp2[:40000,:]
+  #target=datasets.Features172K().Get_phixtarget()  #[:40000,:]  #[:40000,:]
+  if (((phix.shape[0]+phit.shape[0]+target.shape[0]+len(all_target_ids)+len(all_target_captions_train)+len(all_img_captions_train))/len(all_target_captions_train))!=6):
+    print("type mis match x t tar cap: tar img    ", phix.shape[0],phit.shape[0],target.shape[0],len(all_target_ids),len(all_target_captions_train),len(all_img_captions_train))
+  for i in range (phix.shape[0]):
+    if sum(phix[all_target_ids[i],:]-target[i,:])!=0:
+      print ('error i target phix[targetid], phixtarget[i]',i,'**', all_target_ids[i],'**', phix[all_target_ids[i],:5],'**', target[i,:5])
+    if all_target_captions_train[i] != all_img_captions_train[all_target_ids[i]]:
+      print ('error i target caption[targetid], targetcaption[i]',i,'**', all_target_ids[i],'**', all_img_captions_train[all_target_ids[i],:],'**', all_target_captions_train[i,:])
+
 if __name__ == '__main__': 
-    
+  validate_data_set()  
   #phase2_network()  img_model_file,text_model_file,flag  
   #asbook1, model=Phase2_test_models_get_orignal("4iCovLinearflr006w12.pth","4Dtlr006w124000.pth",3)
   #name="joint"
@@ -3222,7 +3262,8 @@ if __name__ == '__main__':
   #resume_train_final_net_with_semantic_Hup(4500)
   #inspect_case()
   #regression_study(1)
-  save_captions_values()
+  #save_captions_values()
+
   
   #bulid_train_final_net_with_semantic_Hup()
   #save_semantic_hup_output()
