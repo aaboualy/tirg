@@ -55,6 +55,10 @@ def PrintSizeDatasets():
     print('Querys Modifier Text Lenght 172k:',len(datasets.Feature172KOrg().PhitQueryMod))
     print('Target Imgs Lenght 172k:',len(datasets.Feature172KOrg().PhixTargetImg))
     print('Target Captions Lenght 172k:',len(datasets.Feature172KOrg().PhitTargetCaption))
+    print('IDs Lenght 172k:',len(datasets.Feature172KOrg().all_ids))
+    print('Query Captions Text Lenght 172k:',len(datasets.Feature172KOrg().all_Query_captions_text))
+    print('Target Captions Text Lenght 172k:',len(datasets.Feature172KOrg().all_target_captions_text))
+    print('Mod Captions Text Lenght 172k:',len(datasets.Feature172KOrg().all_captions_text))
  
     ########## 33K #########
 
@@ -65,6 +69,11 @@ def PrintSizeDatasets():
     print('Target Captions Lenght 33K:',len(datasets.Features33KOrg().PhitTargetCaption))
     print('All Imgs Unique Lenght 33K:',len(datasets.Features33KOrg().PhixAllImages))
     print('All Imgs Captions Unique Lenght 33K:',len(datasets.Features33KOrg().PhitAllImagesCaptions))
+    print('IDs Lenght 172k:',len(datasets.Features33KOrg().all_ids))
+    print('Query Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_queries_captions_text))
+    print('Target Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_target_captions_text))
+    print('Mod Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_queries_Mod_text))
+    print('All  Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_captions_text))
 
 
 def savesourcevalues():
@@ -115,7 +124,7 @@ def savesourcevalues():
 
 
 if __name__ == '__main__': 
-    savesourcevalues()
+    PrintSizeDatasets()
     
     
   
