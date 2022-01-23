@@ -50,30 +50,32 @@ path2=r"C:\MMaster\Files"
 def PrintSizeDatasets():
     ########## 172K #########
 
-    print('Querys Imgs Lenght 172k:',len(datasets.Feature172KOrg().PhixQueryImg))
-    print('Querys Captions Lenght 172k:',len(datasets.Feature172KOrg().PhitQueryCaption))
-    print('Querys Modifier Text Lenght 172k:',len(datasets.Feature172KOrg().PhitQueryMod))
-    print('Target Imgs Lenght 172k:',len(datasets.Feature172KOrg().PhixTargetImg))
-    print('Target Captions Lenght 172k:',len(datasets.Feature172KOrg().PhitTargetCaption))
-    print('IDs Lenght 172k:',len(datasets.Feature172KOrg().all_ids))
-    print('Query Captions Text Lenght 172k:',len(datasets.Feature172KOrg().all_Query_captions_text))
-    print('Target Captions Text Lenght 172k:',len(datasets.Feature172KOrg().all_target_captions_text))
-    print('Mod Captions Text Lenght 172k:',len(datasets.Feature172KOrg().all_captions_text))
+    # print('Querys Imgs Lenght 172k:',len(datasets.Feature172KOrg().PhixQueryImg))
+    # print('Querys Captions Lenght 172k:',len(datasets.Feature172KOrg().PhitQueryCaption))
+    # print('Querys Modifier Text Lenght 172k:',len(datasets.Feature172KOrg().PhitQueryMod))
+    # print('Target Imgs Lenght 172k:',len(datasets.Feature172KOrg().PhixTargetImg))
+    # print('Target Captions Lenght 172k:',len(datasets.Feature172KOrg().PhitTargetCaption))
+    # print('IDs Lenght 172k:',len(datasets.Feature172KOrg().all_ids))
+    # print('Query Captions Text Lenght 172k:',len(datasets.Feature172KOrg().all_Query_captions_text))
+    # print('Target Captions Text Lenght 172k:',len(datasets.Feature172KOrg().all_target_captions_text))
+    # print('Mod Captions Text Lenght 172k:',len(datasets.Feature172KOrg().all_captions_text))
  
     ########## 33K #########
 
-    print('Querys Imgs Lenght 33K:',len(datasets.Features33KOrg().PhixQueryImg))
-    print('Querys Captions Lenght 33K:',len(datasets.Features33KOrg().PhitQueryCaption))
-    print('Querys Modifier Text Lenght 33K:',len(datasets.Features33KOrg().PhitQueryMod))
-    print('Target Imgs Lenght 33K:',len(datasets.Features33KOrg().PhixTargetImg))
-    print('Target Captions Lenght 33K:',len(datasets.Features33KOrg().PhitTargetCaption))
-    print('All Imgs Unique Lenght 33K:',len(datasets.Features33KOrg().PhixAllImages))
-    print('All Imgs Captions Unique Lenght 33K:',len(datasets.Features33KOrg().PhitAllImagesCaptions))
-    print('IDs Lenght 172k:',len(datasets.Features33KOrg().all_ids))
-    print('Query Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_queries_captions_text))
-    print('Target Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_target_captions_text))
-    print('Mod Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_queries_Mod_text))
-    print('All  Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_captions_text))
+    # print('Querys Imgs Lenght 33K:',len(datasets.Features33KOrg().PhixQueryImg))
+    # print('Querys Captions Lenght 33K:',len(datasets.Features33KOrg().PhitQueryCaption))
+    # print('Querys Modifier Text Lenght 33K:',len(datasets.Features33KOrg().PhitQueryMod))
+    # print('Target Imgs Lenght 33K:',len(datasets.Features33KOrg().PhixTargetImg))
+    # print('Target Captions Lenght 33K:',len(datasets.Features33KOrg().PhitTargetCaption))
+    # print('All Imgs Unique Lenght 33K:',len(datasets.Features33KOrg().PhixAllImages))
+    # print('All Imgs Captions Unique Lenght 33K:',len(datasets.Features33KOrg().PhitAllImagesCaptions))
+    # print('IDs Lenght 172k:',len(datasets.Features33KOrg().all_ids))
+    # print('Query Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_queries_captions_text))
+    # print('Target Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_target_captions_text))
+    # print('Mod Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_queries_Mod_text))
+    # print('All  Captions Text Lenght 172k:',len(datasets.Features33KOrg().all_captions_text))
+
+    print(datasets.Features33KOrg().all_captions_text[30][0])
 
 
 def savesourcevalues():
