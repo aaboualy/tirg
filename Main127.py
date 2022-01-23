@@ -1,4 +1,5 @@
-from numpy.core.fromnumeric import argsort, squeeze
+from numpy.core.fromnumeric import argsort, mean, squeeze
+from scipy import linalg
 from tensorflow.python.ops.array_ops import zeros
 from tensorflow.python.ops.gen_array_ops import concat
 import torch
@@ -1217,7 +1218,14 @@ class NLR2(nn.Module):
 class NLR3(nn.Module):
   def __init__(self,netin,netout,nethidden):
     super().__init__()
-    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Sigmoid(),torch.nn.Linear(nethidden, netout))
+    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Tanh(),torch.nn.Linear(nethidden, netout))
+  def myforward (self,inv):
+    outv=self.netmodel(inv)
+    return outv
+class NLR32(nn.Module):
+  def __init__(self,netin,netout,nethidden):
+    super().__init__()
+    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Tanh(),torch.nn.Linear(nethidden, nethidden),torch.nn.Tanh(),torch.nn.Linear(nethidden, netout))
   def myforward (self,inv):
     outv=self.netmodel(inv)
     return outv
@@ -3031,39 +3039,176 @@ def semantic_Model_performance(file_no):
     
   return out 
 #######################################################################################################
+
 def regression_study(st):
   # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
   #   Beta = pickle.load(fp) 
+  #all_img_captions_train=datasets.Feature172KOrg().all_captions_text
+  #all_target_captions=datasets.Feature172KOrg().all_target_captions_text
+  inp1=datasets.Feature172KOrg().PhixQueryImg
+  inp2=datasets.Feature172KOrg().PhitQueryMod
+  target=datasets.Feature172KOrg().PhixTargetImg
 
-  inp1=datasets.Features172K().Get_phix()   #[:40000,:] 
-  inp2=datasets.Features172K().Get_phit()  #[:40000,:] 
-  inp2=np.concatenate(inp2)
-  #inp2=inp2[:40000,:]
-  target=datasets.Features172K().Get_phixtarget()  #[:40000,:]  #[:40000,:]
-  with open(Path1+r"/"+'target_captions_all_captions.pckl', 'rb') as fp:
-      captions_target_list=pickle.load( fp)  
   reg1 = LinearRegression().fit(inp1, target)
   reg2 = LinearRegression().fit(inp2, target)
+  reg4 = LinearRegression().fit(inp2, inp1)
+
   newinp1=reg1.predict(inp1)
   newinp2=reg2.predict(inp2)
-  newinp=np.concatenate((newinp1,newinp2),axis=1)
+  newinp3=reg4.predict(inp2)
+  newinp=np.concatenate((newinp1,newinp2,newinp3),axis=1)
+  with open(Path1+r"/"+'Features172K1500inxttx.pckl', 'wb') as fp:
+       pickle.dump( newinp,fp)
+
   reg3 = LinearRegression().fit(newinp, target)
   target_sout=reg3.predict(newinp)
   cnt=np.zeros(5)
   rng=[1,5,10,50,100]
   rng=np.array(rng)
+  
+  #captions_target_list=prepare_dataset(all_target_captions)
+  with open(Path1+r"/"+'Features172Kcaptions_target_index.pckl', 'rb') as fp:
+       captions_target_list=pickle.load( fp)
+
   for i in range(np.shape(target_sout)[0]):
-    tlist=argsort((np.square(inp1-target[i,:])).sum(1))[:100]
-    if (i%200==0):
-      print(set(captions_target_list[i]).intersection(set(tlist)))
+    #dist=(np.square(target-target_sout[i,:])).sum(1)[:100]
+    #print(dist)
+    tlist=argsort((np.square(target-newinp1[i,:])).sum(1))[:100]
     for j in range(5):
-      if (set(captions_target_list[i]).intersection(set(tlist[:j]))) !=set():
+      if (set(captions_target_list[i]).intersection(set(tlist[:j+1]))) !=set():
        cnt[j] +=1
     if (i%200 ==0):
       print('counts',cnt, 'percent',100*cnt/(i+1), 'index = ',i+1)
     
   print('precent= ',rng ,' are of values ',100*cnt/np.shape(target_sout)[0])
 ############################################################################################################333333333333333333
+def bulid_train_final_net(inp,target,hidden,min_error,l_r,epoch,batch_size,save_duration,tag,seed):
+  
+  model_mlp=NLR3(inp.shape[1],target.shape[1],hidden)
+ 
+  torch.manual_seed(seed)
+  model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,save_duration,tag)
+
+
+  loss_fn=torch.nn.CosineSimilarity(dim=1,eps=1e-10)
+def model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,save_duration,tag,loss_fn):
+  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=l_r)
+
+  s=0
+  sweep_range=inp.shape[0]%batch_size
+
+  totallosses=[]
+
+  for j in range(epoch):
+    total_loss=0
+    
+    for l in range(int(inp.shape[0]/batch_size)):
+      
+      item_batch = inp[l*batch_size+s:(l+1)*batch_size+s,:]
+
+      target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
+      netoutbatch=model_mlp.myforward(item_batch)
+      loss =1- loss_fn(target_batch,netoutbatch)
+
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      total_loss+=loss
+    if (total_loss<min_error):
+      break
+    print('iteration:',j,' loss ',loss, 'total loss',total_loss)
+    totallosses.append(total_loss)
+    s+=1
+    if s>=sweep_range:
+       s=0
+    if (j%save_duration==0) :
+      torch.save(model_mlp.state_dict(), Path1+r'\4net'+tag+r'.pth') 
+
+      #torch.save(model_mlp.state_dict(), Path1+r'\4final_net_with_Shup'+str(j)+r'.pth') 
+      with open(Path1+r"/"+'4losses'+tag+'.pkl', 'wb') as fp:
+          pickle.dump( totallosses, fp)
+
+
+  print('Finished Training')
+  torch.save(model_mlp.state_dict(), Path1+r'\4final_net'+tag+'.pth') 
+  return model_mlp
+
+def evaluate_performance(target,target_sout,captions_target_list,rng,print_every,cnt):
+  target = Variable(target, requires_grad=False)
+  target_sout = Variable(target_sout, requires_grad=False)
+
+  target=np.array(target) 
+  target_sout=np.array(target_sout) 
+  #captions_target_list=prepare_dataset(all_target_captions)
+  #with open(Path1+r"/"+'Features172Kcaptions_target_index.pckl', 'rb') as fp:
+   #    captions_target_list=pickle.load( fp)
+  for i in range(np.shape(target_sout)[0]):
+    target_sout[i,:]/=np.linalg.norm(target_sout[i,:])
+   # target[i,:]/=np.linalg.norm(target[i,:])
+
+  for i in range(np.shape(target_sout)[0]):
+    dist=target_sout[i,:].dot(target.T)
+
+    print('i min max mean',dist[captions_target_list[i]], min(dist),max(dist),mean(dist))
+    #tlist=argsort(dist)[:101]
+    tlist=argsort(-(target_sout[i,:].dot(target.T)))[:101]
+    for j in range(5):
+      if (set(captions_target_list[i]).intersection(set(tlist[:j+1]))) !=set():
+       cnt[j] +=1
+    if (i%print_every ==0):
+      print('counts',cnt, 'percent',100*cnt/(i+1), 'index = ',i+1)
+    
+  print('precent= ',rng ,' are of values ',100*cnt/np.shape(target_sout)[0])
+  return cnt
+
+def main_nonlinear():
+  target=datasets.Feature172KOrg().PhixTargetImg
+
+  with open(Path1+r"/"+'Features172K1500inxttx.pckl', 'rb') as fp:
+       inp=pickle.load( fp)
+
+  inp=torch.tensor(inp)
+  target=torch.tensor(target)
+  cnt=np.zeros(5)
+  rng=[1,5,10,50,100]
+  rng=np.array(rng)
+  hidden=2000
+  l_r=0.002
+  epoch=25000
+  tag='finalstagexttxNLR32-2'
+  batch_size=1
+  save_duration=1
+  seed=100
+  loss_fn=torch.nn.CosineSimilarity(dim=1,eps=1e-10)
+
+  min_error=1
+  model_mlp=NLR32(inp.shape[1],target.shape[1],hidden)
+  for i in range(np.shape(target)[0]):
+    target[i,:]/=np.linalg.norm(target[i,:])
+  
+  model_mlp.load_state_dict(torch.load( Path1+r'\4net'+tag+r'.pth', map_location=torch.device('cpu') ))
+  #model_learning_iterate(epoch,inp[:50000,:],target[:50000,:],model_mlp,batch_size,l_r,min_error,save_duration,tag,loss_fn)
+
+  target_sout=model_mlp.myforward(inp[:50000,:])
+  for i in range(20):
+    loss=target[i,:].dot(target_sout[i,:].T)/torch.norm(target_sout[i,:])
+    print('print=',i,loss)
+  target = Variable(target, requires_grad=False)
+  target_sout = Variable(target_sout, requires_grad=False)
+
+  mse=mean_squared_error(np.array(target[:50000,:]),np.array(target_sout))
+  print('mean square error',mse)
+  
+
+  with open(Path1+r"/"+'Features172Kcaptions_target_index.pckl', 'rb') as fp:
+       captions_target_list=pickle.load( fp)
+  #target_sout=datasets.Features172K().Get_all_queries() 
+  evaluate_performance(target,target_sout,captions_target_list,rng,500,cnt)
+
+
+  #bulid_train_final_net(inp,target,hidden,40,l_r,max_iteration,batch_size,save_duration,tag,seed)
+    
+
 def datasets_size_check():
     print('Querys Imgs Lenght 172k:',len(datasets.Feature172KOrg().PhixQueryImg))
     print('Querys Captions Lenght 172k:',len(datasets.Feature172KOrg().PhitQueryCaption))
@@ -3144,41 +3289,17 @@ def save_captions_values():
 
   print('172 Finished')
 #########################################################################333#########################
-def prepare_dataset():
-    with open(Path1+r"/"+'Features33Kall_image_caption.pckl', 'rb') as fp:
-      all_img_captions_test=pickle.load( fp)
-
-    with open(Path1+r"/"+'Features33Kall_target_captions.pckl', 'rb') as fp:
-      all_target_captions_test=pickle.load(fp)
-
-    #with open(Path1+r"/"+'Features33Kall_mods.pckl', 'rb') as fp:
-    #  all_mods_test=pickle.load( fp)
-    print(" data test done ")
+def prepare_dataset(all_target_captions):
     captions_target_list=[]
-    for i in range(len(all_target_captions_test)):
-      itemlist=[j for j,x in enumerate(all_img_captions_test) if x==all_target_captions_test[i]]
-
-      captions_target_list.append(itemlist)
-    with open(Path1+r"/"+'target_captions_all_captions33k.pckl', 'wb') as fp:
-      pickle.dump(captions_target_list, fp)
-  
-    with open(Path1+r"/"+'Features172Kall_image_caption.pckl', 'rb') as fp:
-      all_img_captions_train=pickle.load( fp)
-
-    with open(Path1+r"/"+'Features172Kall_target_captions.pckl', 'rb') as fp:
-      all_target_captions_train=pickle.load(fp)
-
-      
-
-    captions_target_list=[]
-  
-    for i in range(len(all_target_captions_train)):
-      itemlist=[j for j,x in enumerate(all_img_captions_train) if x==all_target_captions_train[i]]
+    for i in range(len(all_target_captions)):
+      itemlist=[j for j,x in enumerate(all_target_captions) if x==all_target_captions[i]]
       if (i%500==0):
-        print(" train 172",i)
+        print(" working in index ",i)
       captions_target_list.append(itemlist)
-    with open(Path1+r"/"+'target_captions_all_captions172k.pckl', 'wb') as fp:
-      pickle.dump(captions_target_list, fp)
+    with open(Path1+r"/"+'Features172Kcaptions_target_index.pckl', 'wb') as fp:
+          pickle.dump(captions_target_list, fp)
+    return captions_target_list
+    
 #######################################################################################################################
 def print_element(no):
   
@@ -3247,7 +3368,7 @@ def validate_data_set():
       print ('error i target caption[targetid], targetcaption[i]',i,'**', all_target_ids[i],'**', all_img_captions_train[all_target_ids[i],:],'**', all_target_captions_train[i,:])
 
 if __name__ == '__main__': 
-  validate_data_set()  
+  #validate_data_set()  
   #phase2_network()  img_model_file,text_model_file,flag  
   #asbook1, model=Phase2_test_models_get_orignal("4iCovLinearflr006w12.pth","4Dtlr006w124000.pth",3)
   #name="joint"
@@ -3261,6 +3382,7 @@ if __name__ == '__main__':
     #print(semantic_Model_performance(i*100))
   #resume_train_final_net_with_semantic_Hup(4500)
   #inspect_case()
+  main_nonlinear()
   #regression_study(1)
   #save_captions_values()
 
