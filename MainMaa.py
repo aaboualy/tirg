@@ -138,20 +138,21 @@ def GetElementFromDataSet():
                                               [0.229, 0.224, 0.225])
         ]))
 
-    for i in range(100,115): #172048
+    for i in range(100,5000): #172048
       item = train[i] 
-      print('Index=',i,'------------------------------------------------------------------------')
-      print('Source Image ID =',item['source_img_id'])      
-      print('Source Caption =',item['source_caption'])
-      print('Source Path=',item['source_path'] )
-      print('Target Image ID =',item['target_img_id'] )      
-      print('Target Caption =',item['target_caption'] )
-      print('Target Path =',item['target_path'] )
-      print('Modifier =',item['mod']['str'] )
-      #print(item['modifiable'] )
-      #print(item['source_img_data'])
-      #print(item['target_img_data'] )
-      print('----------------------------------------------------------------------------------')
+      if('blue' in (item['mod']['str'])):
+        print('Index=',i,'------------------------------------------------------------------------')
+        print('Source Image ID =',item['source_img_id'])      
+        print('Source Caption =',item['source_caption'])
+        print('Source Path=',item['source_path'] )
+        print('Target Image ID =',item['target_img_id'] )      
+        print('Target Caption =',item['target_caption'] )
+        print('Target Path =',item['target_path'] )
+        print('Modifier =',item['mod']['str'] )
+        #print(item['modifiable'] )
+        #print(item['source_img_data'])
+        #print(item['target_img_data'] )
+        print('----------------------------------------------------------------------------------')
 
 
 
