@@ -77,7 +77,6 @@ def PrintSizeDatasets():
 
     print(datasets.Features33KOrg().all_captions_text[30][0])
 
-
 def savesourcevalues():
 
   train = datasets.Fashion200k(
@@ -124,8 +123,6 @@ def savesourcevalues():
   
   print('33k Finished')
 
-
-
 def GetElementFromDataSet():
     train = datasets.Fashion200k(
         path=Path1,
@@ -138,9 +135,9 @@ def GetElementFromDataSet():
                                               [0.229, 0.224, 0.225])
         ]))
 
-    for i in range(100,5000): #172048
+    for i in range(200,300): #172048
       item = train[i] 
-      if('blue' in (item['mod']['str'])):
+      if('red' in (item['mod']['str'])):
         print('Index=',i,'------------------------------------------------------------------------')
         print('Source Image ID =',item['source_img_id'])      
         print('Source Caption =',item['source_caption'])
@@ -154,10 +151,31 @@ def GetElementFromDataSet():
         #print(item['target_img_data'] )
         print('----------------------------------------------------------------------------------')
 
+def getlossesGraph(fileName):
+  with open (Path1+"\\LossesABC\\"+fileName+".pkl", 'rb') as fp:
+    lossMean = pickle.load(fp) 
+  
+  Y=[]
+  X1=[]
+  for x in range(len(lossMean)):
+    if x % 1 == 0:
+      Y.append(lossMean[x].detach().numpy())
+      X1.append(x)
+  
+
+  plt.plot(X1, Y)
+  # plt.rc('xtick', labelsize=30)    # fontsize of the tick labels
+  # plt.rc('ytick', labelsize=30)
+  plt.xlabel('Iteration')
+  plt.ylabel('Loss')
+  plt.title('Graph')
+  plt.show()
 
 
 if __name__ == '__main__': 
-    GetElementFromDataSet()
+    getlossesGraph("NetAlosses")
+    getlossesGraph("NetBlosses")
+    getlossesGraph("NetClosses")
     
     
   
