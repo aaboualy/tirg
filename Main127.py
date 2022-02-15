@@ -40,6 +40,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.datasets import make_regression
 from sklearn.metrics import mean_squared_error
+import torchvision.models as models
 
 
 
@@ -3366,8 +3367,85 @@ def validate_data_set():
       print ('error i target phix[targetid], phixtarget[i]',i,'**', all_target_ids[i],'**', phix[all_target_ids[i],:5],'**', target[i,:5])
     if all_target_captions_train[i] != all_img_captions_train[all_target_ids[i]]:
       print ('error i target caption[targetid], targetcaption[i]',i,'**', all_target_ids[i],'**', all_img_captions_train[all_target_ids[i],:],'**', all_target_captions_train[i,:])
+def RestNet152():
+  test_dataset = datasets.Fashion200k(
+        path=path2,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  resnet152 = models.resnet152(pretrained=True)
+  #resnet50=models.resnet50(pretrained=True)
+  #resnet50.fc=nn.Identity()
+  #resnet50.eval()
+  resnet152.fc = nn.Identity()
+  resnet152.eval()
+  #phix_50=[]
+  #target_phix_50=[]
+  phix_152=[]
+  target_phix_152=[]
+  cnt=0
+  for item in (test_dataset):
+    
+    cnt+=1
+    #img_id=item['source_img_id']
+    #target_id=item['target_id']
+    img=item['source_img_data']
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    img=img/torch.max(img)
+    out=resnet152(img)
+    #out50=resnet50(img)
+    out = Variable(out, requires_grad=False)
+    #out50 = Variable(out50, requires_grad=False)
+    #out50=np.array(out50)
+    out=np.array(out)
+    phix_152 +=[out[0,:]]
+    #phix_50 +=[out50[0,:]]
 
-if __name__ == '__main__': 
+    img=item['target_img_data']
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    img=img/torch.max(img)
+    out=resnet152(img)
+    #out50=resnet50(img)
+    out = Variable(out, requires_grad=False)
+    #out50 = Variable(out50, requires_grad=False)
+    #out50=np.array(out50)
+
+    out=np.array(out)
+
+    target_phix_152+=[out[0,:]]
+    #target_phix_50+=[out50[0,:]]
+
+    ###############################
+    
+    ##############################
+    if (cnt%500)==0:
+      print('cnt',cnt)
+      if (cnt%2000)==0:
+        with open(path2+r"/dataset172Org/"+'target_phix_152_test.txt', 'wb') as fp:
+          pickle.dump(target_phix_152,fp)
+        with open(path2+r"/dataset172Org/"+'phix_152_test.txt', 'wb') as fp:
+          pickle.dump(phix_152,fp)
+     #   with open(path2+r"/dataset172Org/"+'target_phix_50_test.txt', 'wb') as fp:
+      #    pickle.dump(target_phix_50,fp)
+     #   with open(path2+r"/dataset172Org/"+'phix_50_test.txt', 'wb') as fp:
+      #    pickle.dump(phix_50,fp)
+
+  with open(path2+r"/dataset172Org/"+'target_phix_152_test.txt', 'wb') as fp:
+      pickle.dump(target_phix_152,fp)
+  with open(path2+r"/dataset172Org/"+'phix_152_test.txt', 'wb') as fp:
+      pickle.dump(phix_152,fp)
+  #with open(path2+r"/dataset172Org/"+'target_phix_50_test.txt', 'wb') as fp:
+  #        pickle.dump(target_phix_50,fp)
+  #with open(path2+r"/dataset172Org/"+'phix_50_test.txt', 'wb') as fp:
+  #        pickle.dump(phix_50,fp)
+
+if __name__ == '__main__':
+  RestNet152() 
   #validate_data_set()  
   #phase2_network()  img_model_file,text_model_file,flag  
   #asbook1, model=Phase2_test_models_get_orignal("4iCovLinearflr006w12.pth","4Dtlr006w124000.pth",3)
@@ -3382,7 +3460,7 @@ if __name__ == '__main__':
     #print(semantic_Model_performance(i*100))
   #resume_train_final_net_with_semantic_Hup(4500)
   #inspect_case()
-  main_nonlinear()
+  #main_nonlinear()
   #regression_study(1)
   #save_captions_values()
 
@@ -3406,23 +3484,7 @@ if __name__ == '__main__':
   #k=0
   #path2=path2=r"C:\MMaster\Files"
   
-  #dataset_used = datasets.Fashion200k(
-  #      path=path2,
-  #      path=path2,
-  #      split='train',
-  #      transform=torchvision.transforms.Compose([
-  #          torchvision.transforms.Resize(224),
-  #          torchvision.transforms.CenterCrop(224),
-  #          torchvision.transforms.ToTensor(),
-  #          torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-  #                                           [0.229, 0.224, 0.225])
-  #      ]))
-
-  #for i in range(0,170000,500):
-  #  k+= CBIR(i,1, 500,model_file,dataset_used)
-
-  #print('total found is ',k)
-
+  
   
     
 
