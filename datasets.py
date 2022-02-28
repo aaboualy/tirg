@@ -1725,7 +1725,7 @@ class Features33KOrg():
 
 class Features152Org():
   def __init__(self):
-    super(Features152Org, self).__init__()
+    super(Features33KOrg, self).__init__()
     
     with open (Path1+r"/dataset152Org/"+'phix_152.txt', 'rb') as fp:
       self.phix_152 = pickle.load(fp) 
