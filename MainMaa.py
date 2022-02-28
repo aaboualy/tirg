@@ -171,11 +171,17 @@ def getlossesGraph(fileName):
   plt.title('Graph')
   plt.show()
 
+def testGPU():
+  print(torch.cuda.is_available())
+  if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+    print("GPU")
+  else:
+    device = torch.device("cpu")
+    print("CPU")
 
 if __name__ == '__main__': 
-    getlossesGraph("NetAlosses")
-    getlossesGraph("NetBlosses")
-    getlossesGraph("NetClosses")
+    testGPU()
     
     
   

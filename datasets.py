@@ -1550,9 +1550,6 @@ class Feature172KOrg():
     with open(Path+r"/"+'Features172Kall_ids.txt', 'wb') as fp:
       pickle.dump(all_ids, fp)
 
-
-
-
 class Features33KOrg():
   def __init__(self):
     super(Features33KOrg, self).__init__()
@@ -1726,6 +1723,25 @@ class Features33KOrg():
     with open(Path+r"/"+'Features33Kall_ids.txt', 'wb') as fp:
       pickle.dump(all_ids, fp)
 
+class Features152Org():
+  def __init__(self):
+    super(Features152Org, self).__init__()
     
+    with open (Path1+r"/dataset152Org/"+'phix_152.txt', 'rb') as fp:
+      self.phix_152 = pickle.load(fp) 
+    
+    with open (Path1+r"/dataset152Org/"+'target_phix_152.txt', 'rb') as fp:
+      self.target_phix_152 = pickle.load(fp) 
+
+    with open (Path1+r"/dataset152Org/"+'phix_152_test.txt', 'rb') as fp:
+      self.phix_152_test = pickle.load(fp) 
+    
+    with open (Path1+r"/dataset152Org/"+'target_phix_152_test.txt', 'rb') as fp:
+      self.target_phix_152_test = pickle.load(fp) 
+
+    
+
+    
+
 
   
