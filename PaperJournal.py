@@ -42,7 +42,13 @@ from sklearn.metrics import mean_squared_error
 
 
 Path1 = r"C:\MMaster\Files"
-
+print(torch.cuda.is_available())
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+    print("GPU")
+else:
+    device = torch.device("cpu")
+    print("CPU")
 
 class NLR3(nn.Module):
     def __init__(self, netin, netout, nethidden):
@@ -318,190 +324,6 @@ def NetBeval(run_type):
             print('testing loss= ',torch.mean(loss_tst))
         torch.save(model_mlp_updated.state_dict(), '/gdrive/My Drive/dataset/NetBfinalTST.pth')
 
-def Semantic152(run_type):
-    if run_type==0:        
-        phix=datasets.Features152Org().phix_152[:10000]
-        phix_target=datasets.Features152Org().target_phix_152[:10000]
-        phit=datasets.Feature172KOrg().PhitQueryCaption[:10000]
-        alltargetcaptions=datasets.Feature172KOrg().all_target_captions_text[:10000]
-        allquerycaptions=datasets.Feature172KOrg().all_Query_captions_text[:10000]
-        phit_query_captions=datasets.Feature172KOrg().PhitQueryCaption[:10000]
-        phit_taget_captions=datasets.Feature172KOrg().PhitTargetCaption[:10000]
-
-    else:        
-        phix=datasets.Features152Org().phix_152_test
-        phix_target=datasets.Features152Org().target_phix_152_test
-        phit=datasets.Features33KOrg().PhitQueryMod
-        alltargetcaptions=datasets.Features33KOrg().all_target_captions_text
-        allquerycaptions=datasets.Features33KOrg().all_queries_captions_text
-        phit_query_captions=datasets.Features33KOrg().PhitQueryCaption
-        phit_taget_captions=datasets.Features33KOrg().PhitTargetCaption
-
-    
-    phix=torch.tensor(phix)
-    phix_target=torch.tensor(phix_target)
-    hidden=1000
-    NetA=NLR3T(phix.shape[1],phit.shape[1],hidden)
-    NetA.load_state_dict(torch.load( Path1+r'/NetA152.pth', map_location=torch.device('cpu') ))
-    hidden=1000
-    NetB=NLR3T(phit.shape[1],phix.shape[1],hidden)
-    NetB.load_state_dict(torch.load( Path1+r'/NetB152.pth', map_location=torch.device('cpu') ))
-    
-    hidden=1800
-    NetC=NLR3S(phit.shape[1]*2,phit.shape[1],hidden)
-    NetC.load_state_dict(torch.load( Path1+r'/NetCfinalUpTR.pth', map_location=torch.device('cpu') ))
-    
-    print('Loaded Models')
-    phix=torch.tensor(phix)
-    NetAout=NetA.myforward(phix)
-    print('Net A')
-    
-    phit=torch.tensor(phit)
-    phit_query_captions=torch.tensor(phit_query_captions)
-    NetCinp=torch.cat((phit,NetAout[:phit.shape[0],:]),1)
-    NetCout=NetC.myforward(NetCinp)
-    print('Net C')
-    phit_taget_captions=torch.tensor(phit_taget_captions)
-    net_target=NetB.myforward(NetCout)
-    print('Net A')
-
-    ACloss_fn=torch.nn.MSELoss()
-    Bloss_fn=torch.nn.CosineSimilarity()
-    phit_query_captions=torch.tensor(phit_query_captions)
-    Aloss=ACloss_fn(NetAout[:phit_query_captions.shape[0],:],phit_query_captions)
-    phit_taget_captions=torch.tensor(phit_taget_captions)
-    Closs=ACloss_fn(NetCout,phit_taget_captions)
-    phix_target=torch.tensor(phix_target)
-    Bloss=torch.mean(Bloss_fn(net_target,phix_target[:net_target.shape[0],:]))
-    print('loss A  C  B',Aloss,Closs,Bloss)
-
-    
-    nn_result = []
-    
-    net_target=tensor(net_target)
-    net_target=Variable(net_target,requires_grad=False)
-    net_target=np.array(net_target)
-
-    for i in range(net_target.shape[0]):
-        phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
-        net_target[i,:]=net_target[i,:]/np.linalg.norm(net_target[i,:])
-    
-    
-    for i in range (net_target.shape[1]):  #(3900): #
-        sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)        
-        nn_result.append(np.argsort(-sims[ :])[:110])
-    
-        
-    
-    out = []
-    nn_result = [[allquerycaptions[nn] for nn in nns] for nns in nn_result]
-    
-    
-    for k in [1, 5, 10, 50, 100]:
-        
-        r = 0.0
-        for i, nns in enumerate(nn_result):
-            if alltargetcaptions[i] in nns[:k]:
-                r += 1
-        r /= len(nn_result)
-        #out += [('recall_top' + str(k) + '_correct_composition', r)]
-        out.append(str(k) + ' ---> '+ str(r*100))
-        r = 0.0
-
-    print (out)
-
-def Semantic18(run_type):
-    if run_type==0:        
-        phix=datasets.Feature172KOrg().PhixQueryImg[:10000]
-        phix_target=datasets.Feature172KOrg().PhixTargetImg[:10000]
-        phit=datasets.Feature172KOrg().PhitQueryCaption[:10000]
-        alltargetcaptions=datasets.Feature172KOrg().all_target_captions_text[:10000]
-        allquerycaptions=datasets.Feature172KOrg().all_target_captions_text[:10000]#.all_Query_captions_text[:10000]
-        phit_query_captions=datasets.Feature172KOrg().PhitQueryCaption[:10000]
-        phit_taget_captions=datasets.Feature172KOrg().PhitTargetCaption[:10000]
-
-    else:        
-        phix=datasets.Features33KOrg().PhixQueryImg
-        phix_target=datasets.Features33KOrg().PhixTargetImg
-        phit=datasets.Features33KOrg().PhitQueryMod
-        alltargetcaptions=datasets.Features33KOrg().all_target_captions_text
-        allquerycaptions=datasets.Features33KOrg().all_queries_captions_text
-        phit_query_captions=datasets.Features33KOrg().PhitQueryCaption
-        phit_taget_captions=datasets.Features33KOrg().PhitTargetCaption
-
-    
-    phix=torch.tensor(phix)
-    phix_target=torch.tensor(phix_target)
-    hidden=1000
-    NetA=NLR3T(phix.shape[1],phit.shape[1],hidden)
-    NetA.load_state_dict(torch.load( Path1+r'/NetA.pth', map_location=torch.device('cpu') ))
-    hidden=1000
-    NetB=NLR3T(phit.shape[1],phix.shape[1],hidden)
-    NetB.load_state_dict(torch.load( Path1+r'/NetB.pth', map_location=torch.device('cpu') ))
-    
-    hidden=1800
-    NetC=NLR3S(phit.shape[1]*2,phit.shape[1],hidden)
-    NetC.load_state_dict(torch.load( Path1+r'/NetCfinalUpTR.pth', map_location=torch.device('cpu') ))
-    
-    print('Loaded Models')
-    phix=torch.tensor(phix)
-    NetAout=NetA.myforward(phix)
-    print('Net A')
-    
-    phit=torch.tensor(phit)
-    phit_query_captions=torch.tensor(phit_query_captions)
-    NetCinp=torch.cat((phit,NetAout[:phit.shape[0],:]),1)
-    NetCout=NetC.myforward(NetCinp)
-    print('Net C')
-    phit_taget_captions=torch.tensor(phit_taget_captions)
-    net_target=NetB.myforward(NetCout)
-    print('Net A')
-
-    ACloss_fn=torch.nn.MSELoss()
-    Bloss_fn=torch.nn.CosineSimilarity()
-    phit_query_captions=torch.tensor(phit_query_captions)
-    Aloss=ACloss_fn(NetAout[:phit_query_captions.shape[0],:],phit_query_captions)
-    phit_taget_captions=torch.tensor(phit_taget_captions)
-    Closs=ACloss_fn(NetCout,phit_taget_captions)
-    phix_target=torch.tensor(phix_target)
-    Bloss=torch.mean(Bloss_fn(net_target,phix_target[:net_target.shape[0],:]))
-    print('loss A  C  B',Aloss,Closs,Bloss)
-
-    
-    nn_result = []
-    
-    net_target=tensor(net_target)
-    net_target=Variable(net_target,requires_grad=False)
-    net_target=np.array(net_target)
-    for i in range(net_target.shape[0]):
-        phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
-        net_target[i,:]=net_target[i,:]/np.linalg.norm(net_target[i,:])
-    
-    
-    for i in range (net_target.shape[1]):  #(3900): #
-        sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
-        
-        nn_result.append(np.argsort(-sims[ :])[:110])
-    
-        
-    
-    out = []
-    nn_result = [[allquerycaptions[nn] for nn in nns] for nns in nn_result]
-    
-    
-    for k in [1, 5, 10, 50, 100]:
-        
-        r = 0.0
-        for i, nns in enumerate(nn_result):
-            if alltargetcaptions[i] in nns[:k]:
-                r += 1
-        r /= len(nn_result)
-        #out += [('recall_top' + str(k) + '_correct_composition', r)]
-        out.append(str(k) + ' ---> '+ str(r*100))
-        r = 0.0
-
-    print (out)
-    
 def EvalNetC(run_type):
 
     if run_type=='train': 
@@ -618,7 +440,381 @@ def EvalNetCOld(run_type):
 
     print (out)
 
+######################Training
+
+def trainNetB1521500():
    
+    inp=datasets.Feature172KOrg().PhitTargetCaption
+    
+    target=datasets.Features152Org().target_phix_152
+
+    inp=torch.tensor(inp)
+    target=torch.tensor(target)
+    
+    hidden=1500
+    l_r=0.38
+    epoch=100000
+    batch_size=500
+    save_duration=50
+    seed=100
+    min_error=0.3
+    model_mlp=NLR3(inp.shape[1],target.shape[1],hidden).to(device)
+    model_mlp.load_state_dict(torch.load( Path1+r'/NetB152_1500.pth', map_location=torch.device('cpu') ))
+    loss_fn = torch.nn.CosineSimilarity(dim=1, eps=1e-4) 
+    optimizer=torch.optim.SGD(model_mlp.parameters(), lr=l_r)
+    s=0
+    sweep_range=inp.shape[0]%batch_size
+
+    totallosses=[]
+    
+
+    for j in range(epoch):
+        total_loss=0
+        
+        for l in range(int(inp.shape[0]/batch_size)):
+            
+            item_batch = inp[l*batch_size+s:(l+1)*batch_size+s,:].to(device)
+
+            target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:].to(device)
+            netoutbatch=model_mlp.myforward(item_batch)
+            loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            total_loss+=loss
+        if (total_loss<min_error):
+            break
+        print('iteration:',j, 'total loss',total_loss,'avg loss', total_loss/(inp.shape[0]/batch_size))
+        totallosses.append(total_loss)
+        totallosses=[]
+        total_loss=0
+
+        s+=1
+        if s==sweep_range:
+            s=0
+        if (j%save_duration==0) :
+            torch.save(model_mlp.state_dict(), Path1+r'/NetB152_1500.pth') 
+
+            
+    print('Finished Training')
+    torch.save(model_mlp.state_dict(), Path1+r'/Final_NetB152_1500.pth') 
+
+
+
+
+#########################Semantic
+
+def Semantic18(run_type):
+    if run_type==0:        
+        phix=datasets.Feature172KOrg().PhixQueryImg[:10000]
+        phix_target=datasets.Feature172KOrg().PhixTargetImg[:10000]
+        phit=datasets.Feature172KOrg().PhitQueryCaption[:10000]
+        alltargetcaptions=datasets.Feature172KOrg().all_target_captions_text[:10000]
+        allquerycaptions=datasets.Feature172KOrg().all_target_captions_text[:10000]#.all_Query_captions_text[:10000]
+        phit_query_captions=datasets.Feature172KOrg().PhitQueryCaption[:10000]
+        phit_taget_captions=datasets.Feature172KOrg().PhitTargetCaption[:10000]
+
+    else:        
+        phix=datasets.Features33KOrg().PhixQueryImg
+        phix_target=datasets.Features33KOrg().PhixTargetImg
+        phit=datasets.Features33KOrg().PhitQueryMod
+        alltargetcaptions=datasets.Features33KOrg().all_target_captions_text
+        allquerycaptions=datasets.Features33KOrg().all_queries_captions_text
+        phit_query_captions=datasets.Features33KOrg().PhitQueryCaption
+        phit_taget_captions=datasets.Features33KOrg().PhitTargetCaption
+
+    
+    phix=torch.tensor(phix)
+    phix_target=torch.tensor(phix_target)
+    hidden=1000
+    NetA=NLR3T(phix.shape[1],phit.shape[1],hidden)
+    NetA.load_state_dict(torch.load( Path1+r'/NetA.pth', map_location=torch.device('cpu') ))
+    hidden=1000
+    NetB=NLR3T(phit.shape[1],phix.shape[1],hidden)
+    NetB.load_state_dict(torch.load( Path1+r'/NetB.pth', map_location=torch.device('cpu') ))
+    
+    hidden=1800
+    NetC=NLR3S(phit.shape[1]*2,phit.shape[1],hidden)
+    NetC.load_state_dict(torch.load( Path1+r'/NetCfinalUpTR.pth', map_location=torch.device('cpu') ))
+    
+    print('Loaded Models')
+    phix=torch.tensor(phix)
+    NetAout=NetA.myforward(phix)
+    print('Net A')
+    
+    phit=torch.tensor(phit)
+    phit_query_captions=torch.tensor(phit_query_captions)
+    NetCinp=torch.cat((phit,NetAout[:phit.shape[0],:]),1)
+    NetCout=NetC.myforward(NetCinp)
+    print('Net C')
+    phit_taget_captions=torch.tensor(phit_taget_captions)
+    net_target=NetB.myforward(NetCout)
+    print('Net A')
+
+    ACloss_fn=torch.nn.MSELoss()
+    Bloss_fn=torch.nn.CosineSimilarity()
+    phit_query_captions=torch.tensor(phit_query_captions)
+    Aloss=ACloss_fn(NetAout[:phit_query_captions.shape[0],:],phit_query_captions)
+    phit_taget_captions=torch.tensor(phit_taget_captions)
+    Closs=ACloss_fn(NetCout,phit_taget_captions)
+    phix_target=torch.tensor(phix_target)
+    Bloss=torch.mean(Bloss_fn(net_target,phix_target[:net_target.shape[0],:]))
+    print('loss A  C  B',Aloss,Closs,Bloss)
+
+    
+    nn_result = []
+    
+    net_target=tensor(net_target)
+    net_target=Variable(net_target,requires_grad=False)
+    net_target=np.array(net_target)
+    for i in range(net_target.shape[0]):
+        phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
+        net_target[i,:]=net_target[i,:]/np.linalg.norm(net_target[i,:])
+    
+    
+    for i in range (net_target.shape[1]):  #(3900): #
+        sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
+        
+        nn_result.append(np.argsort(-sims[ :])[:110])
+    
+        
+    
+    out = []
+    nn_result = [[allquerycaptions[nn] for nn in nns] for nns in nn_result]
+    
+    
+    for k in [1, 5, 10, 50, 100]:
+        
+        r = 0.0
+        for i, nns in enumerate(nn_result):
+            if alltargetcaptions[i] in nns[:k]:
+                r += 1
+        r /= len(nn_result)
+        #out += [('recall_top' + str(k) + '_correct_composition', r)]
+        out.append(str(k) + ' ---> '+ str(r*100))
+        r = 0.0
+
+    print (out)
+    
+def Semantic50(run_type):
+    device = torch.device("cpu")
+    
+
+    if run_type=='train': 
+        PhixQueryImg =datasets.Features152Org().phix_152[:10000]
+        PhitQueryCaption =datasets.Feature172KOrg().PhitQueryCaption[:10000]
+        PhitQueryMod =datasets.Feature172KOrg().PhitQueryMod[:10000]
+        PhixTargetImg =datasets.Features152Org().target_phix_152[:10000]
+        PhitTargetCaption =datasets.Feature172KOrg().PhitTargetCaption[:10000]
+        all_captions_text =datasets.Feature172KOrg().all_captions_text[:10000]
+        all_target_captions_text =datasets.Feature172KOrg().all_target_captions_text[:10000]
+        all_Query_captions_text =datasets.Feature172KOrg().all_Query_captions_text[:10000]
+        all_ids =datasets.Feature172KOrg().all_ids[:10000]
+        SearchedFeatures=PhixTargetImg
+        
+
+    elif run_type=='test':    
+        PhixQueryImg=datasets.Features152Org().phix_152_test
+        PhitQueryCaption=datasets.Features33KOrg().PhitQueryCaption
+        PhitQueryMod=datasets.Features33KOrg().PhitQueryMod
+        PhixTargetImg=datasets.Features152Org().target_phix_152_test
+        PhitTargetCaption=datasets.Features33KOrg().PhitTargetCaption
+        PhixAllImages=datasets.Features33KOrg().PhixAllImages
+        PhitAllImagesCaptions=datasets.Features33KOrg().PhitAllImagesCaptions
+        all_captions_text=datasets.Features33KOrg().all_captions_text
+        all_target_captions_text=datasets.Features33KOrg().all_target_captions_text
+        all_Query_captions_text=datasets.Features33KOrg().all_queries_captions_text
+        all_queries_Mod_text=datasets.Features33KOrg().all_queries_Mod_text
+        all_ids=datasets.Features33KOrg().all_ids
+        SearchedFeatures=PhixAllImages
+
+    
+    PhitQueryCaption=torch.tensor(PhitQueryCaption).to(device)
+    PhixQueryImg=torch.tensor(PhixQueryImg).to(device)
+    PhitQueryMod=torch.tensor(PhitQueryMod).to(device)
+    PhitTargetCaption=torch.tensor(PhitTargetCaption).to(device)
+    PhixTargetImg=torch.tensor(PhixTargetImg).to(device)
+
+    for i in range(PhixQueryImg.shape[0]):
+        PhixQueryImg[i,:]/= torch.norm(PhixQueryImg[i,:])
+
+
+    hidden=1000
+    NetA=NLR3S(PhixQueryImg.shape[1],PhitQueryMod.shape[1],hidden).to(device)
+    NetA.load_state_dict(torch.load( Path1+r'/NetA152.pth', map_location=torch.device('cpu') ))
+    NetAout=NetA.myforward(PhixQueryImg)
+    ACloss_fn=torch.nn.MSELoss()
+    Aloss=ACloss_fn(NetAout[:PhitQueryCaption.shape[0],:],PhitQueryCaption)
+    print('Net A Loss:',Aloss)
+
+
+    hidden=1800
+    NetC=NLR3S(PhitQueryMod.shape[1]*2,PhitQueryMod.shape[1],hidden)
+    NetC.load_state_dict(torch.load( Path1+r'/NetCfinalUpTR.pth', map_location=torch.device('cpu') ))
+    NetCinp=torch.cat((PhitQueryMod,NetAout[:PhitQueryMod.shape[0],:]),1)
+    NetCout=NetC.myforward(NetCinp)
+    Closs=ACloss_fn(NetCout,PhitTargetCaption)
+    print('Net C Loss:',Closs)
+
+    
+    
+    
+    hidden=1000
+    NetB=NLR3T(PhitTargetCaption.shape[1],PhixTargetImg.shape[1],hidden)
+    NetB.load_state_dict(torch.load( Path1+r'/NetB152.pth', map_location=torch.device('cpu') ))
+    net_target=NetB.myforward(NetCout)    
+    Bloss_fn=torch.nn.CosineSimilarity()    
+    Bloss=torch.mean(Bloss_fn(net_target,PhixTargetImg[:net_target.shape[0],:]))
+    print('Net B Loss:',Bloss)
+
+
+   # print(test_retrieval.testSemantic(all_captions_text,all_target_captions_text,net_target,SearchedFeatures))
+
+    
+    nn_result = []
+    
+    net_target=tensor(net_target)
+    net_target=Variable(net_target,requires_grad=False)
+    net_target=np.array(net_target)
+
+    for i in range(net_target.shape[0]):
+        PhixTargetImg[i,:]=PhixTargetImg[i,:]/np.linalg.norm(PhixTargetImg[i,:])
+        net_target[i,:]=net_target[i,:]/np.linalg.norm(net_target[i,:])
+    
+    
+    for i in range (net_target.shape[0]):  #(3900): #
+        sims = net_target[i, :].dot(PhixTargetImg[:net_target.shape[0],:].T)        
+        nn_result.append(np.argsort(-sims[ :])[:110])
+    
+        
+    
+    out = []
+    nn_result = [[all_target_captions_text[nn] for nn in nns] for nns in nn_result]
+    
+    
+    for k in [1, 5, 10, 50, 100]:
+        
+        r = 0.0
+        for i, nns in enumerate(nn_result):
+            if all_target_captions_text[i] in nns[:k]:
+                r += 1
+        r /= len(nn_result)
+        #out += [('recall_top' + str(k) + '_correct_composition', r)]
+        out.append(str(k) + ' ---> '+ str(r*100))
+        r = 0.0
+
+    print (out)
+   
+def Semantic152(run_type):
+    device = torch.device("cpu")
+    
+
+    if run_type=='train': 
+        PhixQueryImg =datasets.Features152Org().phix_152[:10000]
+        PhitQueryCaption =datasets.Feature172KOrg().PhitQueryCaption[:10000]
+        PhitQueryMod =datasets.Feature172KOrg().PhitQueryMod[:10000]
+        PhixTargetImg =datasets.Features152Org().target_phix_152[:10000]
+        PhitTargetCaption =datasets.Feature172KOrg().PhitTargetCaption[:10000]
+        all_captions_text =datasets.Feature172KOrg().all_captions_text[:10000]
+        all_target_captions_text =datasets.Feature172KOrg().all_target_captions_text[:10000]
+        all_Query_captions_text =datasets.Feature172KOrg().all_Query_captions_text[:10000]
+        all_ids =datasets.Feature172KOrg().all_ids[:10000]
+        SearchedFeatures=PhixTargetImg
+        
+
+    elif run_type=='test':    
+        PhixQueryImg=datasets.Features152Org().phix_152_test
+        PhitQueryCaption=datasets.Features33KOrg().PhitQueryCaption
+        PhitQueryMod=datasets.Features33KOrg().PhitQueryMod
+        PhixTargetImg=datasets.Features152Org().target_phix_152_test
+        PhitTargetCaption=datasets.Features33KOrg().PhitTargetCaption
+        PhixAllImages=datasets.Features33KOrg().PhixAllImages
+        PhitAllImagesCaptions=datasets.Features33KOrg().PhitAllImagesCaptions
+        all_captions_text=datasets.Features33KOrg().all_captions_text
+        all_target_captions_text=datasets.Features33KOrg().all_target_captions_text
+        all_Query_captions_text=datasets.Features33KOrg().all_queries_captions_text
+        all_queries_Mod_text=datasets.Features33KOrg().all_queries_Mod_text
+        all_ids=datasets.Features33KOrg().all_ids
+        SearchedFeatures=PhixAllImages
+
+    
+    PhitQueryCaption=torch.tensor(PhitQueryCaption).to(device)
+    PhixQueryImg=torch.tensor(PhixQueryImg).to(device)
+    PhitQueryMod=torch.tensor(PhitQueryMod).to(device)
+    PhitTargetCaption=torch.tensor(PhitTargetCaption).to(device)
+    PhixTargetImg=torch.tensor(PhixTargetImg).to(device)
+
+    for i in range(PhixQueryImg.shape[0]):
+        PhixQueryImg[i,:]/= torch.norm(PhixQueryImg[i,:])
+
+
+    hidden=1000
+    NetA=NLR3S(PhixQueryImg.shape[1],PhitQueryMod.shape[1],hidden).to(device)
+    NetA.load_state_dict(torch.load( Path1+r'/NetA152.pth', map_location=torch.device('cpu') ))
+    NetAout=NetA.myforward(PhixQueryImg)
+    ACloss_fn=torch.nn.MSELoss()
+    Aloss=ACloss_fn(NetAout[:PhitQueryCaption.shape[0],:],PhitQueryCaption)
+    print('Net A Loss:',Aloss)
+
+
+    hidden=1800
+    NetC=NLR3S(PhitQueryMod.shape[1]*2,PhitQueryMod.shape[1],hidden)
+    NetC.load_state_dict(torch.load( Path1+r'/NetCfinalUpTR.pth', map_location=torch.device('cpu') ))
+    NetCinp=torch.cat((PhitQueryMod,NetAout[:PhitQueryMod.shape[0],:]),1)
+    NetCout=NetC.myforward(NetCinp)
+    Closs=ACloss_fn(NetCout,PhitTargetCaption)
+    print('Net C Loss:',Closs)
+
+    
+    
+    
+    hidden=1000
+    NetB=NLR3T(PhitTargetCaption.shape[1],PhixTargetImg.shape[1],hidden)
+    NetB.load_state_dict(torch.load( Path1+r'/NetB152.pth', map_location=torch.device('cpu') ))
+    net_target=NetB.myforward(NetCout)    
+    Bloss_fn=torch.nn.CosineSimilarity()    
+    Bloss=torch.mean(Bloss_fn(net_target,PhixTargetImg[:net_target.shape[0],:]))
+    print('Net B Loss:',Bloss)
+
+
+   # print(test_retrieval.testSemantic(all_captions_text,all_target_captions_text,net_target,SearchedFeatures))
+
+    
+    nn_result = []
+    
+    net_target=tensor(net_target)
+    net_target=Variable(net_target,requires_grad=False)
+    net_target=np.array(net_target)
+
+    for i in range(net_target.shape[0]):
+        PhixTargetImg[i,:]=PhixTargetImg[i,:]/np.linalg.norm(PhixTargetImg[i,:])
+        net_target[i,:]=net_target[i,:]/np.linalg.norm(net_target[i,:])
+    
+    
+    for i in range (net_target.shape[0]):  #(3900): #
+        sims = net_target[i, :].dot(PhixTargetImg[:net_target.shape[0],:].T)        
+        nn_result.append(np.argsort(-sims[ :])[:110])
+    
+        
+    
+    out = []
+    nn_result = [[all_target_captions_text[nn] for nn in nns] for nns in nn_result]
+    
+    
+    for k in [1, 5, 10, 50, 100]:
+        
+        r = 0.0
+        for i, nns in enumerate(nn_result):
+            if all_target_captions_text[i] in nns[:k]:
+                r += 1
+        r /= len(nn_result)
+        #out += [('recall_top' + str(k) + '_correct_composition', r)]
+        out.append(str(k) + ' ---> '+ str(r*100))
+        r = 0.0
+
+    print (out)
+
+
     
 
 
@@ -629,9 +825,7 @@ def EvalNetCOld(run_type):
 
 
 if __name__ == '__main__': 
-    # EvalNetC('test')
-    # EvalNetC('train')
-    EvalNetCOld(1)
+    trainNetB1521500()
     
     
 
