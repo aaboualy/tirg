@@ -38,6 +38,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.datasets import make_regression
 from sklearn.metrics import mean_squared_error
+import torchvision.models as models
 
 
 
@@ -3196,9 +3197,185 @@ def resume_train_second_text_net_2_semantic_Hup(start_no):
 
   print('Finished Training')
   torch.save(model_mlp.state_dict(), Path1+r'\t2final_net_with_Shup_Final.pth') 
-   
+def RestNet50():
+  trainset = datasets.Fashion200k(
+        path=path2,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  #with open(path2+r"/dataset172Org/"+'Features172Kall_ids.txt', 'rb') as fp:
+  #  all_id=pickle.load(fp)
+  resnet50 = models.resnet50(pretrained=True)
+  resnet50.fc = nn.Identity()
+  with open(path2+r"/dataset172/"+'target_phix_50.txt', 'rb') as fp:
+        target_phix_50=pickle.load(fp)
+  with open(path2+r"/dataset172/"+'phix_50.txt', 'rb') as fp:
+        phix_50=pickle.load(fp)  
+  resnet50.eval()
+  #phix_50=[]
+  #target_phix_50=[]
+  cnt=0
+  for item in (trainset):
+    cnt+=1
+    #img_id=item['source_img_id']
+    #target_id=item['target_id']
+    img=item['source_img_data']
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    img=img/torch.max(img)
+    out=resnet50(img)
+    out = Variable(out, requires_grad=False)
+
+    out=np.array(out)
+    phix_50 +=[out[0,:]]
+    img=item['target_img_data']
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    img=img/torch.max(img)
+    out=resnet50(img)
+    out = Variable(out, requires_grad=False)
+
+    out=np.array(out)
+
+    target_phix_50+=[out[0,:]]
+    if cnt%5000 ==0 :
+      with open(path2+r"/dataset172/"+'target_phix_50.txt', 'wb') as fp:
+        pickle.dump(target_phix_50,fp)
+      with open(path2+r"/dataset172/"+'phix_50.txt', 'wb') as fp:
+        pickle.dump(phix_50,fp)  
+    if (cnt%500)==0:
+      print('cnt',cnt)
+  with open(path2+r"/dataset172/"+'target_phix_50.txt', 'wb') as fp:
+      pickle.dump(target_phix_50,fp)
+  with open(path2+r"/dataset172/"+'phix_50.txt', 'wb') as fp:
+      pickle.dump(phix_50,fp)  
+def RestNet50_test():
+  trainset = datasets.Fashion200k(
+        path=path2,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  #with open(path2+r"/dataset172Org/"+'Features172Kall_ids.txt', 'rb') as fp:
+  #  all_id=pickle.load(fp)
+  resnet50 = models.resnet50(pretrained=True)
+  resnet50.fc = nn.Identity()
+  #with open(path2+r"/dataset172/"+'target_phix_152.txt', 'rb') as fp:
+  #      target_phix_152=pickle.load(fp)
+  #with open(path2+r"/dataset172/"+'phix_152.txt', 'rb') as fp:
+  #      phix_152=pickle.load(fp)  
+  resnet50.eval()
+  phix_50=[]
+  target_phix_50=[]
+  cnt=0
+  test_queries = trainset.get_test_queries()
+  for item in (test_queries):
+    cnt+=1
+    #img_id=item['source_img_id']
+    #target_id=item['target_id']
+    img=trainset.get_img(item['source_img_id'])
+    #img=item['source_img_data']
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    img=img/torch.max(img)
+    out=resnet50(img)
+    out = Variable(out, requires_grad=False)
+
+    out=np.array(out)
+    phix_50 +=[out[0,:]]
+    #img=item['target_img_data']
+    img=trainset.get_img(item['target_id'])
+
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    img=img/torch.max(img)
+    out=resnet50(img)
+    out = Variable(out, requires_grad=False)
+
+    out=np.array(out)
+
+    target_phix_50+=[out[0,:]]
+    if cnt%5000 ==0 :
+      with open(path2+r"/dataset172/"+'target_phix_50_test.txt', 'wb') as fp:
+        pickle.dump(target_phix_50,fp)
+      with open(path2+r"/dataset172/"+'phix_50_test.txt', 'wb') as fp:
+        pickle.dump(phix_50,fp)  
+    if (cnt%500)==0:
+      print('cnt',cnt)
+  with open(path2+r"/dataset172/"+'target_phix_50_test.txt', 'wb') as fp:
+      pickle.dump(target_phix_50,fp)
+  with open(path2+r"/dataset172/"+'phix_50_test.txt', 'wb') as fp:
+      pickle.dump(phix_50,fp)  
+def RestNet18_test():
+  trainset = datasets.Fashion200k(
+        path=path2,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  #with open(path2+r"/dataset172Org/"+'Features172Kall_ids.txt', 'rb') as fp:
+  #  all_id=pickle.load(fp)
+  resnet18 = models.resnet18(pretrained=True)
+  resnet18.fc = nn.Identity()
+  #with open(path2+r"/dataset172/"+'target_phix_152.txt', 'rb') as fp:
+  #      target_phix_152=pickle.load(fp)
+  #with open(path2+r"/dataset172/"+'phix_152.txt', 'rb') as fp:
+  #      phix_152=pickle.load(fp)  
+  resnet18.eval()
+  phix_18=[]
+  target_phix_18=[]
+  cnt=0
+  test_queries = trainset.get_test_queries()
+  for item in (test_queries):
+    cnt+=1
+    #img_id=item['source_img_id']
+    #target_id=item['target_id']
+    img=trainset.get_img(item['source_img_id'])
+    #img=item['source_img_data']
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    #img=img/torch.max(img)
+    out=resnet18(img)
+    out = Variable(out, requires_grad=False)
+
+    out=np.array(out)
+    phix_18 +=[out[0,:]]
+    #img=item['target_img_data']
+    img=trainset.get_img(item['target_id'])
+
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    img=img/torch.max(img)
+    out=resnet18(img)
+    out = Variable(out, requires_grad=False)
+
+    out=np.array(out)
+
+    target_phix_18+=[out[0,:]]
+    if cnt%5000 ==0 :
+      with open(path2+r"/dataset172/"+'target_phix_18_test.txt', 'wb') as fp:
+        pickle.dump(target_phix_18,fp)
+      with open(path2+r"/dataset172/"+'phix_18_test.txt', 'wb') as fp:
+        pickle.dump(phix_18,fp)  
+    if (cnt%500)==0:
+      print('cnt',cnt)
+  with open(path2+r"/dataset172/"+'target_phix_18_test.txt', 'wb') as fp:
+      pickle.dump(target_phix_18,fp)
+  with open(path2+r"/dataset172/"+'phix_18_test.txt', 'wb') as fp:
+      pickle.dump(phix_18,fp)  
 if __name__ == '__main__': 
-    
+  #RestNet50_test()
+  with open(path2+r"/dataset172/"+'phix_18_test.txt', 'rb') as fp:
+      phix_18=pickle.load(fp)  
+  test=10
+  #RestNet18_test()
   #phase2_network()  img_model_file,text_model_file,flag  
   #asbook1, model=Phase2_test_models_get_orignal("4iCovLinearflr006w12.pth","4Dtlr006w124000.pth",3)
   #name="joint"
@@ -3211,7 +3388,7 @@ if __name__ == '__main__':
     #print(semantic_Model_performance(i))
   #bulid_train_second_text_net_2_semantic_Hup()
   #resume_train_second_text_net_2_semantic_Hup(400)
-  resume_train_final_net_with_semantic_Hup(9000)
+  #resume_train_final_net_with_semantic_Hup(9000)
   #bulid_train_final_net_with_semantic_Hup()
   #print(semantic_regression_performance())
   #save_semantic_hup_output()
