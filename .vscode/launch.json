@@ -11,7 +11,9 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "python.defaultInterpreterPath": "C:/Users/Mohamed Aboali/anaconda3/python.exe"
+
         }
     ]
 }
