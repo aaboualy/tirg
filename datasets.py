@@ -49,7 +49,7 @@ import datasets
 import img_text_composition_models
 
 #Path1=r"D:\personal\master\MyCode\files"
-Path1=r"C:\MMaster\Files"
+Path1=r"E:\MMstr"
 
 class BaseDataset(torch.utils.data.Dataset):
   """Base class for a dataset."""
@@ -1042,6 +1042,26 @@ class Features172K():
     with open (Path1+r"/dataset172/"+'Features172Kall_queriesold.txt', 'rb') as fp:
       data = pickle.load(fp) 
       return data
+  def Get_phit_image_caption(self):
+    with open (Path1+r"/phase2/"+'Features172Kall_queriesphicaptions.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+  
+  def Get_semantic_query_caption(self):
+    with open (Path1+r"/phase2/"+'semantic_query_caption.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+  def Get_squery_caption_with_phix(self):
+    with open (Path1+r"/phase2/"+'squery_with_phix.txt', 'rb') as fp:
+      data = pickle.load(fp) 
+      return data
+
+  def Get_all_target_captions(self):
+    with open (Path1+r"/phase2/"+'train_all_target_captions.txt', 'rb') as fp:
+      all_target_captions = pickle.load(fp)
+      return  all_target_captions
+
+
 
   def Get_all_imagesold(self):
     with open (Path1+r"/dataset172/"+'Features172Kall_imgsold.txt', 'rb') as fp:
