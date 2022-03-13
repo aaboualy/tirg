@@ -1739,6 +1739,22 @@ class Features152Org():
     with open (Path1+r"/dataset152Org/"+'target_phix_152_test.txt', 'rb') as fp:
       self.target_phix_152_test = pickle.load(fp) 
 
+class Features50Org():
+  def __init__(self):
+    super(Features50Org, self).__init__()
+    
+    with open (Path1+r"/dataset50Org/"+'phix_50.txt', 'rb') as fp:
+      self.phix_50 = pickle.load(fp) 
+    
+    with open (Path1+r"/dataset50Org/"+'target_phix_50.txt', 'rb') as fp:
+      self.target_phix_50 = pickle.load(fp) 
+
+    with open (Path1+r"/dataset50Org/"+'phix_50_test.txt', 'rb') as fp:
+      self.phix_50_test = pickle.load(fp) 
+    
+    with open (Path1+r"/dataset50Org/"+'target_phix_50_test.txt', 'rb') as fp:
+      self.target_phix_50_test = pickle.load(fp) 
+
     
 
     
