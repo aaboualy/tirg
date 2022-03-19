@@ -49,7 +49,7 @@ import datasets
 import img_text_composition_models
 
 #Path1=r"D:\personal\master\MyCode\files"
-Path1=r"E:\MMstr"
+Path1 = r"C:\MMaster\Files"
 
 class BaseDataset(torch.utils.data.Dataset):
   """Base class for a dataset."""

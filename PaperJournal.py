@@ -713,14 +713,14 @@ def Semantic152(run_type):
     
 
     if run_type=='train': 
-        PhixQueryImg =datasets.Features152Org().phix_152[:10000]
-        PhitQueryCaption =datasets.Feature172KOrg().PhitQueryCaption[:10000]
-        PhitQueryMod =datasets.Feature172KOrg().PhitQueryMod[:10000]
-        PhixTargetImg =datasets.Features152Org().target_phix_152[:10000]
-        PhitTargetCaption =datasets.Feature172KOrg().PhitTargetCaption[:10000]
-        all_captions_text =datasets.Feature172KOrg().all_captions_text[:10000]
-        all_target_captions_text =datasets.Feature172KOrg().all_target_captions_text[:10000]
-        all_Query_captions_text =datasets.Feature172KOrg().all_Query_captions_text[:10000]
+        PhixQueryImg =datasets.Features152Org().phix_152[:20000]
+        PhitQueryCaption =datasets.Feature172KOrg().PhitQueryCaption[:20000]
+        PhitQueryMod =datasets.Feature172KOrg().PhitQueryMod[:20000]
+        PhixTargetImg =datasets.Features152Org().target_phix_152[:20000]
+        PhitTargetCaption =datasets.Feature172KOrg().PhitTargetCaption[:20000]
+        all_captions_text =datasets.Feature172KOrg().all_captions_text[:20000]
+        all_target_captions_text =datasets.Feature172KOrg().all_target_captions_text[:20000]
+        all_Query_captions_text =datasets.Feature172KOrg().all_Query_captions_text[:20000]
         all_ids =datasets.Feature172KOrg().all_ids[:10000]
         SearchedFeatures=PhixTargetImg
         
@@ -786,10 +786,10 @@ def Semantic152(run_type):
     with open(Path1+r'/NetCOut.txt', 'rb') as fp:
       NetCOutFile= pickle.load(fp)
     
-    net_targetCoutFile=NetB.myforward(NetCOutFile[:10000])
-    Bloss_fnCoutFile=torch.nn.CosineSimilarity(dim=1, eps=1e-4)    
-    BlossCoutFile=torch.mean(torch.abs(Bloss_fnCoutFile(net_targetCoutFile,PhixTargetImg[:net_target.shape[0],:])))
-    print('Net B Loss:',BlossCoutFile)
+    # net_targetCoutFile=NetB.myforward(NetCOutFile[:10000])
+    # Bloss_fnCoutFile=torch.nn.CosineSimilarity(dim=1, eps=1e-4)    
+    # BlossCoutFile=torch.mean(torch.abs(Bloss_fnCoutFile(net_targetCoutFile,PhixTargetImg[:net_target.shape[0],:])))
+    # print('Net B Loss:',BlossCoutFile)
 
     #print(NetCout[0])
     #print(NetCOutFile[0])
@@ -927,9 +927,9 @@ def CoutAdjustment():
 
 
 if __name__ == '__main__': 
-    #Semantic152("train")
-    #Semantic152("test")
-    CoutAdjustment()
+    Semantic152("train")
+    Semantic152("test")
+    #CoutAdjustment()
     
     
 
