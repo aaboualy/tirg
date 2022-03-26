@@ -71,10 +71,10 @@ def Semantic50_Maa(run_type):
     device = torch.device("cpu")    
 
     if run_type=='train': 
-        PhixQueryImg =datasets.Features152Org().phix_152[:10000]
+        PhixQueryImg =datasets.Features50Org().phix_50[:10000]
         PhitQueryCaption =datasets.Feature172KOrg().PhitQueryCaption[:10000]
         PhitQueryMod =datasets.Feature172KOrg().PhitQueryMod[:10000]
-        PhixTargetImg =datasets.Features152Org().target_phix_152[:10000]
+        PhixTargetImg =datasets.Features50Org().target_phix_50[:10000]
         PhitTargetCaption =datasets.Feature172KOrg().PhitTargetCaption[:10000]
         all_captions_text =datasets.Feature172KOrg().all_captions_text[:10000]
         all_target_captions_text =datasets.Feature172KOrg().all_target_captions_text[:10000]
@@ -84,10 +84,10 @@ def Semantic50_Maa(run_type):
         
 
     elif run_type=='test':    
-        PhixQueryImg=datasets.Features152Org().phix_152_test
+        PhixQueryImg=datasets.Features50Org().phix_50_test
         PhitQueryCaption=datasets.Features33KOrg().PhitQueryCaption
         PhitQueryMod=datasets.Features33KOrg().PhitQueryMod
-        PhixTargetImg=datasets.Features152Org().target_phix_152_test
+        PhixTargetImg=datasets.Features50Org().target_phix_50_test
         PhitTargetCaption=datasets.Features33KOrg().PhitTargetCaption
         PhixAllImages=datasets.Features33KOrg().PhixAllImages
         PhitAllImagesCaptions=datasets.Features33KOrg().PhitAllImagesCaptions
