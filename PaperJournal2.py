@@ -71,16 +71,16 @@ def Semantic50_Maa(run_type):
     device = torch.device("cpu")    
 
     if run_type=='train': 
-        PhixQueryImg =datasets.Features50Org().phix_50[:10000]
-        PhitQueryCaption =datasets.Feature172KOrg().PhitQueryCaption[:10000]
-        PhitQueryMod =datasets.Feature172KOrg().PhitQueryMod[:10000]
-        PhixTargetImg =datasets.Features50Org().target_phix_50[:10000]
-        PhitTargetCaption =datasets.Feature172KOrg().PhitTargetCaption[:10000]
-        all_captions_text =datasets.Feature172KOrg().all_captions_text[:10000]
-        all_target_captions_text =datasets.Feature172KOrg().all_target_captions_text[:10000]
-        all_Query_captions_text =datasets.Feature172KOrg().all_Query_captions_text[:10000]
-        all_ids =datasets.Feature172KOrg().all_ids[:10000]
-        SearchedFeatures=PhixTargetImg
+        PhixQueryImg =datasets.Features50Org().phix_50[:50000]
+        PhitQueryCaption =datasets.Feature172KOrg().PhitQueryCaption[:50000]
+        PhitQueryMod =datasets.Feature172KOrg().PhitQueryMod[:50000]
+        PhixTargetImg =datasets.Features50Org().target_phix_50[:50000]
+        PhitTargetCaption =datasets.Feature172KOrg().PhitTargetCaption[:50000]
+        all_captions_text =datasets.Feature172KOrg().all_captions_text[:50000]
+        all_target_captions_text =datasets.Feature172KOrg().all_target_captions_text[:50000]
+        all_Query_captions_text =datasets.Feature172KOrg().all_Query_captions_text[:50000]
+        all_ids =datasets.Feature172KOrg().all_ids[:50000]
+        #SearchedFeatures=PhixTargetImg
         
 
     elif run_type=='test':    
@@ -96,7 +96,7 @@ def Semantic50_Maa(run_type):
         all_Query_captions_text=datasets.Features33KOrg().all_queries_captions_text
         all_queries_Mod_text=datasets.Features33KOrg().all_queries_Mod_text
         all_ids=datasets.Features33KOrg().all_ids
-        SearchedFeatures=PhixAllImages
+        #SearchedFeatures=PhixAllImages
 
     
     PhitQueryCaption=torch.tensor(PhitQueryCaption).to(device)
@@ -162,10 +162,243 @@ def Semantic50_Maa(run_type):
 
     print (out)
 
+def savesourcephixtvalues():
+
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
 
 
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  #trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  #trig.load_state_dict(torch.load(Path1+r'\checkpoint_fashion200k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+
+  
+
+  opt = argparse.ArgumentParser()
+  opt.add_argument('--batch_size', type=int, default=2)
+  opt.add_argument('--dataset', type=str, default='fashion200k')
+  opt.batch_size =1
+  opt.dataset='fashion200k'
+
+
+  
+
+  #datasets.Feature172KOrg().SavetoFilesphixt(Path1+r'/dataset172Org', trig, train,opt)
+  #print('172 Finished')
+  datasets.Features33KOrg().SavetoFilesphixt(Path1+r'/dataset33Org', trig, test,opt)
+  
+  
+  print('33k Finished')
+
+def comparefilesdataset33k():
+    
+    PhitQueryCaptionOrg=datasets.Features33KOrg().PhitQueryCaption
+    
+
+    with open (Path1+r"/dataset33OrgNoModel/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
+        PhitQueryCaptionNoModel = pickle.load(fp) 
+
+    with open (Path1+r"/dataset33OrgCheckModel/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
+        PhitQueryCaptionCheckModel = pickle.load(fp) 
+
+    with open (Path1+r"/dataset33OrgFashionModel/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
+        PhitQueryCaptionFashionModel = pickle.load(fp) 
+
+    with open (Path1+r"/dataset33OrgUnknwon/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
+        PhitQueryCaptionUnknow = pickle.load(fp) 
+
+    
+    
+    print("Between ORG No Model New and No Model: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionNoModel[0]))
+    print("Between ORG No Model New and Check File: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionCheckModel[0]))
+    print("Between ORG No Model New and Fashion 33 New file: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionFashionModel[0]))
+    print("Between ORG No Model New and Unknown  file: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionUnknow[0]))
+    print("Between ORG No Model New and Fashion 33 New file: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionOrg[0]))
+    
+
+    # print(PhitQueryCaptionOrg)
+    # print(PhitQueryCaptionNoModel)
+    # print(PhitQueryCaptionCheckModel)
+    # print(PhitQueryCaptionFashionModel)
+
+
+
+    
+
+    # PhitQueryMod=datasets.Features33KOrg().PhitQueryMod
+    # PhitTargetCaption=datasets.Features33KOrg().PhitTargetCaption
+    
+    # with open (Path1+r"/dataset33Org30122021/"+'Features33KphitQueryMod.txt', 'rb') as fp:
+    #     PhitQueryMod32022 = pickle.load(fp) 
+    
+   
+    # with open (Path1+r"/dataset33Org30122021/"+'Features33KphitTargetCaption.txt', 'rb') as fp:
+    #     PhitTargetCaption32022 = pickle.load(fp) 
+
+   
+    # print(euclideandistance(PhitQueryMod[0], PhitQueryMod32022[0]))
+    # print(euclideandistance(PhitTargetCaption[0], PhitTargetCaption32022[0]))
+
+    
+
+def euclideandistance(signature,signatureimg):
+    from scipy.spatial import distance
+    return distance.euclidean(signature, signatureimg)
+
+def SavetoFilesphixt():
+    Path=Path1+r'/dataset33Org'
+
+    train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+    testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+
+    opt = argparse.ArgumentParser()
+    opt.add_argument('--batch_size', type=int, default=2)
+    opt.add_argument('--dataset', type=str, default='fashion200k')
+    opt.batch_size =1
+    opt.dataset='fashion200k'
+    model= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+    #model.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+
+    model.eval()
+    all_imgs = []
+    all_captions = []
+    all_target = []
+    all_target_captions = []
+    all_queries = []
+    all_queries_captions = []
+    all_queries_Mod = []
+    all_captions_text = []
+    all_target_captions_text = []
+    all_queries_captions_text = []
+    all_queries_Mod_text = []
+    all_ids = []
+
+    imgs0 = []
+    imgs = []
+    mods = []
+    target=[]
+    Qcaption=[]
+    Tcaption=[]
+    
+    test_queries = testset.get_test_queries()
+    
+    for t in tqdm(test_queries):
+      idx = {
+          'source_img_id': t['source_img_id'],
+          'target_id':t['target_id']          
+      }
+      imgs += [testset.get_img(t['source_img_id'])]
+      mods += [t['mod']['str']]
+      target += [testset.get_img(t['target_id'])]
+      Qcaption += [t['source_caption']]
+      Tcaption += [t['target_caption']]
+      all_queries_captions_text += [t['source_caption']]
+      all_target_captions_text += [t['target_caption']]
+      all_queries_Mod_text += [t['mod']['str']]
+
+      if len(imgs) >= opt.batch_size or t is test_queries[-1]:
+        if 'torch' not in str(type(imgs[0])):
+          imgs = [torch.from_numpy(d).float() for d in imgs]
+          target = [torch.from_numpy(d).float() for d in target]
+
+        imgs = torch.stack(imgs).float()
+        imgs = torch.autograd.Variable(imgs)
+        target = torch.stack(target).float()
+        target = torch.autograd.Variable(target)
+        
+        f = model.extract_img_feature(imgs).data.cpu().numpy() 
+        f2 = model.extract_text_feature(mods).data.cpu().numpy()
+        f3 = model.extract_img_feature(target).data.cpu().numpy()
+        f4 = model.extract_text_feature(Qcaption).data.cpu().numpy()
+        f5 = model.extract_text_feature(Tcaption).data.cpu().numpy()
+
+        all_queries += [f]
+        all_queries_Mod += [f2]
+        all_target += [f3]
+        all_queries_captions += [f4]
+        all_target_captions += [f5]
+        all_ids += [idx]
+
+        imgs = []
+        mods = []
+        target=[]
+        Qcaption=[]
+        Tcaption=[]
+    
+    all_target = np.concatenate(all_target)
+    all_target_captions = np.concatenate(all_target_captions)
+    all_queries = np.concatenate(all_queries)
+    all_queries_captions = np.concatenate(all_queries_captions)
+    all_queries_Mod = np.concatenate(all_queries_Mod)
+    #all_target_captions = [t['target_caption'] for t in test_queries]
+
+    # compute all image features  
+    imgs = []
+    imgsCaption = []
+
+    # for i in tqdm(range(len(testset.imgs))):
+    #   imgs += [testset.get_img(i)]
+    #   if len(imgs) >= opt.batch_size or i == len(testset.imgs) - 1:
+    #     if 'torch' not in str(type(imgs[0])):
+    #       imgs = [torch.from_numpy(d).float() for d in imgs]
+    #     imgs = torch.stack(imgs).float()
+    #     imgs = torch.autograd.Variable(imgs)#.cuda()
+    #     imgs = model.extract_img_feature(imgs).data.cpu().numpy()
+    #     imgsCaption = model.extract_text_feature(testset.imgs[i]['captions']).data.cpu().numpy()
+    #     all_captions_text += [testset.imgs[i]['captions']]
+
+    #     all_imgs += [imgs]
+    #     all_captions += [imgsCaption]
+    #     imgs = []
+    #     imgsCaption = []
+    # all_imgs = np.concatenate(all_imgs)
+    # all_captions = np.concatenate(all_captions)
+
+   
+  
 
 if __name__ == '__main__': 
-    Semantic50_Maa("train")
-    Semantic50_Maa("test")
+    #savesourcephixtvalues()
+    #Semantic50_Maa("test")
+    #comparefilesdataset33k()
+    SavetoFilesphixt()
     

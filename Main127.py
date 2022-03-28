@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-from numpy.core.fromnumeric import squeeze
-from tensorflow.python.ops.array_ops import zeros
-=======
 from numpy.core.fromnumeric import argsort, mean, squeeze
 from scipy import linalg
 from tensorflow.python.ops.array_ops import zeros
 from tensorflow.python.ops.gen_array_ops import concat
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
 import torch
 from torch import tensor
 from torch.functional import norm
@@ -50,13 +45,8 @@ import torchvision.models as models
 
 
 
-<<<<<<< HEAD
-Path1=r"E:\MMstr\phase2"
-path2=r"E:\MMstr"
-=======
 Path1=r"C:\MMaster\Files\phase2"
 path2=r"C:\MMaster\Files"
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
 #################  Support Functions Section   #################
 
 def dataset(batch_size_all):
@@ -1220,9 +1210,6 @@ def resultsNLPCosWOPbetaNLP():
 class NLR2(nn.Module):
   def __init__(self,netin,netout,nethidden1,nethidden2):
     super().__init__()
-<<<<<<< HEAD
-    self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.ReLU(),torch.nn.Linear(nethidden1, nethidden2),torch.nn.Linear(nethidden2, netout))
-=======
     self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.Sigmoid(),torch.nn.Linear(nethidden1, nethidden2),
     torch.nn.Linear(nethidden2, netout))
   def myforward (self,inv):
@@ -1240,7 +1227,6 @@ class NLR32(nn.Module):
   def __init__(self,netin,netout,nethidden):
     super().__init__()
     self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Tanh(),torch.nn.Linear(nethidden, nethidden),torch.nn.Tanh(),torch.nn.Linear(nethidden, netout))
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
   def myforward (self,inv):
     outv=self.netmodel(inv)
     return outv
@@ -2905,80 +2891,6 @@ def bulid_train_final_net_with_semantic_Hup():
   target=datasets.Features172K().Get_phixtarget()
   inp=Variable(torch.Tensor(inp))
   target=Variable(torch.Tensor(target))
-<<<<<<< HEAD
-  hidden1=850
-  hidden2=800
-  batch_size=1000
-  max_iterations=25000
-  min_error=12
-  model_mlp=NLR2(inp.shape[1],target.shape[1],hidden1,hidden2)
- 
-  torch.manual_seed(30)
-  loss_fn=torch.nn.CosineSimilarity()
-  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=0.02)
-  epoch=max_iterations
-  s=0
-  sweep_range=inp.shape[0]%batch_size
-  losses=[]
-  totallosses=[]
-  for j in range(epoch):
-    total_loss=0
-    
-    for l in range(int(inp.shape[0]/batch_size)):
-      
-      item_batch = inp[l*batch_size+s:(l+1)*batch_size+s,:]
-
-      target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
-      netoutbatch=model_mlp.myforward(item_batch)
-      loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
-
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
-      #losses.append(loss)
-      optimizer.step()
-      total_loss+=loss
-    if (total_loss<min_error):
-      break
-    print('iteration:',j,'COS similarity loss ',loss, 'total loss',total_loss)
-    totallosses.append(total_loss)
-    s+=1
-    if s==sweep_range:
-       s=0
-    if (j%100==0) :
-      torch.save(model_mlp.state_dict(), Path1+r'\2final_net_with_Shup'+str(j)+r'.pth') 
-      with open(Path1+r"/"+'2lossesfinal_net_with_Shup.pkl', 'wb') as fp:
-          pickle.dump( losses, fp)
-
-
-  print('Finished Training')
-  torch.save(model_mlp.state_dict(), Path1+r'\2final_net_with_Shup_Final.pth') 
-
-
-def resume_train_final_net_with_semantic_Hup(start_no):
-  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
-  #   Beta = pickle.load(fp) 
-
-  inp=datasets.Features172K().Get_squery_caption_with_phix()
-  target=datasets.Features172K().Get_phixtarget()
-  inp=Variable(torch.Tensor(inp))
-  target=Variable(torch.Tensor(target))
-
-  hidden1=850
-  hidden2=800
-  batch_size=500
-  max_iterations=25000
-  min_error=12
-  model_mlp=NLR2(inp.shape[1],target.shape[1],hidden1,hidden2)
-  model_mlp.load_state_dict(torch.load( Path1+r'\2final_net_with_Shup'+str(start_no)+r'.pth', map_location=torch.device('cpu') ))
- 
-  loss_fn=torch.nn.CosineSimilarity()
-  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=0.01)
-  epoch=max_iterations
-
-  s=0
-  sweep_range=inp.shape[0]%batch_size
-=======
 
   hidden=900
   batch_size=500
@@ -2993,154 +2905,10 @@ def resume_train_final_net_with_semantic_Hup(start_no):
   s=0
   sweep_range=inp.shape[0]%batch_size
 
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
   losses=[]
   totallosses=[]
   for j in range(epoch):
     total_loss=0
-<<<<<<< HEAD
-    
-    for l in range(int(inp.shape[0]/batch_size)):
-      
-      item_batch = inp[l*batch_size+s:(l+1)*batch_size+s,:]
-
-      target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
-      netoutbatch=model_mlp.myforward(item_batch)
-      loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
-
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
-      #losses.append(loss)
-      optimizer.step()
-      total_loss+=loss
-    if (total_loss<min_error):
-      break
-    print('iteration:',j,'COS similarity loss ',loss, 'total loss',total_loss)
-    totallosses.append(total_loss)
-    s+=1
-    if s==sweep_range:
-       s=0
-    if (j%100==0) :
-      torch.save(model_mlp.state_dict(), Path1+r'\2final_net_with_Shup'+str(j+start_no)+r'.pth') 
-      with open(Path1+r"/"+'2lossesfinal_net_with_Shup'+str(start_no)+'.pkl', 'wb') as fp:
-          pickle.dump( totallosses, fp)
-
-
-  print('Finished Training')
-  torch.save(model_mlp.state_dict(), Path1+r'\2final_net_with_Shup_Final.pth') 
-
-def semantic_Model_performance(file_no):
-  inp=datasets.Features172K().Get_squery_caption_with_phix()
-  target=datasets.Features172K().Get_phixtarget()
-  inp=Variable(torch.Tensor(inp))
-  phix=datasets.Features172K().Get_phix()
-  all_captions=datasets.Features172K().Get_all_captions()
-  all_target_captions=datasets.Features172K().Get_all_target_captions()
-
-  hidden1=850
-  hidden2=800
-  model_mlp=NLR3(inp.shape[1],target.shape[1],hidden1,hidden2)
-  model_mlp.load_state_dict(torch.load( Path1+r'\2final_net_with_Shup'+str(file_no)+r'.pth', map_location=torch.device('cpu') ))
-
-  netout=model_mlp.myforward(inp)
-  netout = torch.autograd.Variable(netout)
-  #target = torch.autograd.Variable(target)
-
-  netout=numpy.array(netout)
-  #target=numpy.array(target)
-
-  for i in range(netout.shape[0]):
-    netout[i,:]/=np.linalg.norm(netout[i, :])
-  for i in range(target.shape[0]):
-    target[i,:]/=np.linalg.norm(target[i, :])
-  
-  print('test normalization', np.linalg.norm(target[1, :]),np.linalg.norm(netout[1, :]))
-  # match test queries to target images, get nearest neighbors
-  nn_result = []
-  
-  for i in tqdm(range(int(netout.shape[0]/5))):
-    sims = netout[i:(i+1), :].dot(phix.T)
-    
-    nn_result.append(np.argsort(-sims[0, :])[:110])
-  
-    
-  # compute recalls
-  out = []
-  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
-  
-  
-  for k in [1, 5, 10, 50, 100]:
-    
-    r = 0.0
-    for i, nns in enumerate(nn_result):
-      if all_target_captions[i] in nns[:k]:
-        r += 1
-    r /= len(nn_result)
-    #out += [('recall_top' + str(k) + '_correct_composition', r)]
-    out.append(str(k) + ' ---> '+ str(r*100))
-    r = 0.0
-
-    
-  return out
-  
-  ###################################################################################################
-def semantic_regression_performance():
-  inp=datasets.Features172K().Get_squery_caption_with_phix()
-  target=datasets.Features172K().Get_phixtarget()
-  inp=Variable(torch.Tensor(inp))
-  for i in range(target.shape[0]):
-    target[i,:]/=np.linalg.norm(target[i, :])
-  for i in range(inp.shape[0]):
-    inp[i,:]/=np.linalg.norm(inp[i, :])
-
-  all_captions=datasets.Features172K().Get_all_captions()
-  all_target_captions=datasets.Features172K().Get_all_target_captions()
-  reg = LinearRegression().fit(inp,target)
-  new_target=reg.predict(inp)
-  mse= np.average(np.sum(np.square((new_target-np.array(target))), axis=1))
-  print('mean square error',mse)
-
-  #target = torch.autograd.Variable(target)
-
-  netout=numpy.array(new_target)
-  #target=numpy.array(target)
-
-  #for i in range(netout.shape[0]):
-  #  netout[i,:]/=np.linalg.norm(netout[i, :])
-  #for i in range(target.shape[0]):
-  #  target[i,:]/=np.linalg.norm(target[i, :])
-  
-  print('test normalization', np.linalg.norm(target[1, :]),np.linalg.norm(netout[1, :]))
-  # match test queries to target images, get nearest neighbors
-  nn_result = []
-  
-  for i in tqdm(range(int(netout.shape[0]/20))):
-    sims = np.average((np.square(target-netout[i:(i+1), :])), axis=1)
-    
-    nn_result.append(np.argsort(sims)[:110])
-  
-    
-  # compute recalls
-  out = []
-  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
-  
-  
-  for k in [1, 5, 10, 50, 100]:
-    
-    r = 0.0
-    for i, nns in enumerate(nn_result):
-      if all_target_captions[i] in nns[:k]:
-        r += 1
-    r /= len(nn_result)
-    #out += [('recall_top' + str(k) + '_correct_composition', r)]
-    out.append(str(k) + ' ---> '+ str(r*100))
-    r = 0.0
-
-    
-  return out
-    
-=======
     
     for l in range(int(inp.shape[0]/batch_size)):
       
@@ -3171,7 +2939,6 @@ def semantic_regression_performance():
 
   print('Finished Training')
   torch.save(model_mlp.state_dict(), Path1+r'\3final_net_with_Shup_Final.pth') 
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
 
 def bulid_train_second_text_net_2_semantic_Hup():
   # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
@@ -3204,11 +2971,6 @@ def bulid_train_second_text_net_2_semantic_Hup():
       
       item_batch = inp[l*batch_size+s:(l+1)*batch_size+s,:]
 
-<<<<<<< HEAD
-      target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
-      netoutbatch=model_mlp.myforward(item_batch)
-      netoutbatch=torch.squeeze(netoutbatch)
-=======
 def resume_train_final_net_with_semantic_Hup(start_no):
   # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
   #   Beta = pickle.load(fp) 
@@ -3241,7 +3003,6 @@ def resume_train_final_net_with_semantic_Hup(start_no):
 
       target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
       netoutbatch=model_mlp.myforward(item_batch)
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
       loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
 
       optimizer.zero_grad()
@@ -3258,43 +3019,6 @@ def resume_train_final_net_with_semantic_Hup(start_no):
     if s==sweep_range:
        s=0
     if (j%200==0) :
-<<<<<<< HEAD
-      torch.save(model_mlp.state_dict(), Path1+r'\t2final_net_with_Shup'+str(j)+r'.pth') 
-      with open(Path1+r"/"+'t2lossesfinal_net_with_Shup.pkl', 'wb') as fp:
-          pickle.dump( losses, fp)
-
-
-  print('Finished Training')
-  torch.save(model_mlp.state_dict(), Path1+r'\t2final_net_with_Shup_Final.pth') 
-
-
-def resume_train_second_text_net_2_semantic_Hup(start_no):
-  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
-  #   Beta = pickle.load(fp) 
-
- 
-  inp=datasets.Features172K().Get_phit_image_caption()
-  target=datasets.Features172K().Get_phix()
-  inp=Variable(torch.Tensor(inp))
-  target=Variable(torch.Tensor(target))
-
-  hidden1=1024
-  hidden2=750
-  batch_size=100
-  max_iterations=25000
-  min_error=12
-  model_mlp=NLR2(inp.shape[1],target.shape[1],hidden1,hidden2)
- 
-  model_mlp.load_state_dict(torch.load( Path1+r'\t2final_net_with_Shup'+str(start_no)+r'.pth', map_location=torch.device('cpu') ))
-
-  loss_fn=torch.nn.CosineSimilarity()
-  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=0.01)
-  epoch=max_iterations
-  s=0
-  sweep_range=inp.shape[0]%batch_size
-  losses=[]
-  totallosses=[]
-=======
       torch.save(model_mlp.state_dict(), Path1+r'\3final_net_with_Shup'+str(j+start_no)+r'.pth') 
       with open(Path1+r"/"+'3lossesfinal_net_with_Shup'+str(start_no)+'.pkl', 'wb') as fp:
           pickle.dump( totallosses, fp)
@@ -3416,7 +3140,6 @@ def model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,s
 
   totallosses=[]
 
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
   for j in range(epoch):
     total_loss=0
     
@@ -3426,93 +3149,11 @@ def model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,s
 
       target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
       netoutbatch=model_mlp.myforward(item_batch)
-<<<<<<< HEAD
-      netoutbatch=torch.squeeze(netoutbatch)
-      loss = torch.mean(torch.abs(1-loss_fn(target_batch,netoutbatch)))
-=======
       loss =1- loss_fn(target_batch,netoutbatch)
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
 
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
-<<<<<<< HEAD
-      #losses.append(loss)
-      optimizer.step()
-      total_loss+=loss
-    if (total_loss<min_error):
-      break
-    print('iteration:',j,'COS similarity loss ',loss, 'total loss',total_loss)
-    totallosses.append(total_loss)
-    s+=1
-    if s==sweep_range:
-       s=0
-    if (j%200==0) :
-      torch.save(model_mlp.state_dict(), Path1+r'\t2final_net_with_Shup'+str(j)+r'.pth') 
-      with open(Path1+r"/"+'t2lossesfinal_net_with_Shup.pkl', 'wb') as fp:
-          pickle.dump( losses, fp)
-
-
-  print('Finished Training')
-  torch.save(model_mlp.state_dict(), Path1+r'\t2final_net_with_Shup_Final.pth') 
-def RestNet50():
-  trainset = datasets.Fashion200k(
-        path=path2,
-        split='train',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-  #with open(path2+r"/dataset172Org/"+'Features172Kall_ids.txt', 'rb') as fp:
-  #  all_id=pickle.load(fp)
-  resnet50 = models.resnet50(pretrained=True)
-  resnet50.fc = nn.Identity()
-  with open(path2+r"/dataset172/"+'target_phix_50.txt', 'rb') as fp:
-        target_phix_50=pickle.load(fp)
-  with open(path2+r"/dataset172/"+'phix_50.txt', 'rb') as fp:
-        phix_50=pickle.load(fp)  
-  resnet50.eval()
-  #phix_50=[]
-  #target_phix_50=[]
-  cnt=0
-  for item in (trainset):
-    cnt+=1
-    #img_id=item['source_img_id']
-    #target_id=item['target_id']
-    img=item['source_img_data']
-    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-    img=img/torch.max(img)
-    out=resnet50(img)
-    out = Variable(out, requires_grad=False)
-
-    out=np.array(out)
-    phix_50 +=[out[0,:]]
-    img=item['target_img_data']
-    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-    img=img/torch.max(img)
-    out=resnet50(img)
-    out = Variable(out, requires_grad=False)
-
-    out=np.array(out)
-
-    target_phix_50+=[out[0,:]]
-    if cnt%5000 ==0 :
-      with open(path2+r"/dataset172/"+'target_phix_50.txt', 'wb') as fp:
-        pickle.dump(target_phix_50,fp)
-      with open(path2+r"/dataset172/"+'phix_50.txt', 'wb') as fp:
-        pickle.dump(phix_50,fp)  
-    if (cnt%500)==0:
-      print('cnt',cnt)
-  with open(path2+r"/dataset172/"+'target_phix_50.txt', 'wb') as fp:
-      pickle.dump(target_phix_50,fp)
-  with open(path2+r"/dataset172/"+'phix_50.txt', 'wb') as fp:
-      pickle.dump(phix_50,fp)  
-def RestNet50_test():
-  trainset = datasets.Fashion200k(
-=======
       total_loss+=loss
     if (total_loss<min_error):
       break
@@ -3655,7 +3296,6 @@ def save_captions_values():
 
   return 
   test_dataset = datasets.Fashion200k(
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
         path=path2,
         split='test',
         transform=torchvision.transforms.Compose([
@@ -3665,58 +3305,6 @@ def save_captions_values():
             torchvision.transforms.Normalize([0.485, 0.456, 0.406],
                                               [0.229, 0.224, 0.225])
         ]))
-<<<<<<< HEAD
-  #with open(path2+r"/dataset172Org/"+'Features172Kall_ids.txt', 'rb') as fp:
-  #  all_id=pickle.load(fp)
-  resnet50 = models.resnet50(pretrained=True)
-  resnet50.fc = nn.Identity()
-  #with open(path2+r"/dataset172/"+'target_phix_152.txt', 'rb') as fp:
-  #      target_phix_152=pickle.load(fp)
-  #with open(path2+r"/dataset172/"+'phix_152.txt', 'rb') as fp:
-  #      phix_152=pickle.load(fp)  
-  resnet50.eval()
-  phix_50=[]
-  target_phix_50=[]
-  cnt=0
-  test_queries = trainset.get_test_queries()
-  for item in (test_queries):
-    cnt+=1
-    #img_id=item['source_img_id']
-    #target_id=item['target_id']
-    img=trainset.get_img(item['source_img_id'])
-    #img=item['source_img_data']
-    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-    img=img/torch.max(img)
-    out=resnet50(img)
-    out = Variable(out, requires_grad=False)
-
-    out=np.array(out)
-    phix_50 +=[out[0,:]]
-    #img=item['target_img_data']
-    img=trainset.get_img(item['target_id'])
-
-    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-    img=img/torch.max(img)
-    out=resnet50(img)
-    out = Variable(out, requires_grad=False)
-
-    out=np.array(out)
-
-    target_phix_50+=[out[0,:]]
-    if cnt%5000 ==0 :
-      with open(path2+r"/dataset172/"+'target_phix_50_test.txt', 'wb') as fp:
-        pickle.dump(target_phix_50,fp)
-      with open(path2+r"/dataset172/"+'phix_50_test.txt', 'wb') as fp:
-        pickle.dump(phix_50,fp)  
-    if (cnt%500)==0:
-      print('cnt',cnt)
-  with open(path2+r"/dataset172/"+'target_phix_50_test.txt', 'wb') as fp:
-      pickle.dump(target_phix_50,fp)
-  with open(path2+r"/dataset172/"+'phix_50_test.txt', 'wb') as fp:
-      pickle.dump(phix_50,fp)  
-def RestNet18_test():
-  trainset = datasets.Fashion200k(
-=======
 
 
   all_img_captions = []
@@ -3821,7 +3409,6 @@ def validate_data_set():
       print ('error i target caption[targetid], targetcaption[i]',i,'**', all_target_ids[i],'**', all_img_captions_train[all_target_ids[i],:],'**', all_target_captions_train[i,:])
 def RestNet152():
   test_dataset = datasets.Fashion200k(
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
         path=path2,
         split='test',
         transform=torchvision.transforms.Compose([
@@ -3831,62 +3418,6 @@ def RestNet152():
             torchvision.transforms.Normalize([0.485, 0.456, 0.406],
                                               [0.229, 0.224, 0.225])
         ]))
-<<<<<<< HEAD
-  #with open(path2+r"/dataset172Org/"+'Features172Kall_ids.txt', 'rb') as fp:
-  #  all_id=pickle.load(fp)
-  resnet18 = models.resnet18(pretrained=True)
-  resnet18.fc = nn.Identity()
-  #with open(path2+r"/dataset172/"+'target_phix_152.txt', 'rb') as fp:
-  #      target_phix_152=pickle.load(fp)
-  #with open(path2+r"/dataset172/"+'phix_152.txt', 'rb') as fp:
-  #      phix_152=pickle.load(fp)  
-  resnet18.eval()
-  phix_18=[]
-  target_phix_18=[]
-  cnt=0
-  test_queries = trainset.get_test_queries()
-  for item in (test_queries):
-    cnt+=1
-    #img_id=item['source_img_id']
-    #target_id=item['target_id']
-    img=trainset.get_img(item['source_img_id'])
-    #img=item['source_img_data']
-    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-    #img=img/torch.max(img)
-    out=resnet18(img)
-    out = Variable(out, requires_grad=False)
-
-    out=np.array(out)
-    phix_18 +=[out[0,:]]
-    #img=item['target_img_data']
-    img=trainset.get_img(item['target_id'])
-
-    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-    img=img/torch.max(img)
-    out=resnet18(img)
-    out = Variable(out, requires_grad=False)
-
-    out=np.array(out)
-
-    target_phix_18+=[out[0,:]]
-    if cnt%5000 ==0 :
-      with open(path2+r"/dataset172/"+'target_phix_18_test.txt', 'wb') as fp:
-        pickle.dump(target_phix_18,fp)
-      with open(path2+r"/dataset172/"+'phix_18_test.txt', 'wb') as fp:
-        pickle.dump(phix_18,fp)  
-    if (cnt%500)==0:
-      print('cnt',cnt)
-  with open(path2+r"/dataset172/"+'target_phix_18_test.txt', 'wb') as fp:
-      pickle.dump(target_phix_18,fp)
-  with open(path2+r"/dataset172/"+'phix_18_test.txt', 'wb') as fp:
-      pickle.dump(phix_18,fp)  
-if __name__ == '__main__': 
-  #RestNet50_test()
-  with open(path2+r"/dataset172/"+'phix_18_test.txt', 'rb') as fp:
-      phix_18=pickle.load(fp)  
-  test=10
-  #RestNet18_test()
-=======
   resnet152 = models.resnet152(pretrained=True)
   #resnet50=models.resnet50(pretrained=True)
   #resnet50.fc=nn.Identity()
@@ -3956,7 +3487,6 @@ if __name__ == '__main__':
 if __name__ == '__main__':
   RestNet152() 
   #validate_data_set()  
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
   #phase2_network()  img_model_file,text_model_file,flag  
   #asbook1, model=Phase2_test_models_get_orignal("4iCovLinearflr006w12.pth","4Dtlr006w124000.pth",3)
   #name="joint"

@@ -1450,32 +1450,34 @@ class Feature172KOrg():
   def __init__(self):
     super(Feature172KOrg, self).__init__()
     
-    with open (Path1+r"/dataset172Org/"+'Features172KphixQuery.txt', 'rb') as fp:
-      self.PhixQueryImg = pickle.load(fp) 
-    
-    with open (Path1+r"/dataset172Org/"+'Features172KphitQueryCaption.txt', 'rb') as fp:
-      self.PhitQueryCaption = pickle.load(fp) 
+    if(os.path.isdir(Path1+r"/dataset172Org/")):
 
-    with open (Path1+r"/dataset172Org/"+'Features172KphitQueryMod.txt', 'rb') as fp:
-      self.PhitQueryMod = pickle.load(fp) 
-    
-    with open (Path1+r"/dataset172Org/"+'Features172KphixTarget.txt', 'rb') as fp:
-      self.PhixTargetImg = pickle.load(fp) 
+      with open (Path1+r"/dataset172Org/"+'Features172KphixQuery.txt', 'rb') as fp:
+        self.PhixQueryImg = pickle.load(fp) 
+      
+      with open (Path1+r"/dataset172Org/"+'Features172KphitQueryCaption.txt', 'rb') as fp:
+        self.PhitQueryCaption = pickle.load(fp) 
 
-    with open (Path1+r"/dataset172Org/"+'Features172KphitTargetCaption.txt', 'rb') as fp:
-      self.PhitTargetCaption = pickle.load(fp) 
+      with open (Path1+r"/dataset172Org/"+'Features172KphitQueryMod.txt', 'rb') as fp:
+        self.PhitQueryMod = pickle.load(fp) 
+      
+      with open (Path1+r"/dataset172Org/"+'Features172KphixTarget.txt', 'rb') as fp:
+        self.PhixTargetImg = pickle.load(fp) 
 
-    with open(Path1+r"/dataset172Org/"+'Features172Kall_captions_text.txt', 'rb') as fp:
-      self.all_captions_text = pickle.load(fp) 
+      with open (Path1+r"/dataset172Org/"+'Features172KphitTargetCaption.txt', 'rb') as fp:
+        self.PhitTargetCaption = pickle.load(fp) 
 
-    with open(Path1+r"/dataset172Org/"+'Features172Kall_target_captions_text.txt', 'rb') as fp:
-      self.all_target_captions_text = pickle.load(fp) 
+      with open(Path1+r"/dataset172Org/"+'Features172Kall_captions_text.txt', 'rb') as fp:
+        self.all_captions_text = pickle.load(fp) 
 
-    with open(Path1+r"/dataset172Org/"+'Features172Kall_Query_captions_text.txt', 'rb') as fp:
-      self.all_Query_captions_text = pickle.load(fp) 
+      with open(Path1+r"/dataset172Org/"+'Features172Kall_target_captions_text.txt', 'rb') as fp:
+        self.all_target_captions_text = pickle.load(fp) 
 
-    with open(Path1+r"/dataset172Org/"+'Features172Kall_ids.txt', 'rb') as fp:
-      self.all_ids = pickle.load(fp) 
+      with open(Path1+r"/dataset172Org/"+'Features172Kall_Query_captions_text.txt', 'rb') as fp:
+        self.all_Query_captions_text = pickle.load(fp) 
+
+      with open(Path1+r"/dataset172Org/"+'Features172Kall_ids.txt', 'rb') as fp:
+        self.all_ids = pickle.load(fp) 
 
   def SavetoFilesphixt(self,Path,model,testset,opt):
     model.eval()
@@ -1542,6 +1544,9 @@ class Feature172KOrg():
     # all_target_captions_text = np.concatenate(all_target_captions_text)
     # all_Query_captions_text = np.concatenate(all_Query_captions_text)
     
+    if(not os.path.isdir(Path1+r"/dataset172Org/")):
+      os.makedirs(Path1+r"/dataset172Org/")
+
 
     with open(Path+r"/"+'Features172KphixQuery.txt', 'wb') as fp:
       pickle.dump(all_queries, fp)
@@ -1573,42 +1578,44 @@ class Feature172KOrg():
 class Features33KOrg():
   def __init__(self):
     super(Features33KOrg, self).__init__()
-    
-    with open (Path1+r"/dataset33Org/"+'Features33KphixQuery.txt', 'rb') as fp:
-      self.PhixQueryImg = pickle.load(fp) 
-    
-    with open (Path1+r"/dataset33Org/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
-      self.PhitQueryCaption = pickle.load(fp) 
 
-    with open (Path1+r"/dataset33Org/"+'Features33KphitQueryMod.txt', 'rb') as fp:
-      self.PhitQueryMod = pickle.load(fp) 
+    if(os.path.isdir(Path1+r"/dataset33Org/")):
     
-    with open (Path1+r"/dataset33Org/"+'Features33KphixTarget.txt', 'rb') as fp:
-      self.PhixTargetImg = pickle.load(fp) 
+      with open (Path1+r"/dataset33Org/"+'Features33KphixQuery.txt', 'rb') as fp:
+        self.PhixQueryImg = pickle.load(fp) 
+      
+      with open (Path1+r"/dataset33Org/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
+        self.PhitQueryCaption = pickle.load(fp) 
 
-    with open (Path1+r"/dataset33Org/"+'Features33KphitTargetCaption.txt', 'rb') as fp:
-      self.PhitTargetCaption = pickle.load(fp) 
-    
-    with open (Path1+r"/dataset33Org/"+'Features33KphixTestDatasetImg.txt', 'rb') as fp:
-      self.PhixAllImages = pickle.load(fp) 
+      with open (Path1+r"/dataset33Org/"+'Features33KphitQueryMod.txt', 'rb') as fp:
+        self.PhitQueryMod = pickle.load(fp) 
+      
+      with open (Path1+r"/dataset33Org/"+'Features33KphixTarget.txt', 'rb') as fp:
+        self.PhixTargetImg = pickle.load(fp) 
 
-    with open (Path1+r"/dataset33Org/"+'Features33KphitTestDatasetImg.txt', 'rb') as fp:
-      self.PhitAllImagesCaptions = pickle.load(fp) 
-    
-    with open(Path1+r"/dataset33Org/"+'Features33Kall_captions_text.txt', 'rb') as fp:
-      self.all_captions_text = pickle.load(fp)
+      with open (Path1+r"/dataset33Org/"+'Features33KphitTargetCaption.txt', 'rb') as fp:
+        self.PhitTargetCaption = pickle.load(fp) 
+      
+      with open (Path1+r"/dataset33Org/"+'Features33KphixTestDatasetImg.txt', 'rb') as fp:
+        self.PhixAllImages = pickle.load(fp) 
 
-    with open(Path1+r"/dataset33Org/"+'Features33Kall_target_captions_text.txt', 'rb') as fp:
-      self.all_target_captions_text = pickle.load(fp)
+      with open (Path1+r"/dataset33Org/"+'Features33KphitTestDatasetImg.txt', 'rb') as fp:
+        self.PhitAllImagesCaptions = pickle.load(fp) 
+      
+      with open(Path1+r"/dataset33Org/"+'Features33Kall_captions_text.txt', 'rb') as fp:
+        self.all_captions_text = pickle.load(fp)
 
-    with open(Path1+r"/dataset33Org/"+'Features33Kall_queries_captions_text.txt', 'rb') as fp:
-      self.all_queries_captions_text = pickle.load(fp)
-    
-    with open(Path1+r"/dataset33Org/"+'Features33Kall_queries_Mod_text.txt', 'rb') as fp:
-      self.all_queries_Mod_text = pickle.load(fp)
- 
-    with open(Path1+r"/dataset33Org/"+'Features33Kall_ids.txt', 'rb') as fp:
-      self.all_ids = pickle.load(fp)
+      with open(Path1+r"/dataset33Org/"+'Features33Kall_target_captions_text.txt', 'rb') as fp:
+        self.all_target_captions_text = pickle.load(fp)
+
+      with open(Path1+r"/dataset33Org/"+'Features33Kall_queries_captions_text.txt', 'rb') as fp:
+        self.all_queries_captions_text = pickle.load(fp)
+      
+      with open(Path1+r"/dataset33Org/"+'Features33Kall_queries_Mod_text.txt', 'rb') as fp:
+        self.all_queries_Mod_text = pickle.load(fp)
+  
+      with open(Path1+r"/dataset33Org/"+'Features33Kall_ids.txt', 'rb') as fp:
+        self.all_ids = pickle.load(fp)
 
     
   
@@ -1706,6 +1713,9 @@ class Features33KOrg():
         imgsCaption = []
     all_imgs = np.concatenate(all_imgs)
     all_captions = np.concatenate(all_captions)
+
+    if(not os.path.isdir(Path1+r"/dataset33Org/")):
+      os.makedirs(Path1+r"/dataset33Org/")
 
     with open(Path+r"/"+'Features33KphixQuery.txt', 'wb') as fp:
       pickle.dump(all_queries, fp)
