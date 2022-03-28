@@ -321,7 +321,7 @@ def SavetoFilesphixt():
     
     test_queries = testset.get_test_queries()
     
-    for t in tqdm(test_queries):
+    for t in tqdm(test_queries[:1]):
       idx = {
           'source_img_id': t['source_img_id'],
           'target_id':t['target_id']          
@@ -393,6 +393,134 @@ def SavetoFilesphixt():
     # all_imgs = np.concatenate(all_imgs)
     # all_captions = np.concatenate(all_captions)
 
+def SavetoFilesphixtNoModel():
+    Path=Path1+r'/dataset33Org'
+
+    train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+    testset = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+
+    opt = argparse.ArgumentParser()
+    opt.add_argument('--batch_size', type=int, default=2)
+    opt.add_argument('--dataset', type=str, default='fashion200k')
+    opt.batch_size =1
+    opt.dataset='fashion200k'
+    model= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+    #model.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+
+    model.eval()
+    all_imgs = []
+    all_captions = []
+    all_target = []
+    all_target_captions = []
+    all_queries = []
+    all_queries_captions = []
+    all_queries_Mod = []
+    all_captions_text = []
+    all_target_captions_text = []
+    all_queries_captions_text = []
+    all_queries_Mod_text = []
+    all_ids = []
+
+    imgs0 = []
+    imgs = []
+    mods = []
+    target=[]
+    Qcaption=[]
+    Tcaption=[]
+    
+    test_queries = testset.get_test_queries()
+    
+    for t in tqdm(test_queries[:1]):
+      idx = {
+          'source_img_id': t['source_img_id'],
+          'target_id':t['target_id']          
+      }
+      imgs += [testset.get_img(t['source_img_id'])]
+      mods += [t['mod']['str']]
+      target += [testset.get_img(t['target_id'])]
+      Qcaption += [t['source_caption']]
+      Tcaption += [t['target_caption']]
+      all_queries_captions_text += [t['source_caption']]
+      all_target_captions_text += [t['target_caption']]
+      all_queries_Mod_text += [t['mod']['str']]
+
+      if len(imgs) >= opt.batch_size or t is test_queries[-1]:
+        if 'torch' not in str(type(imgs[0])):
+          imgs = [torch.from_numpy(d).float() for d in imgs]
+          target = [torch.from_numpy(d).float() for d in target]
+
+        imgs = torch.stack(imgs).float()
+        imgs = torch.autograd.Variable(imgs)
+        target = torch.stack(target).float()
+        target = torch.autograd.Variable(target)
+        
+        f = model.extract_img_feature(imgs).data.cpu().numpy() 
+        f2 = model.extract_text_feature(mods).data.cpu().numpy()
+        f3 = model.extract_img_feature(target).data.cpu().numpy()
+        f4 = model.extract_text_feature(Qcaption).data.cpu().numpy()
+        f5 = model.extract_text_feature(Tcaption).data.cpu().numpy()
+
+        all_queries += [f]
+        all_queries_Mod += [f2]
+        all_target += [f3]
+        all_queries_captions += [f4]
+        all_target_captions += [f5]
+        all_ids += [idx]
+
+        imgs = []
+        mods = []
+        target=[]
+        Qcaption=[]
+        Tcaption=[]
+    
+    all_target = np.concatenate(all_target)
+    all_target_captions = np.concatenate(all_target_captions)
+    all_queries = np.concatenate(all_queries)
+    all_queries_captions = np.concatenate(all_queries_captions)
+    all_queries_Mod = np.concatenate(all_queries_Mod)
+    #all_target_captions = [t['target_caption'] for t in test_queries]
+
+    # compute all image features  
+    imgs = []
+    imgsCaption = []
+
+    # for i in tqdm(range(len(testset.imgs))):
+    #   imgs += [testset.get_img(i)]
+    #   if len(imgs) >= opt.batch_size or i == len(testset.imgs) - 1:
+    #     if 'torch' not in str(type(imgs[0])):
+    #       imgs = [torch.from_numpy(d).float() for d in imgs]
+    #     imgs = torch.stack(imgs).float()
+    #     imgs = torch.autograd.Variable(imgs)#.cuda()
+    #     imgs = model.extract_img_feature(imgs).data.cpu().numpy()
+    #     imgsCaption = model.extract_text_feature(testset.imgs[i]['captions']).data.cpu().numpy()
+    #     all_captions_text += [testset.imgs[i]['captions']]
+
+    #     all_imgs += [imgs]
+    #     all_captions += [imgsCaption]
+    #     imgs = []
+    #     imgsCaption = []
+    # all_imgs = np.concatenate(all_imgs)
+    # all_captions = np.concatenate(all_captions)
    
   
 
@@ -400,5 +528,5 @@ if __name__ == '__main__':
     #savesourcephixtvalues()
     #Semantic50_Maa("test")
     #comparefilesdataset33k()
-    SavetoFilesphixt()
+    SavetoFilesphixtNoModel()
     
