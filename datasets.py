@@ -47,6 +47,7 @@ import PIL
 import argparse
 import datasets
 import img_text_composition_models
+import torchvision.models as models
 
 #Path1=r"D:\personal\master\MyCode\files"
 Path1 = r"C:\MMaster\Files"
@@ -637,6 +638,8 @@ class Fashion200k(BaseDataset):
           'source_caption': source_caption,
           'target_caption': target_caption,
           'target_id':target_idx,
+          'source_path':source_file,
+          'target_path':target_file,
           # 'source_data':self.get_img(idx),
           # 'target_data':self.get_img(target_idx),
           'mod': {
@@ -1785,9 +1788,119 @@ class Features50Org():
     with open (Path1+r"/dataset50Org/"+'target_phix_50_test.txt', 'rb') as fp:
       self.target_phix_50_test = pickle.load(fp) 
 
+##################  Get Img & text Correctly 
+
+class Feature172KImgTextF():
+  def __init__(self):
+    super(Feature172KImgTextF, self).__init__()
+    
+  
+  def SavetoFilesphixt(self,Path,model,testset,opt):
+    model.eval()
+    QueryImgFeatures=[]
+    ModTextFeature=[]
+    QueryTextFeature=[]
+    QueryInfo=[]
+    TargetImgFeatures=[]
+    TargetTextFeature=[]
+
+    # Resnet152 = models.resnet152(pretrained=True)
+    # Resnet152.fc = nn.Identity()
+    # Resnet152.eval()
+
+    # Resnet50 = models.resnet50(pretrained=True)
+    # Resnet50.fc = nn.Identity()
+    # Resnet50.eval()
+
+    # Resnet18 = models.resnet18(pretrained=True)
+    # Resnet18.fc = nn.Identity()
+    # Resnet18.eval()
+
+    for i in range(172048):#172048
+      print('Extracting Feature From image=',i,end='\r')  
+      item = testset[i]
+      idx = {
+          'QueryID': item['source_img_id'],
+          'TargetID':item['target_img_id'],
+          'Mod':  item['mod']['str'],
+          'QueryCaption':item['source_caption'],
+          'TargetCaption':item['target_caption'],
+          'QueryURL':item['source_path'],
+          'TargetURL':item['target_path']
+      }
+      #print(idx)
+      
+      
+      
+      # QueryImgFeatures += [model.extract_img_feature(torch.stack([item['source_img_data']]).float()).data.cpu().numpy()]
+      # ModTextFeature += [model.extract_text_feature([item['mod']['str']]).data.cpu().numpy()]
+      # QueryTextFeature += [model.extract_text_feature([item['source_caption']]).data.cpu().numpy()]
+      QueryInfo += [idx]
+      # TargetImgFeatures += [model.extract_img_feature(torch.stack([item['target_img_data']]).float()).data.cpu().numpy()]
+      # TargetTextFeature += [model.extract_text_feature([item['target_caption']]).data.cpu().numpy()]
+    
+    # QueryImgFeatures=np.concatenate(QueryImgFeatures)
+    # ModTextFeature=np.concatenate(ModTextFeature)
+    # QueryTextFeature=np.concatenate(QueryTextFeature)
+    # TargetImgFeatures=np.concatenate(TargetImgFeatures)
+    # TargetTextFeature=np.concatenate(TargetTextFeature)
+    
+    if(not os.path.isdir(Path)):
+      os.makedirs(Path)
+
+
+    # with open(Path+r"/"+'Feature172QueryImgTrigModel.txt', 'wb') as fp:
+    #   pickle.dump(QueryImgFeatures, fp)
+
+    # with open(Path+r"/"+'Feature172ModTrigModel.txt', 'wb') as fp:
+    #   pickle.dump(ModTextFeature, fp)
+
+    # with open(Path+r"/"+'Feature172CaptionQueryTrigModel.txt', 'wb') as fp:
+    #   pickle.dump(QueryTextFeature, fp)
+
+    # with open(Path+r"/"+'Feature172TargetImgTrigModel.txt', 'wb') as fp:
+    #   pickle.dump(TargetImgFeatures, fp)
+
+    # with open(Path+r"/"+'Feature172CaptionTargetTrigModel.txt', 'wb') as fp:
+    #   pickle.dump(TargetTextFeature, fp)
+
+    with open(Path+r"/"+'Feature172Info.txt', 'wb') as fp:
+      pickle.dump(QueryInfo, fp)
+
+class Feature33KImgTextF():
+  def __init__(self):
+      super(Feature33KImgTextF, self).__init__()
+  
+  def SavetoFilesphixt(self,Path,model,testset,opt):
+    model.eval()
+    QueryInfo=[]
+    
+    
+    test_queries = testset.get_test_queries()
+    for t in tqdm(test_queries):
+      idx = {
+          
+          'QueryID': t['source_img_id'],
+          'TargetID':t['target_id'],
+          'Mod':  t['mod']['str'],
+          'QueryCaption':t['source_caption'],
+          'TargetCaption':t['target_caption'],
+          'QueryURL':t['source_path'],
+          'TargetURL':t['target_path']         
+      }
+      QueryInfo += [idx]
+
+    # compute all image features  
     
 
-    
+    if(not os.path.isdir(Path)):
+      os.makedirs(Path)
+
+    with open(Path+r"/"+'Feature33Info.txt', 'wb') as fp:
+      pickle.dump(QueryInfo, fp)
+
+   
+ 
 
 
   
