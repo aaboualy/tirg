@@ -3491,19 +3491,6 @@ if __name__ == '__main__':
   #asbook1, model=Phase2_test_models_get_orignal("4iCovLinearflr006w12.pth","4Dtlr006w124000.pth",3)
   #name="joint"
   #print(name,' L oaded As PaPer: ',asbook1, '\n  model generated      ',model, '\n  ' )
-<<<<<<< HEAD
-
-  ###########phase2_two_network_model_train()
-  #############select_best_saved_model()
-  #for i in range(6900,7400,100):
-    #i=33800
-    #print(semantic_Model_performance(i))
-  #bulid_train_second_text_net_2_semantic_Hup()
-  #resume_train_second_text_net_2_semantic_Hup(400)
-  #resume_train_final_net_with_semantic_Hup(9000)
-  #bulid_train_final_net_with_semantic_Hup()
-  #print(semantic_regression_performance())
-=======
   #datasets_check()
   #prepare_dataset()
   ###########phase2_two_network_model_train()
@@ -3519,7 +3506,6 @@ if __name__ == '__main__':
 
   
   #bulid_train_final_net_with_semantic_Hup()
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
   #save_semantic_hup_output()
   #bulid_train_semantic_Hup()
 
@@ -3538,27 +3524,7 @@ if __name__ == '__main__':
   #k=0
   #path2=path2=r"C:\MMaster\Files"
   
-<<<<<<< HEAD
-  #dataset_used = datasets.Fashion200k(
-  #      path=path2,
-  #      path=path2,
-  #      split='train',
-  #      transform=torchvision.transforms.Compose([
-  #          torchvision.transforms.Resize(224),
-  #          torchvision.transforms.CenterCrop(224),
-  #          torchvision.transforms.ToTensor(),
-  #          torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-  #                                           [0.229, 0.224, 0.225])
-  #      ]))
-
-  #for i in range(0,170000,500):
-  #  k+= CBIR(i,1, 500,model_file,dataset_used)
-
-  #print('total found is ',k)
-
-=======
   
->>>>>>> 1347183636a47e74b8ce86e5a4cb4c4ebbd71160
   
     
 
