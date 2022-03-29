@@ -43,10 +43,13 @@ import torchvision.models as models
 
 
 Path1 = r"C:\MMaster\Files"
+
 print(torch.cuda.is_available())
+
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
     print("GPU")
+
 else:
     device = torch.device("cpu")
     print("CPU")
@@ -59,6 +62,7 @@ class NLR3S(nn.Module):
     def myforward (self,inv):
       outv=self.netmodel(inv)
       return outv
+
 class NLR3T(nn.Module):
     def __init__(self,netin,netout,nethidden):
       super().__init__()
@@ -66,7 +70,6 @@ class NLR3T(nn.Module):
     def myforward (self,inv):
       outv=self.netmodel(inv)
       return outv
-
 
 def Semantic50_Maa(run_type):
     device = torch.device("cpu")    
@@ -163,48 +166,24 @@ def Semantic50_Maa(run_type):
 
     print (out)
 
+
 def savesourcephixtvalues():
 
-  train = datasets.Fashion200k(
-        path=Path1,
-        split='train',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
+    datasets.Feature172KImgTextF().SaveFeaturestoFile(Path1+r'/dataset172ImgTextF')
 
-  test = datasets.Fashion200k(
-        path=Path1,
-        split='test',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
+#   train = datasets.Fashion200k(
+#         path=Path1,
+#         split='train',
+#         transform=torchvision.transforms.Compose([
+#             torchvision.transforms.Resize(224),
+#             torchvision.transforms.CenterCrop(224),
+#             torchvision.transforms.ToTensor(),
+#             torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+#                                               [0.229, 0.224, 0.225])
+#         ]))
 
-
-  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
-  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-
-  opt = argparse.ArgumentParser()
-  opt.add_argument('--batch_size', type=int, default=2)
-  opt.add_argument('--dataset', type=str, default='fashion200k')
-  opt.batch_size =1
-  opt.dataset='fashion200k'
-
-  #datasets.Feature172KImgTextF().SavetoFilesphixt(Path1+r'/dataset172ImgTextF', trig, train,opt)
-  print('172 Finished')
-  datasets.Feature33KImgTextF().SavetoFilesphixt(Path1+r'/dataset33ImgTextF', trig, test,opt)
-  print('33k Finished')
-
-# def RestNet152():
-#   test_dataset = datasets.Fashion200k(
-#         path=path2,
+#   test = datasets.Fashion200k(
+#         path=Path1,
 #         split='test',
 #         transform=torchvision.transforms.Compose([
 #             torchvision.transforms.Resize(224),
@@ -213,72 +192,23 @@ def savesourcephixtvalues():
 #             torchvision.transforms.Normalize([0.485, 0.456, 0.406],
 #                                               [0.229, 0.224, 0.225])
 #         ]))
-#   resnet152 = models.resnet152(pretrained=True)
-#   #resnet50=models.resnet50(pretrained=True)
-#   #resnet50.fc=nn.Identity()
-#   #resnet50.eval()
-#   resnet152.fc = nn.Identity()
-#   resnet152.eval()
-#   #phix_50=[]
-#   #target_phix_50=[]
-#   phix_152=[]
-#   target_phix_152=[]
-#   cnt=0
-#   for item in (test_dataset):
-    
-#     cnt+=1
-#     #img_id=item['source_img_id']
-#     #target_id=item['target_id']
-#     img=item['source_img_data']
-#     img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-#     img=img/torch.max(img)
-#     out=resnet152(img)
-#     #out50=resnet50(img)
-#     out = Variable(out, requires_grad=False)
-#     #out50 = Variable(out50, requires_grad=False)
-#     #out50=np.array(out50)
-#     out=np.array(out)
-#     phix_152 +=[out[0,:]]
-#     #phix_50 +=[out50[0,:]]
-
-#     img=item['target_img_data']
-#     img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-#     img=img/torch.max(img)
-#     out=resnet152(img)
-#     #out50=resnet50(img)
-#     out = Variable(out, requires_grad=False)
-#     #out50 = Variable(out50, requires_grad=False)
-#     #out50=np.array(out50)
-
-#     out=np.array(out)
-
-#     target_phix_152+=[out[0,:]]
-#     #target_phix_50+=[out50[0,:]]
-
-#     ###############################
-    
-#     ##############################
-#     if (cnt%500)==0:
-#       print('cnt',cnt)
-#       if (cnt%2000)==0:
-#         with open(path2+r"/dataset172Org/"+'target_phix_152_test.txt', 'wb') as fp:
-#           pickle.dump(target_phix_152,fp)
-#         with open(path2+r"/dataset172Org/"+'phix_152_test.txt', 'wb') as fp:
-#           pickle.dump(phix_152,fp)
-#      #   with open(path2+r"/dataset172Org/"+'target_phix_50_test.txt', 'wb') as fp:
-#       #    pickle.dump(target_phix_50,fp)
-#      #   with open(path2+r"/dataset172Org/"+'phix_50_test.txt', 'wb') as fp:
-#       #    pickle.dump(phix_50,fp)
-
-#   with open(path2+r"/dataset172Org/"+'target_phix_152_test.txt', 'wb') as fp:
-#       pickle.dump(target_phix_152,fp)
-#   with open(path2+r"/dataset172Org/"+'phix_152_test.txt', 'wb') as fp:
-#       pickle.dump(phix_152,fp)
 
 
+#   trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+#   trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
 
+#   opt = argparse.ArgumentParser()
+#   opt.add_argument('--batch_size', type=int, default=2)
+#   opt.add_argument('--dataset', type=str, default='fashion200k')
+#   opt.batch_size =1
+#   opt.dataset='fashion200k'
 
-
+#   #datasets.Feature172KImgTextF().SavetoFilesQueryidx(Path1+r'/dataset172ImgTextF', trig, train,opt)
+#   print('IDX of 172 Finished')
+#   #datasets.Feature33KImgTextF().SavetoFilesQueryidx(Path1+r'/dataset33ImgTextF', trig, test,opt)
+#   print('IDX of 33k Finished')
+  
+  
 
 
 
@@ -332,8 +262,6 @@ def comparefilesdataset33k():
     # print(euclideandistance(PhitTargetCaption[0], PhitTargetCaption32022[0]))
     print('')
 
-    
-
 def euclideandistance(signature,signatureimg):
     from scipy.spatial import distance
     return distance.euclidean(signature, signatureimg)
@@ -341,4 +269,6 @@ def euclideandistance(signature,signatureimg):
 
 if __name__ == '__main__': 
     savesourcephixtvalues()
+    #datasets.Fashion200k().get_img(idx)
+
     
