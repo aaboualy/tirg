@@ -170,6 +170,7 @@ def Semantic50_Maa(run_type):
 def savesourcephixtvalues():
 
     datasets.Feature172KImgTextF().SaveFeaturestoFile(Path1+r'/dataset172ImgTextF')
+    datasets.Feature33KImgTextF().SaveFeaturestoFile(Path1+r'/dataset33ImgTextF')
 
 #   train = datasets.Fashion200k(
 #         path=Path1,
