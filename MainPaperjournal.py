@@ -172,44 +172,7 @@ def savesourcephixtvalues():
     datasets.Feature172KImgTextF().SaveFeaturestoFile(Path1+r'/dataset172ImgTextF')
     datasets.Feature33KImgTextF().SaveFeaturestoFile(Path1+r'/dataset33ImgTextF')
 
-#   train = datasets.Fashion200k(
-#         path=Path1,
-#         split='train',
-#         transform=torchvision.transforms.Compose([
-#             torchvision.transforms.Resize(224),
-#             torchvision.transforms.CenterCrop(224),
-#             torchvision.transforms.ToTensor(),
-#             torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-#                                               [0.229, 0.224, 0.225])
-#         ]))
 
-#   test = datasets.Fashion200k(
-#         path=Path1,
-#         split='test',
-#         transform=torchvision.transforms.Compose([
-#             torchvision.transforms.Resize(224),
-#             torchvision.transforms.CenterCrop(224),
-#             torchvision.transforms.ToTensor(),
-#             torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-#                                               [0.229, 0.224, 0.225])
-#         ]))
-
-
-#   trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
-#   trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-
-#   opt = argparse.ArgumentParser()
-#   opt.add_argument('--batch_size', type=int, default=2)
-#   opt.add_argument('--dataset', type=str, default='fashion200k')
-#   opt.batch_size =1
-#   opt.dataset='fashion200k'
-
-#   #datasets.Feature172KImgTextF().SavetoFilesQueryidx(Path1+r'/dataset172ImgTextF', trig, train,opt)
-#   print('IDX of 172 Finished')
-#   #datasets.Feature33KImgTextF().SavetoFilesQueryidx(Path1+r'/dataset33ImgTextF', trig, test,opt)
-#   print('IDX of 33k Finished')
-  
-  
 
 
 

@@ -1973,11 +1973,6 @@ class Feature172KImgTextF():
       with open(Path+r"/"+'Feature172TargetImg18.txt', 'wb') as fp:
         pickle.dump(TargetImgFeature18, fp)
 
-        
-
-
-
-
 class Feature33KImgTextF():
   def __init__(self):
       super(Feature33KImgTextF, self).__init__()
