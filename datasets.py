@@ -751,7 +751,6 @@ class Fashion200k(BaseDataset):
       img = self.transform(img)
     return img
 
-
 ###### Get From File 
 class Features172K():
   def __init__(self):
@@ -1906,7 +1905,7 @@ class Feature172KImgTextF():
 
     if(os.path.isdir(Path)):
 
-      with open (Path1+r'/Feature172Info.txt', 'rb') as fp:
+      with open (Path+r'/Feature172Info.txt', 'rb') as fp:
         QueryInfo = pickle.load(fp) 
             
       for item in tqdm(QueryInfo):      
