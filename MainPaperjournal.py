@@ -54,7 +54,6 @@ else:
     device = torch.device("cpu")
     print("CPU")
 
-
 class NLR3S(nn.Module):
     def __init__(self,netin,netout,nethidden):
       super().__init__()
@@ -166,15 +165,12 @@ def Semantic50_Maa(run_type):
 
     print (out)
 
-
 def savesourcephixtvalues():
 
-    datasets.Feature172KImgTextF().SaveFeaturestoFile(Path1+r'/dataset172ImgTextF')
-    datasets.Feature33KImgTextF().SaveFeaturestoFile(Path1+r'/dataset33ImgTextF')
-
-
-
-
+    # datasets.Feature172KImgTextF().SaveFeaturestoFile(Path1+r'/dataset172ImgTextF')
+    # datasets.Feature33KImgTextF().SaveFeaturestoFile(Path1+r'/dataset33ImgTextF')
+    datasets.FeaturesToFiles172().SaveAllFeatures()
+    datasets.FeaturesToFiles33().SaveAllFeatures()
 
 def comparefilesdataset33k():
     

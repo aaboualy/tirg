@@ -2172,6 +2172,235 @@ class Feature33KImgTextF():
         pickle.dump(TargetImgFeature18, fp)
 
      
+################### Get Features of all images
 
 
+class FeaturesToFiles172():
+  def __init__(self):
+    super(FeaturesToFiles172, self).__init__()
+    self.Path=Path1+r'/FeaturesToFiles172'
+    self.train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  def SaveAllimgesToFile(self):    
+    if(not os.path.isdir(self.Path)):
+      os.makedirs(self.Path)
+
+    with open(self.Path+r"/"+'FeaturesToFiles172.txt', 'wb') as fp:
+      pickle.dump(self.train.imgs, fp)
+
+    with open(self.Path+r"/"+'trainget_all_texts.txt', 'wb') as fp:
+      pickle.dump(self.train.get_all_texts(), fp)
+     
+  def SaveAllFeatures(self):
+    
+    if(os.path.exists(self.Path+r"/"+'FeaturesToFiles172.txt') and os.path.exists(self.Path+r"/"+'trainget_all_texts.txt') ):
+      print('172K Index File already found... begining of Extracting Features ')
+    else:
+      self.SaveAllimgesToFile()
+      print('172K Index Files Created... begining of Extracting Features')
+
+    with open (self.Path+r'/trainget_all_texts.txt', 'rb') as fp:
+      alltexts = pickle.load(fp) 
+
+    with open (self.Path+r'/FeaturesToFiles172.txt', 'rb') as fp:
+      Idximgs = pickle.load(fp) 
+
+    trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in alltexts],512)
+    trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+    trig.eval()
+
+    #print('First Extract Features using Tirg Model')
+    #self.SaveimgTxtFToFileTirg(Idximgs,trig)
+    print('Extracting 152 50 18 Resnet')
+    self.SaveImgFeature1525018(Idximgs,trig)
+    
+  def SaveimgTxtFToFileTirg(self,Idximgs,model):
+    
+    img=[]
+    text_model=[]
+    
+    i=0
+    for item in tqdm(Idximgs):      
+      img += [model.extract_img_feature(torch.stack([self.train.get_img(i)]).float()).data.cpu().numpy()]
+      text_model += [model.extract_text_feature([item['captions'][0]]).data.cpu().numpy()]
+      i=i+1
+    
+    img=np.concatenate(img)
+    text_model=np.concatenate(text_model)
+    
+    with open(self.Path+r"/"+'Features172imgTrig.txt', 'wb') as fp:
+      pickle.dump(img, fp)
+
+    with open(self.Path+r"/"+'Features172textTrig.txt', 'wb') as fp:
+      pickle.dump(text_model, fp)
   
+  def SaveImgFeature1525018(self,Idximgs,model):
+    Resnet152 = models.resnet152(pretrained=True)
+    Resnet152.fc = nn.Identity()
+    Resnet152.eval()
+
+    Resnet50 = models.resnet50(pretrained=True)
+    Resnet50.fc = nn.Identity()
+    Resnet50.eval()
+
+    Resnet18 = models.resnet18(pretrained=True)
+    Resnet18.fc = nn.Identity()
+    Resnet18.eval()    
+
+    i=0  
+    for item in tqdm(Idximgs):      
+      Feature152=[]
+      Feature50=[]
+      Feature18=[]
+      
+      img=self.train.get_img(i)
+      img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+      i=i+1
+
+      out=Resnet152(img)
+      out = Variable(out, requires_grad=False)
+      out=np.array(out)
+      Feature152 +=[out[0,:]]
+
+      out=Resnet50(img)
+      out = Variable(out, requires_grad=False)
+      out=np.array(out)
+      Feature50 +=[out[0,:]]
+
+      out=Resnet18(img)
+      out = Variable(out, requires_grad=False)
+      out=np.array(out)
+      Feature18 +=[out[0,:]]
+
+      
+    with open(self.Path+r"/"+'Features172img152.txt', 'wb') as fp:
+      pickle.dump(Feature152, fp)
+
+    with open(self.Path+r"/"+'Features172img50.txt', 'wb') as fp:
+      pickle.dump(Feature50, fp)
+
+    with open(self.Path+r"/"+'Features172img18.txt', 'wb') as fp:
+      pickle.dump(Feature18, fp)
+
+class FeaturesToFiles33():
+  def __init__(self):
+    super(FeaturesToFiles33, self).__init__()
+    self.Path=Path1+r'/FeaturesToFiles33'
+    self.test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  def SaveAllimgesToFile(self):    
+    if(not os.path.isdir(self.Path)):
+      os.makedirs(self.Path)
+
+    with open(self.Path+r"/"+'FeaturesToFiles33.txt', 'wb') as fp:
+      pickle.dump(self.train.imgs, fp)
+     
+  def SaveAllFeatures(self):
+    
+    if(os.path.exists(self.Path+r"/"+'FeaturesToFiles172.txt') and os.path.exists(datasets.FeaturesToFiles172().Path+r"/"+'trainget_all_texts.txt') ):
+      print('172K Index File already found... begining of Extracting Features ')
+    else:
+      self.SaveAllimgesToFile()
+      print('172K Index Files Created... begining of Extracting Features')
+
+    with open (datasets.FeaturesToFiles172().Path+r'/trainget_all_texts.txt', 'rb') as fp:
+      alltexts = pickle.load(fp) 
+
+    with open (self.Path+r'/FeaturesToFiles33.txt', 'rb') as fp:
+      Idximgs = pickle.load(fp) 
+
+    trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in alltexts],512)
+    trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+    trig.eval()
+
+    print('First Extract Features using Tirg Model')
+    self.SaveimgTxtFToFileTirg(Idximgs,trig)
+    print('Extracting 152 50 18 Resnet')
+    self.SaveImgFeature1525018(Idximgs,trig)
+    
+  def SaveimgTxtFToFileTirg(self,Idximgs,model):
+    
+    img=[]
+    text_model=[]
+
+    i=0  
+    for item in tqdm(Idximgs):      
+      img += [model.extract_img_feature(torch.stack([self.train.get_img(i)]).float()).data.cpu().numpy()]
+      text_model += [model.extract_text_feature([item['captions'][0]]).data.cpu().numpy()]
+      i=i+1
+    
+    img=np.concatenate(img)
+    text_model=np.concatenate(text_model)
+    
+    with open(self.Path+r"/"+'Features33imgTrig.txt', 'wb') as fp:
+      pickle.dump(img, fp)
+
+    with open(self.Path+r"/"+'Features33textTrig.txt', 'wb') as fp:
+      pickle.dump(text_model, fp)
+  
+  def SaveImgFeature1525018(self,Idximgs,model):
+    Resnet152 = models.resnet152(pretrained=True)
+    Resnet152.fc = nn.Identity()
+    Resnet152.eval()
+
+    Resnet50 = models.resnet50(pretrained=True)
+    Resnet50.fc = nn.Identity()
+    Resnet50.eval()
+
+    Resnet18 = models.resnet18(pretrained=True)
+    Resnet18.fc = nn.Identity()
+    Resnet18.eval()    
+    i=0
+    for item in tqdm(Idximgs):      
+      Feature152=[]
+      Feature50=[]
+      Feature18=[]
+      
+      img=self.test.get_img(i)
+      img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+      i=i+1
+
+      out=Resnet152(img)
+      out = Variable(out, requires_grad=False)
+      out=np.array(out)
+      Feature152 +=[out[0,:]]
+
+      out=Resnet50(img)
+      out = Variable(out, requires_grad=False)
+      out=np.array(out)
+      Feature50 +=[out[0,:]]
+
+      out=Resnet18(img)
+      out = Variable(out, requires_grad=False)
+      out=np.array(out)
+      Feature18 +=[out[0,:]]
+
+      
+    with open(self.Path+r"/"+'Features33img152.txt', 'wb') as fp:
+      pickle.dump(Feature152, fp)
+
+    with open(self.Path+r"/"+'Features33img50.txt', 'wb') as fp:
+      pickle.dump(Feature50, fp)
+
+    with open(self.Path+r"/"+'Features33img18.txt', 'wb') as fp:
+      pickle.dump(Feature18, fp)
+
+    
