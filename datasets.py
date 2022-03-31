@@ -2311,7 +2311,7 @@ class FeaturesToFiles33():
       os.makedirs(self.Path)
 
     with open(self.Path+r"/"+'FeaturesToFiles33.txt', 'wb') as fp:
-      pickle.dump(self.train.imgs, fp)
+      pickle.dump(self.test.imgs, fp)
      
   def SaveAllFeatures(self):
     
@@ -2343,7 +2343,7 @@ class FeaturesToFiles33():
 
     i=0  
     for item in tqdm(Idximgs):      
-      img += [model.extract_img_feature(torch.stack([self.train.get_img(i)]).float()).data.cpu().numpy()]
+      img += [model.extract_img_feature(torch.stack([self.test.get_img(i)]).float()).data.cpu().numpy()]
       text_model += [model.extract_text_feature([item['captions'][0]]).data.cpu().numpy()]
       i=i+1
     
