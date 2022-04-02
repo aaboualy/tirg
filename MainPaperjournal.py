@@ -169,7 +169,7 @@ def savesourcephixtvalues():
 
     # datasets.Feature172KImgTextF().SaveFeaturestoFile(Path1+r'/dataset172ImgTextF')
     # datasets.Feature33KImgTextF().SaveFeaturestoFile(Path1+r'/dataset33ImgTextF')
-    #datasets.FeaturesToFiles172().SaveAllFeatures()
+    datasets.FeaturesToFiles172().SaveAllFeatures()
     datasets.FeaturesToFiles33().SaveAllFeatures()
 
 def comparefilesdataset33k():

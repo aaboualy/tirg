@@ -2257,10 +2257,11 @@ class FeaturesToFiles172():
     Resnet18.eval()    
 
     i=0  
+    Feature152=[]
+    Feature50=[]
+    Feature18=[]
     for item in tqdm(Idximgs):      
-      Feature152=[]
-      Feature50=[]
-      Feature18=[]
+      
       
       img=self.train.get_img(i)
       img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
@@ -2331,8 +2332,8 @@ class FeaturesToFiles33():
     trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
     trig.eval()
 
-    print('First Extract Features using Tirg Model')
-    self.SaveimgTxtFToFileTirg(Idximgs,trig)
+    #print('First Extract Features using Tirg Model')
+    #self.SaveimgTxtFToFileTirg(Idximgs,trig)
     print('Extracting 152 50 18 Resnet')
     self.SaveImgFeature1525018(Idximgs,trig)
     
@@ -2369,10 +2370,11 @@ class FeaturesToFiles33():
     Resnet18.fc = nn.Identity()
     Resnet18.eval()    
     i=0
+    Feature152=[]
+    Feature50=[]
+    Feature18=[]
     for item in tqdm(Idximgs):      
-      Feature152=[]
-      Feature50=[]
-      Feature18=[]
+      
       
       img=self.test.get_img(i)
       img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
