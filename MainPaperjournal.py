@@ -43,7 +43,6 @@ import torchvision.models as models
 
 
 Path1 = r"C:\MMaster\Files"
-
 print(torch.cuda.is_available())
 
 if torch.cuda.is_available():
@@ -165,70 +164,58 @@ def Semantic50_Maa(run_type):
 
     print (out)
 
-def savesourcephixtvalues():
-
-    # datasets.Feature172KImgTextF().SaveFeaturestoFile(Path1+r'/dataset172ImgTextF')
-    # datasets.Feature33KImgTextF().SaveFeaturestoFile(Path1+r'/dataset33ImgTextF')
-    datasets.FeaturesToFiles172().SaveAllFeatures()
-    datasets.FeaturesToFiles33().SaveAllFeatures()
-
-def comparefilesdataset33k():
-    
-    PhitQueryCaptionOrg=datasets.Features33KOrg().PhitQueryCaption
-    
-
-    with open (Path1+r"/dataset33OrgNoModel/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
-        PhitQueryCaptionNoModel = pickle.load(fp) 
-
-    with open (Path1+r"/dataset33OrgCheckModel/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
-        PhitQueryCaptionCheckModel = pickle.load(fp) 
-
-    with open (Path1+r"/dataset33OrgFashionModel/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
-        PhitQueryCaptionFashionModel = pickle.load(fp) 
-
-    with open (Path1+r"/dataset33OrgUnknwon/"+'Features33KphitQueryCaption.txt', 'rb') as fp:
-        PhitQueryCaptionUnknow = pickle.load(fp) 
-
-    
-    
-    print("Between ORG No Model New and No Model: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionNoModel[0]))
-    print("Between ORG No Model New and Check File: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionCheckModel[0]))
-    print("Between ORG No Model New and Fashion 33 New file: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionFashionModel[0]))
-    print("Between ORG No Model New and Unknown  file: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionUnknow[0]))
-    print("Between ORG No Model New and Fashion 33 New file: ",euclideandistance(PhitQueryCaptionOrg[0], PhitQueryCaptionOrg[0]))
-    
-
-    # print(PhitQueryCaptionOrg)
-    # print(PhitQueryCaptionNoModel)
-    # print(PhitQueryCaptionCheckModel)
-    # print(PhitQueryCaptionFashionModel)
-
-
-
-    
-
-    # PhitQueryMod=datasets.Features33KOrg().PhitQueryMod
-    # PhitTargetCaption=datasets.Features33KOrg().PhitTargetCaption
-    
-    # with open (Path1+r"/dataset33Org30122021/"+'Features33KphitQueryMod.txt', 'rb') as fp:
-    #     PhitQueryMod32022 = pickle.load(fp) 
-    
-   
-    # with open (Path1+r"/dataset33Org30122021/"+'Features33KphitTargetCaption.txt', 'rb') as fp:
-    #     PhitTargetCaption32022 = pickle.load(fp) 
-
-   
-    # print(euclideandistance(PhitQueryMod[0], PhitQueryMod32022[0]))
-    # print(euclideandistance(PhitTargetCaption[0], PhitTargetCaption32022[0]))
-    print('')
-
 def euclideandistance(signature,signatureimg):
     from scipy.spatial import distance
     return distance.euclidean(signature, signatureimg)
 
+def SaveFeaturesToFiles():
+    datasets.FeaturesToFiles172().SaveAllFeatures()
+    datasets.FeaturesToFiles33().SaveAllFeatures()
+
+def ValidateFeaturesToFiles():
+    train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+    test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+    
+
+    trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+    trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+    trig.eval()
+
+    for i in range(172048):#172048
+      print('Validate:',i,end='\r')  
+      item = train[i]
+      datasets.FeaturesToFiles172().ValidateFile(item['source_img_id'],trig)
+      datasets.FeaturesToFiles172().ValidateFile(item['target_img_id'],trig)
+
+    test_queries = test.get_test_queries()
+    for item in tqdm(test_queries):
+        datasets.FeaturesToFiles33().ValidateFile(item['source_img_id'],trig)
+        datasets.FeaturesToFiles33().ValidateFile(item['target_id'],trig)
+
+
 
 if __name__ == '__main__': 
-    savesourcephixtvalues()
-    #datasets.Fashion200k().get_img(idx)
+    SaveFeaturesToFiles()
+    ValidateFeaturesToFiles()
+    
 
     

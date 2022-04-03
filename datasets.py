@@ -2174,8 +2174,12 @@ class Feature33KImgTextF():
      
 ################### Get Features of all images
 
+def euclideandistance(signature,signatureimg):
+    from scipy.spatial import distance
+    return distance.euclidean(signature, signatureimg)
 
 class FeaturesToFiles172():
+
   def __init__(self):
     super(FeaturesToFiles172, self).__init__()
     self.Path=Path1+r'/FeaturesToFiles172'
@@ -2292,7 +2296,75 @@ class FeaturesToFiles172():
     with open(self.Path+r"/"+'Features172img18.txt', 'wb') as fp:
       pickle.dump(Feature18, fp)
 
+  def ValidateFile(self,idx,model):
+    
+    with open (self.Path+r'/FeaturesToFiles172.txt', 'rb') as fp:
+      Idximgs = pickle.load(fp) 
+
+    print('Img in Index of Dataset:',self.train.imgs[idx])
+    print('Img in Index from File:',Idximgs[idx])
+
+    img = [model.extract_img_feature(torch.stack([self.train.get_img(idx)]).float()).data.cpu().numpy()]
+    text_model = [model.extract_text_feature([self.train.imgs[idx]['captions'][0]]).data.cpu().numpy()]
+
+    print('Caption=',self.train.imgs[idx]['captions'][0])
+
+    with open (self.Path+r'/Features172imgTrig.txt', 'rb') as fp:
+      trigimg = pickle.load(fp) 
+
+    with open (self.Path+r'/Features172textTrig.txt', 'rb') as fp:
+      trigtext = pickle.load(fp) 
+
+    print ('Distance Between img Tirg:', euclideandistance(img,trigimg[idx]))
+    print ('Distance Between text Tirg:', euclideandistance(text_model,trigtext[idx]))
+
+    Resnet152 = models.resnet152(pretrained=True)
+    Resnet152.fc = nn.Identity()
+    Resnet152.eval()
+
+    Resnet50 = models.resnet50(pretrained=True)
+    Resnet50.fc = nn.Identity()
+    Resnet50.eval()
+
+    Resnet18 = models.resnet18(pretrained=True)
+    Resnet18.fc = nn.Identity()
+    Resnet18.eval()    
+
+    
+    img=self.train.get_img(idx)
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    
+
+    out=Resnet152(img)
+    out = Variable(out, requires_grad=False)
+    out=np.array(out)
+    Feature152 =[out[0,:]]
+
+    out=Resnet50(img)
+    out = Variable(out, requires_grad=False)
+    out=np.array(out)
+    Feature50 =[out[0,:]]
+
+    out=Resnet18(img)
+    out = Variable(out, requires_grad=False)
+    out=np.array(out)
+    Feature18 =[out[0,:]]
+
+    with open (self.Path+r'/Features172img152.txt', 'rb') as fp:
+      img152 = pickle.load(fp) 
+    
+    with open (self.Path+r'/Features172img50.txt', 'rb') as fp:
+      img50 = pickle.load(fp) 
+
+    with open (self.Path+r'/Features172img18.txt', 'rb') as fp:
+      img18 = pickle.load(fp) 
+
+    print ('Distance Between img 18:', euclideandistance(Feature18,img18[idx]))
+    print ('Distance Between img 50:', euclideandistance(Feature50,img50[idx]))
+    print ('Distance Between img 152:', euclideandistance(Feature152,img152[idx]))
+
 class FeaturesToFiles33():
+  
   def __init__(self):
     super(FeaturesToFiles33, self).__init__()
     self.Path=Path1+r'/FeaturesToFiles33'
@@ -2405,4 +2477,71 @@ class FeaturesToFiles33():
     with open(self.Path+r"/"+'Features33img18.txt', 'wb') as fp:
       pickle.dump(Feature18, fp)
 
+  def ValidateFile(self,idx,model):
     
+    with open (self.Path+r'/FeaturesToFiles33.txt', 'rb') as fp:
+      Idximgs = pickle.load(fp) 
+
+    print('Img in Index of Dataset:',self.test.imgs[idx])
+    print('Img in Index from File:',Idximgs[idx])
+
+    img = [model.extract_img_feature(torch.stack([self.test.get_img(idx)]).float()).data.cpu().numpy()]
+    text_model = [model.extract_text_feature([self.test.imgs[idx]['captions'][0]]).data.cpu().numpy()]
+
+    print('Caption=',self.test.imgs[idx]['captions'][0])
+
+    with open (self.Path+r'/Features33imgTrig.txt', 'rb') as fp:
+      trigimg = pickle.load(fp) 
+
+    with open (self.Path+r'/Features33textTrig.txt', 'rb') as fp:
+      trigtext = pickle.load(fp) 
+
+    print ('Distance Between img Tirg:', euclideandistance(img,trigimg[idx]))
+    print ('Distance Between text Tirg:', euclideandistance(text_model,trigtext[idx]))
+
+    Resnet152 = models.resnet152(pretrained=True)
+    Resnet152.fc = nn.Identity()
+    Resnet152.eval()
+
+    Resnet50 = models.resnet50(pretrained=True)
+    Resnet50.fc = nn.Identity()
+    Resnet50.eval()
+
+    Resnet18 = models.resnet18(pretrained=True)
+    Resnet18.fc = nn.Identity()
+    Resnet18.eval()    
+
+    
+    img=self.test.get_img(idx)
+    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    
+
+    out=Resnet152(img)
+    out = Variable(out, requires_grad=False)
+    out=np.array(out)
+    Feature152 =[out[0,:]]
+
+    out=Resnet50(img)
+    out = Variable(out, requires_grad=False)
+    out=np.array(out)
+    Feature50 =[out[0,:]]
+
+    out=Resnet18(img)
+    out = Variable(out, requires_grad=False)
+    out=np.array(out)
+    Feature18 =[out[0,:]]
+
+    with open (self.Path+r'/Features33img152.txt', 'rb') as fp:
+      img152 = pickle.load(fp) 
+    
+    with open (self.Path+r'/Features33img50.txt', 'rb') as fp:
+      img50 = pickle.load(fp) 
+
+    with open (self.Path+r'/Features33img18.txt', 'rb') as fp:
+      img18 = pickle.load(fp) 
+
+    print ('Distance Between img 18:', euclideandistance(Feature18,img18[idx]))
+    print ('Distance Between img 50:', euclideandistance(Feature50,img50[idx]))
+    print ('Distance Between img 152:', euclideandistance(Feature152,img152[idx]))
+
+  
