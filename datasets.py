@@ -2224,8 +2224,9 @@ class FeaturesToFiles172():
 
     #print('First Extract Features using Tirg Model')
     #self.SaveimgTxtFToFileTirg(Idximgs,trig)
-    print('Extracting 152 50 18 Resnet')
-    self.SaveImgFeature1525018(Idximgs,trig)
+    #print('Extracting 152 50 18 Resnet')
+    #self.SaveImgFeature1525018(Idximgs,trig)
+    self.SaveQueryStructFile(trig)
     
   def SaveimgTxtFToFileTirg(self,Idximgs,model):
     
@@ -2363,8 +2364,29 @@ class FeaturesToFiles172():
     print ('Distance Between img 50:', euclideandistance(Feature50,img50[idx]))
     print ('Distance Between img 152:', euclideandistance(Feature152,img152[idx]))
 
+  def SaveQueryStructFile(self,model):
+    QueryInfo=[]
+    for i in range(172048):#172048
+      print('Extracting Feature From image=',i,end='\r')  
+      item = self.train[i]
+      idx = {
+          'QueryID': item['source_img_id'],
+          'TargetID':item['target_img_id'],
+          'Mod':  item['mod']['str'],
+          'QueryCaption':item['source_caption'],
+          'TargetCaption':item['target_caption'],
+          'QueryURL':item['source_path'],
+          'TargetURL':item['target_path'],
+          'ModF':model.extract_text_feature([item['mod']['str']]).data.cpu().numpy()
+      }
+      QueryInfo += [idx]
+    
+    with open(self.Path+r"/"+'Features172QueryStructure.txt', 'wb') as fp:
+      pickle.dump(QueryInfo, fp)
+
+
 class FeaturesToFiles33():
-  
+
   def __init__(self):
     super(FeaturesToFiles33, self).__init__()
     self.Path=Path1+r'/FeaturesToFiles33'
@@ -2406,8 +2428,9 @@ class FeaturesToFiles33():
 
     #print('First Extract Features using Tirg Model')
     #self.SaveimgTxtFToFileTirg(Idximgs,trig)
-    print('Extracting 152 50 18 Resnet')
-    self.SaveImgFeature1525018(Idximgs,trig)
+    #print('Extracting 152 50 18 Resnet')
+    #self.SaveImgFeature1525018(Idximgs,trig)
+    self.SaveQueryStructFile(trig)
     
   def SaveimgTxtFToFileTirg(self,Idximgs,model):
     
@@ -2543,5 +2566,25 @@ class FeaturesToFiles33():
     print ('Distance Between img 18:', euclideandistance(Feature18,img18[idx]))
     print ('Distance Between img 50:', euclideandistance(Feature50,img50[idx]))
     print ('Distance Between img 152:', euclideandistance(Feature152,img152[idx]))
+
+  def SaveQueryStructFile(self,model):
+    QueryInfo=[]
+    test_queries = self.test .get_test_queries()
+    for item in tqdm(test_queries):
+       
+      idx = {
+          'QueryID': item['source_img_id'],
+          'TargetID':item['target_id'],
+          'Mod':  item['mod']['str'],
+          'QueryCaption':item['source_caption'],
+          'TargetCaption':item['target_caption'],
+          'QueryURL':item['source_path'],
+          'TargetURL':item['target_path'],
+          'ModF':model.extract_text_feature([item['mod']['str']]).data.cpu().numpy()
+      }
+      QueryInfo += [idx]
+    
+    with open(self.Path+r"/"+'Features33QueryStructure.txt', 'wb') as fp:
+      pickle.dump(QueryInfo, fp)
 
   

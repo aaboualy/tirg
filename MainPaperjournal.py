@@ -214,8 +214,8 @@ def ValidateFeaturesToFiles():
 
 
 if __name__ == '__main__': 
-    #SaveFeaturesToFiles()
-    ValidateFeaturesToFiles()
+    SaveFeaturesToFiles()
+    #ValidateFeaturesToFiles()
     
 
     
