@@ -2226,7 +2226,8 @@ class FeaturesToFiles172():
     #self.SaveimgTxtFToFileTirg(Idximgs,trig)
     #print('Extracting 152 50 18 Resnet')
     #self.SaveImgFeature1525018(Idximgs,trig)
-    self.SaveQueryStructFile(trig)
+    #self.SaveQueryStructFile(trig)
+    self.SaveQueryStructFileِallFeatures(trig)
     
   def SaveimgTxtFToFileTirg(self,Idximgs,model):
     
@@ -2299,6 +2300,7 @@ class FeaturesToFiles172():
 
   def ValidateFile(self,idx,model):
     
+
     with open (self.Path+r'/FeaturesToFiles172.txt', 'rb') as fp:
       Idximgs = pickle.load(fp) 
 
@@ -2384,6 +2386,56 @@ class FeaturesToFiles172():
     with open(self.Path+r"/"+'Features172QueryStructure.txt', 'wb') as fp:
       pickle.dump(QueryInfo, fp)
 
+  def SaveQueryStructFileِallFeatures(self,model):
+    with open (self.Path+r'/Features172QueryStructure.txt', 'rb') as fp:
+      QueryInfoold = pickle.load(fp) 
+
+    with open (self.Path+r'/Features172imgTrig.txt', 'rb') as fp:
+      trigimg = pickle.load(fp) 
+
+    with open (self.Path+r'/Features172textTrig.txt', 'rb') as fp:
+      trigtext = pickle.load(fp) 
+
+    with open (self.Path+r'/Features172img152.txt', 'rb') as fp:
+      img152 = pickle.load(fp) 
+    
+    with open (self.Path+r'/Features172img50.txt', 'rb') as fp:
+      img50 = pickle.load(fp) 
+
+    with open (self.Path+r'/Features172img18.txt', 'rb') as fp:
+      img18 = pickle.load(fp) 
+
+
+    QueryInfo=[]
+    for i in range(172048):#172048
+      print('Extracting Feature From image=',i,end='\r')  
+      item = QueryInfoold[i]
+      idx = {
+          'QueryID': item['QueryID'],
+          'TargetID':item['TargetID'],
+          'Mod':  item['Mod'],
+          'QueryCaption':item['QueryCaption'],
+          'TargetCaption':item['TargetCaption'],
+          'QueryURL':item['QueryURL'],
+          'TargetURL':item['TargetURL'],
+          'ModF':item['ModF'],
+          'QueryCaptionF':trigtext[item['QueryID']],
+          'TargetCaptionF':trigtext[item['TargetID']],
+          'Query18F':img18[item['QueryID']],
+          'Query50F':img50[item['QueryID']],
+          'Query152F':img152[item['QueryID']],
+          'QuerytrigF':trigimg[item['QueryID']],
+          'Target18F':img18[item['TargetID']],
+          'Target50F':img50[item['TargetID']],
+          'Target152F':img152[item['TargetID']],
+          'targettirgF':trigimg[item['TargetID']]
+
+      }
+      QueryInfo += [idx]
+    
+    with open(self.Path+r"/"+'Features172QueryStructureallF.txt', 'wb') as fp:
+      pickle.dump(QueryInfo, fp)
+
 
 class FeaturesToFiles33():
 
@@ -2430,7 +2482,8 @@ class FeaturesToFiles33():
     #self.SaveimgTxtFToFileTirg(Idximgs,trig)
     #print('Extracting 152 50 18 Resnet')
     #self.SaveImgFeature1525018(Idximgs,trig)
-    self.SaveQueryStructFile(trig)
+    #self.SaveQueryStructFile(trig)
+    self.SaveQueryStructFileِallFeatures(trig)
     
   def SaveimgTxtFToFileTirg(self,Idximgs,model):
     
@@ -2585,6 +2638,56 @@ class FeaturesToFiles33():
       QueryInfo += [idx]
     
     with open(self.Path+r"/"+'Features33QueryStructure.txt', 'wb') as fp:
+      pickle.dump(QueryInfo, fp)
+
+  def SaveQueryStructFileِallFeatures(self,model):
+    with open (self.Path+r'/Features33QueryStructure.txt', 'rb') as fp:
+      QueryInfoold = pickle.load(fp) 
+
+    with open (self.Path+r'/Features33imgTrig.txt', 'rb') as fp:
+      trigimg = pickle.load(fp) 
+
+    with open (self.Path+r'/Features33textTrig.txt', 'rb') as fp:
+      trigtext = pickle.load(fp) 
+
+    with open (self.Path+r'/Features33img152.txt', 'rb') as fp:
+      img152 = pickle.load(fp) 
+    
+    with open (self.Path+r'/Features33img50.txt', 'rb') as fp:
+      img50 = pickle.load(fp) 
+
+    with open (self.Path+r'/Features33img18.txt', 'rb') as fp:
+      img18 = pickle.load(fp) 
+
+
+    QueryInfo=[]
+    for i in range(len(QueryInfoold)):
+      print('Extracting Feature From image=',i,end='\r')  
+      item = QueryInfoold[i]
+      idx = {
+          'QueryID': item['QueryID'],
+          'TargetID':item['TargetID'],
+          'Mod':  item['Mod'],
+          'QueryCaption':item['QueryCaption'],
+          'TargetCaption':item['TargetCaption'],
+          'QueryURL':item['QueryURL'],
+          'TargetURL':item['TargetURL'],
+          'ModF':item['ModF'],
+          'QueryCaptionF':trigtext[item['QueryID']],
+          'TargetCaptionF':trigtext[item['TargetID']],
+          'Query18F':img18[item['QueryID']],
+          'Query50F':img50[item['QueryID']],
+          'Query152F':img152[item['QueryID']],
+          'QuerytrigF':trigimg[item['QueryID']],
+          'Target18F':img18[item['TargetID']],
+          'Target50F':img50[item['TargetID']],
+          'Target152F':img152[item['TargetID']],
+          'targettirgF':trigimg[item['TargetID']]
+
+      }
+      QueryInfo += [idx]
+    
+    with open(self.Path+r"/"+'Features33QueryStructureallF.txt', 'wb') as fp:
       pickle.dump(QueryInfo, fp)
 
   
