@@ -388,8 +388,106 @@ def ValidateFile33():
         print ('Distance Between img 50:', euclideandistance(Feature50,item['Query50F']))
         print ('Distance Between img 152:', euclideandistance(Feature152,item['Query152F']))
  
+def Semantic152_Maa(run_type):
+    device = torch.device("cpu")
+
+    if run_type=='train':
+        with open (Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
+            AllData = pickle.load(fp) 
+
+        PhixQueryImg =[d['Query152F'] for d in AllData[:10000]]
+        PhitQueryCaption =[d['QueryCaptionF'] for d in AllData[:10000]]
+        PhitQueryMod =[d['ModF'][0] for d in AllData[:10000]]
+        PhixTargetImg =[d['Target152F'] for d in AllData[:10000]]
+        PhitTargetCaption =[d['TargetCaptionF'] for d in AllData[:10000]]
+        all_captions_text =[d['TargetCaption'] for d in AllData[:10000]]
+        all_target_captions_text =[d['TargetCaption'] for d in AllData[:10000]]
+        all_Query_captions_text =[d['QueryCaption'] for d in AllData[:10000]]
+        
+        
+
+
+    elif run_type=='test':
+        with open (Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
+            AllData = pickle.load(fp) 
+
+        PhixQueryImg =[d['Query152F'] for d in AllData]
+        PhitQueryCaption =[d['QueryCaptionF'] for d in AllData]
+        PhitQueryMod =[d['ModF'][0] for d in AllData]
+        PhixTargetImg =[d['Target152F'] for d in AllData]
+        PhitTargetCaption =[d['TargetCaptionF'] for d in AllData]
+        all_captions_text =[d['TargetCaption'] for d in AllData]
+        all_target_captions_text =[d['TargetCaption'] for d in AllData]
+        all_Query_captions_text =[d['QueryCaption'] for d in AllData]
+
+
+    PhitQueryCaption=torch.tensor(PhitQueryCaption).to(device)
+    PhixQueryImg=torch.tensor(PhixQueryImg).to(device)
+    PhitQueryMod=torch.tensor(PhitQueryMod).to(device)
+    PhitTargetCaption=torch.tensor(PhitTargetCaption).to(device)
+    PhixTargetImg=torch.tensor(PhixTargetImg).to(device)
+
+    phix=PhixQueryImg
+    phit=PhitQueryMod
+
+
+
+    hidden=1000
+    NetA=NLR3T(phix.shape[1],phit.shape[1],hidden)
+    NetA.load_state_dict(torch.load( Path1+r'/UltraNetA152.pth', map_location=torch.device('cpu') ))
+    hidden=2500
+    NetB=NLR3T(phit.shape[1],phix.shape[1],hidden)
+    NetB.load_state_dict(torch.load( Path1+r'/UltraNetB152_2500.pth', map_location=torch.device('cpu') ))
+    hidden=1800
+    NetC=NLR3S(phit.shape[1]*2,phit.shape[1],hidden)
+    NetC.load_state_dict(torch.load( Path1+r'/ulteraNetC.pth', map_location=torch.device('cpu') ))
+
+
+
+    NetAout=NetA.myforward(phix)
+    NetCinp=torch.cat((phit,NetAout[:phit.shape[0],:]),1)
+    NetCout=NetC.myforward(NetCinp)
+    net_target=NetB.myforward(NetCout)
+
+
+
+    nn_result = []
+    #phixN=torch.tensor(phixN)
+    net_target=tensor(net_target)
+    net_target=Variable(net_target,requires_grad=False)
+    net_target=np.array(net_target)
+    for i in range(net_target.shape[0]):
+        phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
+    net_target[i,:]=net_target[i,:]/np.linalg.norm(net_target[i,:])
+
+    for i in range (phix.shape[0]):  #(3900): #
+        sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
+        #print(i)
+        nn_result.append(np.argsort(-sims[ :])[:110])
+
+
+    # compute recalls
+    out = []
+    nn_result = [[all_Query_captions_text[nn] for nn in nns] for nns in nn_result]
+
+
+    for k in [1, 5, 10, 50, 100]:
+
+        r = 0.0
+        for i, nns in enumerate(nn_result):
+            if all_target_captions_text[i] in nns[:k]:
+                r += 1
+        r /= len(nn_result)
+        #out += [('recall_top' + str(k) + '_correct_composition', r)]
+        out.append(str(k) + ' ---> '+ str(r*100))
+        r = 0.0
+
+    print (out)
+
+
 
 if __name__ == '__main__':
-    ValidateFile33()
+    Semantic152_Maa('train')
+    Semantic152_Maa('test')
 
 
