@@ -516,7 +516,9 @@ def Semantic18_5(run_test):
     if run_test==0:
         with open (Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
             AllData = pickle.load(fp) 
-            AllData=AllData[10000:]
+        
+        AllData=AllData[:10000]
+    
     elif run_test==1:
         with open (Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
             AllData = pickle.load(fp) 
@@ -568,7 +570,7 @@ def Semantic18_5(run_test):
     for i in range(phix.shape[0]):
         phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
 
-    for i in range(phix.shape[0]): 
+    for i in range(net_target.shape[0]): 
         sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
         nn_result.append(np.argsort(-sims[ :])[:110])  
  
@@ -590,7 +592,7 @@ def Semantic50_5(run_test):
     if run_test==0:
         with open(Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
             AllData=pickle.load( fp)
-            AllData=AllData[10000:]
+            AllData=AllData[:10000]
     else:
         with open(Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
             AllData=pickle.load( fp)
@@ -647,7 +649,7 @@ def Semantic50_5(run_test):
 
         phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
 
-    for i in range (phix.shape[0]):  
+    for i in range (net_target.shape[0]):  
         sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
         nn_result.append(np.argsort(-sims[ :])[:110])
   
