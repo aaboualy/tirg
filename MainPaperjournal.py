@@ -53,21 +53,21 @@ else:
     device = torch.device("cpu")
     print("CPU")
 
-class NLR3S(nn.Module):
-    def __init__(self,netin,netout,nethidden):
-      super().__init__()
-      self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Sigmoid(),torch.nn.Linear(nethidden, netout))
-    def myforward (self,inv):
-      outv=self.netmodel(inv)
-      return outv
+# class NLR3S(nn.Module):
+#     def __init__(self,netin,netout,nethidden):
+#       super().__init__()
+#       self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Sigmoid(),torch.nn.Linear(nethidden, netout))
+#     def myforward (self,inv):
+#       outv=self.netmodel(inv)
+#       return outv
 
-class NLR3T(nn.Module):
-    def __init__(self,netin,netout,nethidden):
-      super().__init__()
-      self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Tanh(),torch.nn.Linear(nethidden, netout))
-    def myforward (self,inv):
-      outv=self.netmodel(inv)
-      return outv
+# class NLR3T(nn.Module):
+#     def __init__(self,netin,netout,nethidden):
+#       super().__init__()
+#       self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Tanh(),torch.nn.Linear(nethidden, netout))
+#     def myforward (self,inv):
+#       outv=self.netmodel(inv)
+#       return outv
 
 def Semantic50_Maa(run_type):
     device = torch.device("cpu")
@@ -483,6 +483,94 @@ def Semantic152_Maa(run_type):
         r = 0.0
 
     print (out)
+
+class NLR3S(nn.Module):
+    def __init__(self,netin,netout,nethidden):
+      super().__init__()
+      self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Sigmoid(),torch.nn.Linear(nethidden, netout))
+    def myforward (self,inv):
+      outv=self.netmodel(inv)
+      return outv
+class NLR3T(nn.Module):
+    def __init__(self,netin,netout,nethidden):
+      super().__init__()
+      self.netmodel= torch.nn.Sequential(torch.nn.Linear(netin, nethidden),torch.nn.Tanh(),torch.nn.Linear(nethidden, netout))
+      
+    def myforward (self,inv):
+      outv=self.netmodel(inv)
+      return outv
+
+def Semantic18_5(run_test):
+    if run_test==0:
+        with open (Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
+            AllData = pickle.load(fp) 
+    elif run_test==1:
+        with open (Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
+            AllData = pickle.load(fp) 
+
+    phix=[d['Query18F'] for d in AllData]
+    phit=[d['ModF'] for d in AllData]
+    phix=torch.tensor(phix)
+    phit=torch.tensor(phit)
+    phit=torch.squeeze(phit)
+    target=[d['Target18F'] for d in AllData]
+    target=torch.tensor(target)
+
+    if run_test==0 :
+        NetA_target=[d['QueryCaptionF'] for d in AllData]
+        NetC_target=[d['TargetCaptionF'] for d in AllData]
+        NetA_target=torch.tensor(NetA_target)
+        NetC_target=torch.tensor(NetC_target)
+
+    del AllData
+
+    hidden=1000
+    NetA=NLR3T(phix.shape[1],phit.shape[1],hidden)
+    # 
+    NetA.load_state_dict(torch.load( Path1+r'/UltraNetA18tune.pth', map_location=torch.device('cpu') ))
+    hidden=2500
+    NetB=NLR3T(phit.shape[1],phix.shape[1],hidden)
+    #NetB_2500_UUTS2   UltraNetB152_2500 UltraNetB18_CO2804final UltraNetB18_CO2804 UltraNetB18_CO2804_best_19_final
+    NetB.load_state_dict(torch.load( Path1+r'/UltraNetB18_CO2804_best_19_final.pth', map_location=torch.device('cpu') ))
+    hidden=1800
+    NetC=NLR3S(phit.shape[1]*2,phit.shape[1],hidden)
+    # Final_ulteraNetC ulteraNetC_best
+    NetC.load_state_dict(torch.load( Path1+r'/Final_ulteraNetC.pth', map_location=torch.device('cpu') ))
+
+    if run_test==0:
+        ACloss_fn=torch.nn.MSELoss()
+        Bloss_fn=torch.nn.CosineSimilarity()
+        NetAout=NetA.myforward(phix)
+        
+        Aloss=ACloss_fn(NetAout,NetA_target)
+        print('loss A  ',Aloss)
+        NetCinp=torch.cat((phit,NetAout),1)
+        NetCout=NetC.myforward(NetCinp)
+        # with open('/gdrive/My Drive/dataset/netcout_18_2804TR.txt', 'wb') as fp:
+        #   pickle.dump( NetCout,fp)
+        if run_dataset==0:
+            del NetCinp, NetAout, NetA_target
+        Closs=ACloss_fn(NetCout,NetC_target)
+        print('loss c  ',Closs)
+        net_target=NetB.myforward(NetCout)
+
+        if run_dataset==0:
+            del NetCout, NetC_target
+        Bloss=torch.mean(Bloss_fn(net_target[:33000],target[:33000]))
+        print('loss   B',Bloss)
+    else:
+        Bloss_fn=torch.nn.CosineSimilarity()
+        NetAout=NetA.myforward(phix)
+        NetCinp=torch.cat((phit,NetAout),1)
+        NetCout=NetC.myforward(NetCinp)
+        # with open('/gdrive/My Drive/dataset/netcout_18_2804TR.txt', 'wb') as fp:
+        #   pickle.dump( NetCout,fp)
+        del NetCinp, NetAout
+        net_target=NetB.myforward(NetCout)
+        del NetCout
+        Bloss=torch.mean(Bloss_fn(net_target,target))
+        print('loss   B',Bloss)
+
 
 
 
