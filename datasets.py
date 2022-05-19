@@ -711,6 +711,10 @@ class Fashion200k(BaseDataset):
         source_caption, target_caption)
     return idx, target_idx, source_word, target_word, mod_str
 
+  def source_caption_by_id(self, idx):
+    source_caption = self.imgs[idx]['captions'][0]
+    return source_caption
+
   def get_all_texts(self):
     texts = []
     for img in self.imgs:

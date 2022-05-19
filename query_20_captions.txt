@@ -1,0 +1,100 @@
+green resort maxi dress
+replace green with pink
+pink resort maxi dress
+520
+EO query # 0
+pink printed chiffon gown
+replace chiffon with silk
+pink printed silk gown
+997
+EO query # 1
+blue off-the-shoulder lace sequin gown
+replace blue with gold
+gold off-the-shoulder sequin lace gown
+1007
+EO query # 2
+multicolor printed crepe dress
+replace multicolor with purple
+purple printed crepe dress
+1886
+EO query # 3
+multicolor printed crepe dress
+replace multicolor with blue
+blue printed crepe dress
+1886
+EO query # 4
+beige annabelle convertible tulle column dress
+replace beige with green
+green annabelle convertible tulle column dress
+4146
+EO query # 5
+black sequin lace dress
+replace black with pink
+pink sequin lace dress
+64
+EO query # 6
+black sequin lace dress
+replace sequin with mesh
+black mesh lace dress
+67
+EO query # 7
+black lace off-the-shoulder dress
+replace black with multicolor
+multicolor lace off-the-shoulder dress
+575
+EO query # 8
+beige blouson sequin gown
+replace beige with multicolor
+multicolor sequin blouson gown
+4154
+EO query # 9
+brown silk maxi dress
+replace brown with multicolor
+multicolor silk maxi dress
+1399
+EO query # 10
+multicolor pleated silk gown
+replace pleated with ruffle
+multicolor silk ruffle gown
+1024
+EO query # 11
+white belted shirt dress
+replace white with black
+black belted shirt dress
+2448
+EO query # 12
+gray maia convertible tulle tea length fit flare dress
+replace gray with pink
+pink maia convertible tulle tea length fit flare dress
+578
+EO query # 13
+gray maia convertible tulle tea length fit flare dress
+replace gray with pink
+pink maia convertible tulle tea length fit flare dress
+578
+EO query # 14
+pink maia convertible tulle tea length fit flare dress
+replace pink with gray
+gray maia convertible tulle tea length fit flare dress
+579
+EO query # 15
+pink maia convertible tulle tea length fit flare dress
+replace pink with gray
+gray maia convertible tulle tea length fit flare dress
+579
+EO query # 16
+black off shoulder lace crepe gown
+replace black with blue
+blue off shoulder lace crepe gown
+1042
+EO query # 17
+black lace mini dress
+replace lace with beaded
+black beaded mini dress
+2462
+EO query # 18
+black lace mini dress
+replace lace with metallic
+black metallic mini dress
+2460
+EO query # 19

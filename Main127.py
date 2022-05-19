@@ -3443,9 +3443,67 @@ def RestNet152():
   #        pickle.dump(target_phix_50,fp)
   #with open(path2+r"/dataset172Org/"+'phix_50_test.txt', 'wb') as fp:
   #        pickle.dump(phix_50,fp)
-
+def display_img_list(lst,fn,fn2):
+    captions=[]
+    figcount=len(lst)
+    fig,ax=plt.subplots(1,figcount)
+    test_dataset = datasets.Fashion200k(
+        path=path2,
+    #    split='none',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+    for i in range(figcount):
+      query_img=test_dataset.get_img(int(lst[i]))
+      
+      source=test_dataset.source_caption_by_id(int(lst[i]))
+      captions.append(source)
+      ax[i].imshow(query_img.data.swapaxes(0,1).swapaxes(1,2))
+      ax[i].axis('off')
+    plt.savefig(fn)
+    out_file =open(fn2, 'wt')
+    for i in range(len(captions)):
+      out_file.write(captions[i]+'\n')
+    out_file.close()
+    
+    
+def test_display(lst):
+  
+    figcount=len(lst)
+    fig,ax=plt.subplots(1,figcount)
+    test_dataset = datasets.Fashion200k(
+        path=path2,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+    for i in range(figcount):
+      query_img=test_dataset.get_img(int(lst[i]))
+      
+      #source=test_dataset.source_caption_by_id(int(lst[i]))
+      ax[i].imshow(query_img.data.swapaxes(0,1).swapaxes(1,2))
+      ax[i].axis('off')
+    #plt.savefig(fn)
+    plt.show()
+    
 if __name__ == '__main__':
-  RestNet152() 
+   lst=[[520,997,1007, 1886, 1886,], [4146, 64, 67, 575, 4154,], [1399, 1024, 2448, 578, 578], [579, 579, 1042, 2462, 2460,]]
+   for i in range(len(lst)):
+     test_display(lst[i])
+#  with open('recall_table_50.txt', 'rb') as fp:
+#      tbl=pickle.load(fp)
+
+#  for i in range(20):
+#      display_img_list(tbl[i,1:],'recall_50_'+str(i)+'.jpg','recall_50_'+str(i)+'.txt')
+  #RestNet152() 
   #validate_data_set()  
   #phase2_network()  img_model_file,text_model_file,flag  
   #asbook1, model=Phase2_test_models_get_orignal("4iCovLinearflr006w12.pth","4Dtlr006w124000.pth",3)
@@ -3473,8 +3531,16 @@ if __name__ == '__main__':
   #resume_train_MLP(300)
   #print('results :' , test_Model_performance(401))
   #all_target_captions=get_target_captions_train(55000)
-  #with open(Path1+r"/"+'train_all_target_captions.txt', 'wb') as fp:
-  #  pickle.dump(all_target_captions, fp)
+ # with open('cases_query_table_20.txt', 'rb') as fp:
+  #  cases_query_table=pickle.load( fp)
+  #out_file =open('query_20_captions.txt', 'wt')
+  #for i in range(len(cases_query_table)):
+  #    for j in range(len(cases_query_table[i])):
+  #        out_file.write(str(cases_query_table[i][j])+'\n')
+  #    out_file.write('EO query # '+str(i)+'\n')
+  #out_file.close()
+  
+
 
   
   

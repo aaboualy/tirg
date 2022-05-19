@@ -138,9 +138,9 @@ def GetElementFromDataSet():
                                               [0.229, 0.224, 0.225])
         ]))
 
-    for i in range(100,5000): #172048
-      item = train[i] 
-      if('blue' in (item['mod']['str'])):
+    for i in range(0,2): #172048
+        item = train[i] 
+      #if('blue' in (item['mod']['str'])):
         print('Index=',i,'------------------------------------------------------------------------')
         print('Source Image ID =',item['source_img_id'])      
         print('Source Caption =',item['source_caption'])
