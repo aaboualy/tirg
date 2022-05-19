@@ -22,6 +22,47 @@ from scipy.spatial import distance
 import datasets
 from BK import main2
 import torchvision
+from numpy.core.fromnumeric import argsort, squeeze
+from tensorflow.python.ops.array_ops import zeros
+from tensorflow.python.ops.gen_array_ops import concat
+import torch
+from torch import tensor
+from torch.functional import norm
+# from torch._C import float32
+import torchvision
+import torchvision.transforms as tvt
+import torch.nn as nn
+import matplotlib.pyplot as plt
+import numpy as np
+from torch import optim
+import torch.nn.functional as F
+import math as m
+import time
+import os
+import random
+from PIL import Image
+from torch.autograd import Variable
+from PIL import Image
+import numpy
+import tensorflow as tf
+from pathlib import Path
+import pickle
+import numpy as np
+import torch
+import torchvision
+import torch.nn.functional as F
+import text_model
+import test_retrieval
+import torch_functions
+from tqdm import tqdm as tqdm
+import PIL
+import argparse
+import datasets
+import img_text_composition_models
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.datasets import make_regression
+from sklearn.metrics import mean_squared_error
 
 
 Path1=r"D:\personal\master\MyCode\files"
@@ -147,6 +188,43 @@ def test(opt, model, testset):
 
   return out
 
+def testSemantic(all_captions,all_target_captions,OutputofModel,SearchedFeatures):
+  # feature normalization
+  OutputofModel=tensor(OutputofModel)
+  OutputofModel=Variable(OutputofModel,requires_grad=False)
+  OutputofModel=np.array(OutputofModel)
+
+  SearchedFeatures=tensor(SearchedFeatures)
+  SearchedFeatures=Variable(SearchedFeatures,requires_grad=False)
+  SearchedFeatures=np.array(SearchedFeatures)
+
+  for i in range(OutputofModel.shape[0]):
+    OutputofModel[i, :] /= np.linalg.norm(OutputofModel[i, :])
+  for i in range(SearchedFeatures.shape[0]):
+    SearchedFeatures[i, :] /= np.linalg.norm(SearchedFeatures[i, :])
+
+  # match test queries to target images, get nearest neighbors
+  nn_result = []
+  for i in tqdm(range(OutputofModel.shape[0])):
+    sims = OutputofModel[i:(i+1), :].dot(SearchedFeatures.T)
+    
+    nn_result.append(np.argsort(-sims[0, :])[:110])
+
+  # compute recalls
+  out = []
+  nn_result = [[all_captions[nn] for nn in nns] for nns in nn_result]
+  for k in [1, 5, 10, 50, 100]:
+    r = 0.0
+    for i, nns in enumerate(nn_result):
+      if all_target_captions[i] in nns[:k]:
+        r += 1
+    r /= len(nn_result)
+    #out += [('recall_top' + str(k) + '_correct_composition', r)]
+    out.append(str(k) + ' ---> '+ str(r*100))
+
+    
+  return out
+
 
 ################# Test by accessing files directly saved before  #########################
 
@@ -219,7 +297,6 @@ def testLoaded(opt, model, testset):
 
   return out
 
-
 def testLoadedWithoutModel(opt, model, testset):
   """Tests a model over the given testset."""
   model.eval()
@@ -288,7 +365,6 @@ def testLoadedWithoutModel(opt, model, testset):
       out += [('recall_top' + str(k) + '_correct_noun', r)]
 
   return out
-
 
 def testLoadedWithoutModeRegModel(opt, model, testset,reg):
   """Tests a model over the given testset."""
@@ -571,6 +647,9 @@ def testLoadedRegModelPlusFFL(opt, model, testset,reg,FFL):
       out += [('recall_top' + str(k) + '_correct_noun', r)]
 
   return out
+
+
+
 
 
 

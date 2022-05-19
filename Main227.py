@@ -1,5 +1,4 @@
 from numpy.core.fromnumeric import argsort, mean, squeeze
-from scipy import linalg
 from tensorflow.python.ops.array_ops import zeros
 from tensorflow.python.ops.gen_array_ops import concat
 import torch
@@ -40,13 +39,12 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.datasets import make_regression
 from sklearn.metrics import mean_squared_error
-import torchvision.models as models
 
 
 
 
-Path1=r"C:\MMaster\Files\phase2"
-path2=r"C:\MMaster\Files"
+Path1=r"E:\MMstr\phase2"
+path2=r"E:\MMstr"
 #################  Support Functions Section   #################
 
 def dataset(batch_size_all):
@@ -1230,16 +1228,6 @@ class NLR32(nn.Module):
   def myforward (self,inv):
     outv=self.netmodel(inv)
     return outv
-
-class NLR3(nn.Module):
-  def __init__(self,netin,netout,nethidden1,nethidden2):
-    super().__init__()
-    self.netmodel1= torch.nn.Sequential(torch.nn.Linear(netin, nethidden1),torch.nn.ReLU())
-    self.netmodel2=torch.nn.Sequential(torch.nn.Linear(nethidden1, nethidden2),torch.nn.Linear(nethidden2, netout))
-  def myforward (self,inv):
-    outv1=self.netmodel1(inv)
-    outv=self.netmodel2(outv1)
-    return outv1,outv
 
 def build_and_train_netMSE():
 
@@ -2940,36 +2928,6 @@ def bulid_train_final_net_with_semantic_Hup():
   print('Finished Training')
   torch.save(model_mlp.state_dict(), Path1+r'\3final_net_with_Shup_Final.pth') 
 
-def bulid_train_second_text_net_2_semantic_Hup():
-  # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
-  #   Beta = pickle.load(fp) 
-
-  inp=datasets.Features172K().Get_phit_image_caption()
-  target=datasets.Features172K().Get_phix()
-  inp=Variable(torch.Tensor(inp))
-  target=Variable(torch.Tensor(target))
-
-  hidden1=1024
-  hidden2=750
-  batch_size=100
-  max_iterations=25000
-  min_error=12
-  model_mlp=NLR2(inp.shape[1],target.shape[1],hidden1,hidden2)
- 
-  torch.manual_seed(300)
-  loss_fn=torch.nn.CosineSimilarity()
-  optimizer=torch.optim.SGD(model_mlp.parameters(), lr=0.01)
-  epoch=max_iterations
-  s=0
-  sweep_range=inp.shape[0]%batch_size
-  losses=[]
-  totallosses=[]
-  for j in range(epoch):
-    total_loss=0
-    
-    for l in range(int(inp.shape[0]/batch_size)):
-      
-      item_batch = inp[l*batch_size+s:(l+1)*batch_size+s,:]
 
 def resume_train_final_net_with_semantic_Hup(start_no):
   # with open (Path1+"\\BetatrainLoaded.txt", 'rb') as fp:
@@ -3086,10 +3044,9 @@ def regression_study(st):
   #   Beta = pickle.load(fp) 
   #all_img_captions_train=datasets.Feature172KOrg().all_captions_text
   #all_target_captions=datasets.Feature172KOrg().all_target_captions_text
-  inp1=datasets.Feature172KOrg().PhixQueryImg
-  inp2=datasets.Feature172KOrg().PhitQueryMod
-  target=datasets.Feature172KOrg().PhixTargetImg
-
+  inp1=datasets.Features172K.Get_phix()
+  inp2=datasets.Features172K.Get_phit()
+  target=datasets.Features172K.Get_phixtarget()
   reg1 = LinearRegression().fit(inp1, target)
   reg2 = LinearRegression().fit(inp2, target)
   reg4 = LinearRegression().fit(inp2, inp1)
@@ -3131,8 +3088,8 @@ def bulid_train_final_net(inp,target,hidden,min_error,l_r,epoch,batch_size,save_
   model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,save_duration,tag)
 
 
-  loss_fn=torch.nn.CosineSimilarity(dim=1,eps=1e-10)
-def model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,save_duration,tag,loss_fn):
+def model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,save_duration,tag):
+  loss_fn=torch.nn.MSELoss()
   optimizer=torch.optim.SGD(model_mlp.parameters(), lr=l_r)
 
   s=0
@@ -3149,7 +3106,7 @@ def model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,s
 
       target_batch=target[l*batch_size+s:(l+1)*batch_size+s,:]
       netoutbatch=model_mlp.myforward(item_batch)
-      loss =1- loss_fn(target_batch,netoutbatch)
+      loss = loss_fn(target_batch,netoutbatch)
 
       optimizer.zero_grad()
       loss.backward()
@@ -3160,7 +3117,7 @@ def model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,s
     print('iteration:',j,' loss ',loss, 'total loss',total_loss)
     totallosses.append(total_loss)
     s+=1
-    if s>=sweep_range:
+    if s==sweep_range:
        s=0
     if (j%save_duration==0) :
       torch.save(model_mlp.state_dict(), Path1+r'\4net'+tag+r'.pth') 
@@ -3181,18 +3138,13 @@ def evaluate_performance(target,target_sout,captions_target_list,rng,print_every
   target=np.array(target) 
   target_sout=np.array(target_sout) 
   #captions_target_list=prepare_dataset(all_target_captions)
-  #with open(Path1+r"/"+'Features172Kcaptions_target_index.pckl', 'rb') as fp:
-   #    captions_target_list=pickle.load( fp)
-  for i in range(np.shape(target_sout)[0]):
-    target_sout[i,:]/=np.linalg.norm(target_sout[i,:])
-   # target[i,:]/=np.linalg.norm(target[i,:])
+  with open(Path1+r"/"+'Features172Kcaptions_target_index.pckl', 'rb') as fp:
+       captions_target_list=pickle.load( fp)
 
   for i in range(np.shape(target_sout)[0]):
-    dist=target_sout[i,:].dot(target.T)
-
-    print('i min max mean',dist[captions_target_list[i]], min(dist),max(dist),mean(dist))
-    #tlist=argsort(dist)[:101]
-    tlist=argsort(-(target_sout[i,:].dot(target.T)))[:101]
+    #dist=(np.square(target-target_sout[i,:])).sum(1)[:100]
+    #print(dist)
+    tlist=argsort((np.square(target-target_sout[i,:])).sum(1))[:100]
     for j in range(5):
       if (set(captions_target_list[i]).intersection(set(tlist[:j+1]))) !=set():
        cnt[j] +=1
@@ -3213,37 +3165,25 @@ def main_nonlinear():
   cnt=np.zeros(5)
   rng=[1,5,10,50,100]
   rng=np.array(rng)
-  hidden=2000
+  hidden=1000
   l_r=0.002
   epoch=25000
-  tag='finalstagexttxNLR32-2'
-  batch_size=1
-  save_duration=1
+  tag='finalstagexttxNLR32'
+  batch_size=500
+  save_duration=500
   seed=100
-  loss_fn=torch.nn.CosineSimilarity(dim=1,eps=1e-10)
-
-  min_error=1
+  min_error=10
   model_mlp=NLR32(inp.shape[1],target.shape[1],hidden)
-  for i in range(np.shape(target)[0]):
-    target[i,:]/=np.linalg.norm(target[i,:])
-  
-  model_mlp.load_state_dict(torch.load( Path1+r'\4net'+tag+r'.pth', map_location=torch.device('cpu') ))
-  #model_learning_iterate(epoch,inp[:50000,:],target[:50000,:],model_mlp,batch_size,l_r,min_error,save_duration,tag,loss_fn)
+  #model_mlp.load_state_dict(torch.load( Path1+r'\4net'+tag+r'.pth', map_location=torch.device('cpu') ))
+  model_learning_iterate(epoch,inp,target,model_mlp,batch_size,l_r,min_error,save_duration,tag)
 
-  target_sout=model_mlp.myforward(inp[:50000,:])
-  for i in range(20):
-    loss=target[i,:].dot(target_sout[i,:].T)/torch.norm(target_sout[i,:])
-    print('print=',i,loss)
-  target = Variable(target, requires_grad=False)
-  target_sout = Variable(target_sout, requires_grad=False)
-
-  mse=mean_squared_error(np.array(target[:50000,:]),np.array(target_sout))
+  target_sout=model_mlp.myforward(inp)
+  mse=(((target-target_sout)**2).sum(1))
+  mse=torch.mean(mse)
   print('mean square error',mse)
-  
 
   with open(Path1+r"/"+'Features172Kcaptions_target_index.pckl', 'rb') as fp:
        captions_target_list=pickle.load( fp)
-  #target_sout=datasets.Features172K().Get_all_queries() 
   evaluate_performance(target,target_sout,captions_target_list,rng,500,cnt)
 
 
@@ -3407,143 +3347,8 @@ def validate_data_set():
       print ('error i target phix[targetid], phixtarget[i]',i,'**', all_target_ids[i],'**', phix[all_target_ids[i],:5],'**', target[i,:5])
     if all_target_captions_train[i] != all_img_captions_train[all_target_ids[i]]:
       print ('error i target caption[targetid], targetcaption[i]',i,'**', all_target_ids[i],'**', all_img_captions_train[all_target_ids[i],:],'**', all_target_captions_train[i,:])
-def RestNet152():
-  test_dataset = datasets.Fashion200k(
-        path=path2,
-        split='test',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-  resnet152 = models.resnet152(pretrained=True)
-  #resnet50=models.resnet50(pretrained=True)
-  #resnet50.fc=nn.Identity()
-  #resnet50.eval()
-  resnet152.fc = nn.Identity()
-  resnet152.eval()
-  #phix_50=[]
-  #target_phix_50=[]
-  phix_152=[]
-  target_phix_152=[]
-  cnt=0
-  for item in (test_dataset):
-    
-    cnt+=1
-    #img_id=item['source_img_id']
-    #target_id=item['target_id']
-    img=item['source_img_data']
-    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-    img=img/torch.max(img)
-    out=resnet152(img)
-    #out50=resnet50(img)
-    out = Variable(out, requires_grad=False)
-    #out50 = Variable(out50, requires_grad=False)
-    #out50=np.array(out50)
-    out=np.array(out)
-    phix_152 +=[out[0,:]]
-    #phix_50 +=[out50[0,:]]
 
-    img=item['target_img_data']
-    img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-    img=img/torch.max(img)
-    out=resnet152(img)
-    #out50=resnet50(img)
-    out = Variable(out, requires_grad=False)
-    #out50 = Variable(out50, requires_grad=False)
-    #out50=np.array(out50)
-
-    out=np.array(out)
-
-    target_phix_152+=[out[0,:]]
-    #target_phix_50+=[out50[0,:]]
-
-    ###############################
-    
-    ##############################
-    if (cnt%500)==0:
-      print('cnt',cnt)
-      if (cnt%2000)==0:
-        with open(path2+r"/dataset172Org/"+'target_phix_152_test.txt', 'wb') as fp:
-          pickle.dump(target_phix_152,fp)
-        with open(path2+r"/dataset172Org/"+'phix_152_test.txt', 'wb') as fp:
-          pickle.dump(phix_152,fp)
-     #   with open(path2+r"/dataset172Org/"+'target_phix_50_test.txt', 'wb') as fp:
-      #    pickle.dump(target_phix_50,fp)
-     #   with open(path2+r"/dataset172Org/"+'phix_50_test.txt', 'wb') as fp:
-      #    pickle.dump(phix_50,fp)
-
-  with open(path2+r"/dataset172Org/"+'target_phix_152_test.txt', 'wb') as fp:
-      pickle.dump(target_phix_152,fp)
-  with open(path2+r"/dataset172Org/"+'phix_152_test.txt', 'wb') as fp:
-      pickle.dump(phix_152,fp)
-  #with open(path2+r"/dataset172Org/"+'target_phix_50_test.txt', 'wb') as fp:
-  #        pickle.dump(target_phix_50,fp)
-  #with open(path2+r"/dataset172Org/"+'phix_50_test.txt', 'wb') as fp:
-  #        pickle.dump(phix_50,fp)
-def display_img_list(lst,fn,fn2):
-    captions=[]
-    figcount=len(lst)
-    fig,ax=plt.subplots(1,figcount)
-    test_dataset = datasets.Fashion200k(
-        path=path2,
-    #    split='none',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-    for i in range(figcount):
-      query_img=test_dataset.get_img(int(lst[i]))
-      
-      source=test_dataset.source_caption_by_id(int(lst[i]))
-      captions.append(source)
-      ax[i].imshow(query_img.data.swapaxes(0,1).swapaxes(1,2))
-      ax[i].axis('off')
-    plt.savefig(fn)
-    out_file =open(fn2, 'wt')
-    for i in range(len(captions)):
-      out_file.write(captions[i]+'\n')
-    out_file.close()
-    
-    
-def test_display(lst):
-  
-    figcount=len(lst)
-    fig,ax=plt.subplots(1,figcount)
-    test_dataset = datasets.Fashion200k(
-        path=path2,
-        split='train',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-    for i in range(figcount):
-      query_img=test_dataset.get_img(int(lst[i]))
-      
-      #source=test_dataset.source_caption_by_id(int(lst[i]))
-      ax[i].imshow(query_img.data.swapaxes(0,1).swapaxes(1,2))
-      ax[i].axis('off')
-    #plt.savefig(fn)
-    plt.show()
-    
-if __name__ == '__main__':
-   lst=[[520,997,1007, 1886, 1886,], [4146, 64, 67, 575, 4154,], [1399, 1024, 2448, 578, 578], [579, 579, 1042, 2462, 2460,]]
-   for i in range(len(lst)):
-     test_display(lst[i])
-#  with open('recall_table_50.txt', 'rb') as fp:
-#      tbl=pickle.load(fp)
-
-#  for i in range(20):
-#      display_img_list(tbl[i,1:],'recall_50_'+str(i)+'.jpg','recall_50_'+str(i)+'.txt')
-  #RestNet152() 
+if __name__ == '__main__': 
   #validate_data_set()  
   #phase2_network()  img_model_file,text_model_file,flag  
   #asbook1, model=Phase2_test_models_get_orignal("4iCovLinearflr006w12.pth","4Dtlr006w124000.pth",3)
@@ -3559,7 +3364,7 @@ if __name__ == '__main__':
   #resume_train_final_net_with_semantic_Hup(4500)
   #inspect_case()
   #main_nonlinear()
-  #regression_study(1)
+  regression_study(1)
   #save_captions_values()
 
   
@@ -3571,16 +3376,8 @@ if __name__ == '__main__':
   #resume_train_MLP(300)
   #print('results :' , test_Model_performance(401))
   #all_target_captions=get_target_captions_train(55000)
- # with open('cases_query_table_20.txt', 'rb') as fp:
-  #  cases_query_table=pickle.load( fp)
-  #out_file =open('query_20_captions.txt', 'wt')
-  #for i in range(len(cases_query_table)):
-  #    for j in range(len(cases_query_table[i])):
-  #        out_file.write(str(cases_query_table[i][j])+'\n')
-  #    out_file.write('EO query # '+str(i)+'\n')
-  #out_file.close()
-  
-
+  #with open(Path1+r"/"+'train_all_target_captions.txt', 'wb') as fp:
+  #  pickle.dump(all_target_captions, fp)
 
   
   
@@ -3590,7 +3387,23 @@ if __name__ == '__main__':
   #k=0
   #path2=path2=r"C:\MMaster\Files"
   
-  
+  #dataset_used = datasets.Fashion200k(
+  #      path=path2,
+  #      path=path2,
+  #      split='train',
+  #      transform=torchvision.transforms.Compose([
+  #          torchvision.transforms.Resize(224),
+  #          torchvision.transforms.CenterCrop(224),
+  #          torchvision.transforms.ToTensor(),
+  #          torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+  #                                           [0.229, 0.224, 0.225])
+  #      ]))
+
+  #for i in range(0,170000,500):
+  #  k+= CBIR(i,1, 500,model_file,dataset_used)
+
+  #print('total found is ',k)
+
   
     
 
