@@ -517,7 +517,7 @@ def Semantic18_5(run_test):
         with open (Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
             AllData = pickle.load(fp) 
         
-        AllData=AllData[:10000]
+        #AllData=AllData[:10000]
     
     elif run_test==1:
         with open (Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
@@ -809,9 +809,8 @@ def Semantic152_5(run_test):
 
 if __name__ == '__main__':
     Semantic18_5(0)
-    Semantic18_5(1)
-    Semantic50_5(0)
-    Semantic50_5(1)
+    #Semantic18_5(1)
+    
 
     
    
