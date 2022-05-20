@@ -515,9 +515,8 @@ class NLR3T(nn.Module):
 def Semantic18_5(run_test):
     if run_test==0:
         with open (Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
-            AllData = pickle.load(fp) 
-        
-        #AllData=AllData[:10000]
+            AllData = pickle.load(fp)         
+        AllData=AllData[:10000]
     
     elif run_test==1:
         with open (Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
@@ -531,6 +530,8 @@ def Semantic18_5(run_test):
     phit=torch.squeeze(phit)
     target=[d['Target18F'] for d in AllData]
     target=torch.tensor(target)
+    #allquerycaptions=[d['QueryCaption'] for d in AllData]
+    
 
     NetA=NLR3T(phix.shape[1],phit.shape[1],1000)    
     NetA.load_state_dict(torch.load( Path1+r'/UltraNetA18tune.pth', map_location=torch.device('cpu') ))
@@ -547,20 +548,21 @@ def Semantic18_5(run_test):
     net_target=NetB.myforward(NetCout)
   
     alltargetcaptions=[d['TargetCaption'] for d in AllData]
-    del AllData
+    
     if (run_test==0):
         with open(Path1+r'/ultra_unique_query_phix_18.txt', 'rb') as fp:
             phix= pickle.load( fp)
         with open(Path1+r'/ultra_unique_query_img_captions_text.txt', 'rb') as fp:
             allquerycaptions=pickle.load( fp)
-
+        
     else:
         with open(Path1+r'/ultra_unique_query_phix_18_test.txt', 'rb') as fp:
             phix= pickle.load( fp)
         with open(Path1+r'/ultra_unique_query_img_captions_text_test.txt', 'rb') as fp:
             allquerycaptions=pickle.load( fp)
-    phix=np.array(phix)
 
+    phix=np.array(phix)
+    
     nn_result = []
     net_target=tensor(net_target)
     net_target=Variable(net_target,requires_grad=False)
@@ -571,7 +573,7 @@ def Semantic18_5(run_test):
         phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
 
     for i in range(net_target.shape[0]): 
-        sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
+        sims = net_target[i, :].dot(phix.T) #[:net_target.shape[0],:]
         nn_result.append(np.argsort(-sims[ :])[:110])  
  
     out = []
@@ -592,7 +594,7 @@ def Semantic50_5(run_test):
     if run_test==0:
         with open(Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
             AllData=pickle.load( fp)
-            AllData=AllData[:10000]
+        AllData=AllData[:10000]
     else:
         with open(Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
             AllData=pickle.load( fp)
@@ -650,7 +652,7 @@ def Semantic50_5(run_test):
         phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
 
     for i in range (net_target.shape[0]):  
-        sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
+        sims = net_target[i, :].dot(phix.T) #[:net_target.shape[0],:]
         nn_result.append(np.argsort(-sims[ :])[:110])
   
     
@@ -666,94 +668,47 @@ def Semantic50_5(run_test):
                 if (k==5 and i<50):
                     flags[i]=1
                 r += 1
-            r /= len(nn_result)
+        r /= len(nn_result)
       
         out.append(str(k) + ' ---> '+ str(r*100))
         r = 0.0
-    print(flags)
+    #print(flags)
     print (out)
 
 def Semantic152_5(run_test):
     if run_test==0:
         with open(Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
             AllData=pickle.load( fp)
+        AllData[:10000]
     else:
         with open(Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
             AllData=pickle.load( fp)
 
-        phix=[d['Query152F'] for d in AllData]
-        phit=[d['ModF'] for d in AllData]
-        phix=torch.tensor(phix)
-        phit=torch.tensor(phit)
-        phit=torch.squeeze(phit)
-        target=[d['Target152F'] for d in AllData]
-        target=torch.tensor(target)
-
-        if run_test==0 :
-            NetA_target=[d['QueryCaptionF'] for d in AllData]
-            NetC_target=[d['TargetCaptionF'] for d in AllData]
-            NetA_target=torch.tensor(NetA_target)
-            NetC_target=torch.tensor(NetC_target)
-        del AllData
+    phix=[d['Query152F'] for d in AllData]
+    phit=[d['ModF'] for d in AllData]
+    phix=torch.tensor(phix)
+    phit=torch.tensor(phit)
+    phit=torch.squeeze(phit)
+    target=[d['Target152F'] for d in AllData]
+    target=torch.tensor(target)
+   
     
-    hidden=1000
-    NetA=NLR3T(phix.shape[1],phit.shape[1],hidden)
-    # Final_NetANN152 UltraNetA152 ulteraNetA_2500_UTS UltraNetA152tune ulteraNetA_Ujn UltraNetA152tune
+    NetA=NLR3T(phix.shape[1],phit.shape[1],1000)
     NetA.load_state_dict(torch.load( Path1+r'/UltraNetA152tunesntc.pth', map_location=torch.device('cpu') ))
-    hidden=2500
-    NetB=NLR3T(phit.shape[1],phix.shape[1],hidden)
-    #NetB_2500_UUTS2   UltraNetB152_2500 UltraNetB152_CO25042final UltraNetB152_CO25042 UltraNetB152_CO25042final2
+    
+    NetB=NLR3T(phit.shape[1],phix.shape[1],2500)
     NetB.load_state_dict(torch.load( Path1+r'/UltraNetB152_CO25042final2.pth', map_location=torch.device('cpu') ))
-    hidden=1800
-    NetC=NLR3S(phit.shape[1]*2,phit.shape[1],hidden)
-    # Final_ulteraNetC ulteraNetC_best
+    
+    NetC=NLR3S(phit.shape[1]*2,phit.shape[1],1800)
     NetC.load_state_dict(torch.load( Path1+r'/Final_ulteraNetC.pth', map_location=torch.device('cpu') ))
 
-    if run_test==0:
-        ACloss_fn=torch.nn.MSELoss()
-        Bloss_fn=torch.nn.CosineSimilarity()
-        NetAout=NetA.myforward(phix)
-
-        Aloss=ACloss_fn(NetAout,NetA_target)
-        print('loss A  ',Aloss)
-        NetCinp=torch.cat((phit,NetAout),1)
-        NetCout=NetC.myforward(NetCinp)
-    
-
-        if run_test==0:
-            del NetCinp, NetAout, NetA_target
-
-        Closs=ACloss_fn(NetCout,NetC_target)
-        print('loss c  ',Closs)
-        net_target=NetB.myforward(NetCout)
-
-        if run_test==0:
-            del NetCout, NetC_target
-        Bloss=torch.mean(Bloss_fn(net_target[:33000],target[:33000]))
-        print('loss   B',Bloss)
-    else:
-        Bloss_fn=torch.nn.CosineSimilarity()
-        NetAout=NetA.myforward(phix)
-        NetCinp=torch.cat((phit,NetAout),1)
-        NetCout=NetC.myforward(NetCinp)
-       
-        del NetCinp, NetAout
-        net_target=NetB.myforward(NetCout)
-        del NetCout
-        Bloss=torch.mean(Bloss_fn(net_target,target))
-        print('loss   B',Bloss)
-
-    if (run_test==0):
-        with open(Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
-            AllData=pickle.load( fp)
-    else:
-        with open(Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
-            AllData=pickle.load( fp)
-  
-
-    #allquerycaptions=[d['QueryCaption'] for d in AllData]
+    NetAout=NetA.myforward(phix)
+    NetCinp=torch.cat((phit,NetAout),1)
+    NetCout=NetC.myforward(NetCinp)
+    net_target=NetB.myforward(NetCout)
+ 
     alltargetcaptions=[d['TargetCaption'] for d in AllData]
-    del AllData
+   
     if (run_test==0):
         with open(Path1+r'/ultra_unique_query_phix_152.txt', 'rb') as fp:
             phix= pickle.load( fp)
@@ -767,7 +722,7 @@ def Semantic152_5(run_test):
             allquerycaptions=pickle.load( fp)
     phix=np.array(phix)
 
-    print(phix.shape)
+    
 
     nn_result = []
     #phixN=torch.tensor(phixN)
@@ -779,8 +734,8 @@ def Semantic152_5(run_test):
     for i in range(phix.shape[0]):
         phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
 
-    for i in range (20000):  #(3900): #
-        sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
+    for i in range (net_target.shape[0]):  #(3900): #
+        sims = net_target[i, :].dot(phix.T)  #[:net_target.shape[0],:]
         #print(i)
         nn_result.append(np.argsort(-sims[ :])[:110])
   
@@ -809,7 +764,11 @@ def Semantic152_5(run_test):
 
 if __name__ == '__main__':
     Semantic18_5(0)
+    # Semantic50_5(0)
+    # Semantic152_5(0)
     #Semantic18_5(1)
+    # Semantic50_5(1)
+    # Semantic152_5(1)
     
 
     
