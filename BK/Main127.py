@@ -1728,7 +1728,6 @@ def getlossesMeanSquarelinear():
 
   
 
- 
 
 ################### Regphix #########################
 
@@ -3591,6 +3590,319 @@ if __name__ == '__main__':
   #path2=path2=r"C:\MMaster\Files"
   
   
+def ValidateFeaturesToFiles():
+    train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+    test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+
+    trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+    trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+    trig.eval()
+
+    for i in range(172048):#172048
+      print('Validate:',i,end='\r')
+      item = train[i]
+      datasets.FeaturesToFiles172().ValidateFile(item['source_img_id'],trig)
+      datasets.FeaturesToFiles172().ValidateFile(item['target_img_id'],trig)
+
+    test_queries = test.get_test_queries()
+    for item in tqdm(test_queries):
+        datasets.FeaturesToFiles33().ValidateFile(item['source_img_id'],trig)
+        datasets.FeaturesToFiles33().ValidateFile(item['target_id'],trig)
+
+def ValidateFile172():
+    Path=Path1+r'/FeaturesToFiles172'
+    train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+    test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+
+    trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+    trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+    trig.eval()
+
+    with open (Path+r'/Features172QueryStructureallF.txt', 'rb') as fp:
+      allinone = pickle.load(fp)
+
+
+    for i in range(len(allinone)):
+        item = allinone[i]
+        idx= item['QueryID']
+
+        with open (Path+r'/FeaturesToFiles172.txt', 'rb') as fp:
+            Idximgs = pickle.load(fp)
+
+        print('Img in Index of Dataset:',train.imgs[idx])
+        print('Img in Index from File:',Idximgs[idx])
+
+        imgF = [trig.extract_img_feature(torch.stack([train.get_img(idx)]).float()).data.cpu().numpy()]
+        text_modelF = [trig.extract_text_feature([train.imgs[idx]['captions'][0]]).data.cpu().numpy()]
+
+        print('Caption=',train.imgs[idx]['captions'][0])
+        print('Caption=',item['QueryCaption']) 
+
+    
+        Resnet152 = models.resnet152(pretrained=True)
+        Resnet152.fc = nn.Identity()
+        Resnet152.eval()
+
+        Resnet50 = models.resnet50(pretrained=True)
+        Resnet50.fc = nn.Identity()
+        Resnet50.eval()
+
+        Resnet18 = models.resnet18(pretrained=True)
+        Resnet18.fc = nn.Identity()
+        Resnet18.eval()
+
+
+        img=train.get_img(idx)
+        img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+
+
+        out=Resnet152(img)
+        out = Variable(out, requires_grad=False)
+        out=np.array(out)
+        Feature152 =[out[0,:]]
+
+        out=Resnet50(img)
+        out = Variable(out, requires_grad=False)
+        out=np.array(out)
+        Feature50 =[out[0,:]]
+
+        out=Resnet18(img)
+        out = Variable(out, requires_grad=False)
+        out=np.array(out)
+        Feature18 =[out[0,:]]
+
+        print ('Distance Between img Tirg:', euclideandistance(imgF,item['QuerytrigF']))
+        print ('Distance Between text Tirg:', euclideandistance(text_modelF,item['QueryCaptionF']))
+        print ('Distance Between img 18:', euclideandistance(Feature18,item['Query18F']))
+        print ('Distance Between img 50:', euclideandistance(Feature50,item['Query50F']))
+        print ('Distance Between img 152:', euclideandistance(Feature152,item['Query152F']))
+       
+def ValidateFile33():
+    Path=Path1+r'/FeaturesToFiles33'
+
+    train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+    test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+
+    trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+    trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+    trig.eval()
+
+    with open (Path+r'/Features33QueryStructureallF.txt', 'rb') as fp:
+      allinone = pickle.load(fp)
+
+
+    for i in range(len(allinone)):
+        item = allinone[i]
+        idx= item['QueryID']
+
+        with open (Path+r'/FeaturesToFiles33.txt', 'rb') as fp:
+            Idximgs = pickle.load(fp)
+
+        print('Img in Index of Dataset:',test.imgs[idx])
+        print('Img in Index from File:',Idximgs[idx])
+
+        imgF = [trig.extract_img_feature(torch.stack([test.get_img(idx)]).float()).data.cpu().numpy()]
+        text_modelF = [trig.extract_text_feature([test.imgs[idx]['captions'][0]]).data.cpu().numpy()]
+
+        print('Caption=',test.imgs[idx]['captions'][0])
+        print('Caption=',item['QueryCaption']) 
+
+    
+        Resnet152 = models.resnet152(pretrained=True)
+        Resnet152.fc = nn.Identity()
+        Resnet152.eval()
+
+        Resnet50 = models.resnet50(pretrained=True)
+        Resnet50.fc = nn.Identity()
+        Resnet50.eval()
+
+        Resnet18 = models.resnet18(pretrained=True)
+        Resnet18.fc = nn.Identity()
+        Resnet18.eval()
+
+
+        img=test.get_img(idx)
+        img=torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+
+
+        out=Resnet152(img)
+        out = Variable(out, requires_grad=False)
+        out=np.array(out)
+        Feature152 =[out[0,:]]
+
+        out=Resnet50(img)
+        out = Variable(out, requires_grad=False)
+        out=np.array(out)
+        Feature50 =[out[0,:]]
+
+        out=Resnet18(img)
+        out = Variable(out, requires_grad=False)
+        out=np.array(out)
+        Feature18 =[out[0,:]]
+
+        print ('Distance Between img Tirg:', euclideandistance(imgF,item['QuerytrigF']))
+        print ('Distance Between text Tirg:', euclideandistance(text_modelF,item['QueryCaptionF']))
+        print ('Distance Between img 18:', euclideandistance(Feature18,item['Query18F']))
+        print ('Distance Between img 50:', euclideandistance(Feature50,item['Query50F']))
+        print ('Distance Between img 152:', euclideandistance(Feature152,item['Query152F']))
+ 
+def Semantic152_Maa(run_type):
+    device = torch.device("cpu")
+
+    if run_type=='train':
+        with open (Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
+            AllData = pickle.load(fp) 
+
+        PhixQueryImg =[d['Query152F'] for d in AllData[:10000]]
+        PhitQueryCaption =[d['QueryCaptionF'] for d in AllData[:10000]]
+        PhitQueryMod =[d['ModF'][0] for d in AllData[:10000]]
+        PhixTargetImg =[d['Target152F'] for d in AllData[:10000]]
+        PhitTargetCaption =[d['TargetCaptionF'] for d in AllData[:10000]]
+        all_captions_text =[d['TargetCaption'] for d in AllData[:10000]]
+        all_target_captions_text =[d['TargetCaption'] for d in AllData[:10000]]
+        all_Query_captions_text =[d['QueryCaption'] for d in AllData[:10000]]
+        
+        
+
+
+    elif run_type=='test':
+        with open (Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
+            AllData = pickle.load(fp) 
+
+        PhixQueryImg =[d['Query152F'] for d in AllData]
+        PhitQueryCaption =[d['QueryCaptionF'] for d in AllData]
+        PhitQueryMod =[d['ModF'][0] for d in AllData]
+        PhixTargetImg =[d['Target152F'] for d in AllData]
+        PhitTargetCaption =[d['TargetCaptionF'] for d in AllData]
+        all_captions_text =[d['TargetCaption'] for d in AllData]
+        all_target_captions_text =[d['TargetCaption'] for d in AllData]
+        all_Query_captions_text =[d['QueryCaption'] for d in AllData]
+
+
+    PhitQueryCaption=torch.tensor(PhitQueryCaption).to(device)
+    PhixQueryImg=torch.tensor(PhixQueryImg).to(device)
+    PhitQueryMod=torch.tensor(PhitQueryMod).to(device)
+    PhitTargetCaption=torch.tensor(PhitTargetCaption).to(device)
+    PhixTargetImg=torch.tensor(PhixTargetImg).to(device)
+
+    phix=PhixQueryImg
+    phit=PhitQueryMod
+
+
+
+    hidden=1000
+    NetA=NLR3T(phix.shape[1],phit.shape[1],hidden)
+    NetA.load_state_dict(torch.load( Path1+r'/UltraNetA152.pth', map_location=torch.device('cpu') ))
+    hidden=2500
+    NetB=NLR3T(phit.shape[1],phix.shape[1],hidden)
+    NetB.load_state_dict(torch.load( Path1+r'/UltraNetB152_2500.pth', map_location=torch.device('cpu') ))
+    hidden=1800
+    NetC=NLR3S(phit.shape[1]*2,phit.shape[1],hidden)
+    NetC.load_state_dict(torch.load( Path1+r'/ulteraNetC.pth', map_location=torch.device('cpu') ))
+
+
+
+    NetAout=NetA.myforward(phix)
+    NetCinp=torch.cat((phit,NetAout[:phit.shape[0],:]),1)
+    NetCout=NetC.myforward(NetCinp)
+    net_target=NetB.myforward(NetCout)
+
+
+
+    nn_result = []
+    #phixN=torch.tensor(phixN)
+    net_target=tensor(net_target)
+    net_target=Variable(net_target,requires_grad=False)
+    net_target=np.array(net_target)
+    for i in range(net_target.shape[0]):
+        phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
+    net_target[i,:]=net_target[i,:]/np.linalg.norm(net_target[i,:])
+
+    for i in range (phix.shape[0]):  #(3900): #
+        sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
+        #print(i)
+        nn_result.append(np.argsort(-sims[ :])[:110])
+
+
+    # compute recalls
+    out = []
+    nn_result = [[all_Query_captions_text[nn] for nn in nns] for nns in nn_result]
+
+
+    for k in [1, 5, 10, 50, 100]:
+
+        r = 0.0
+        for i, nns in enumerate(nn_result):
+            if all_target_captions_text[i] in nns[:k]:
+                r += 1
+        r /= len(nn_result)
+        #out += [('recall_top' + str(k) + '_correct_composition', r)]
+        out.append(str(k) + ' ---> '+ str(r*100))
+        r = 0.0
+
+    print (out)
+
+
   
     
 
