@@ -54,101 +54,6 @@ else:
     print("CPU")
 
 
-def Semantic50_Maa(run_type):
-    device = torch.device("cpu")
-
-    if run_type=='train':
-        PhixQueryImg =datasets.Features50Org().phix_50[:50000]
-        PhitQueryCaption =datasets.Feature172KOrg().PhitQueryCaption[:50000]
-        PhitQueryMod =datasets.Feature172KOrg().PhitQueryMod[:50000]
-        PhixTargetImg =datasets.Features50Org().target_phix_50[:50000]
-        PhitTargetCaption =datasets.Feature172KOrg().PhitTargetCaption[:50000]
-        all_captions_text =datasets.Feature172KOrg().all_captions_text[:50000]
-        all_target_captions_text =datasets.Feature172KOrg().all_target_captions_text[:50000]
-        all_Query_captions_text =datasets.Feature172KOrg().all_Query_captions_text[:50000]
-        all_ids =datasets.Feature172KOrg().all_ids[:50000]
-        #SearchedFeatures=PhixTargetImg
-
-
-    elif run_type=='test':
-        PhixQueryImg=datasets.Features50Org().phix_50_test
-        PhitQueryCaption=datasets.Features33KOrg().PhitQueryCaption
-        PhitQueryMod=datasets.Features33KOrg().PhitQueryMod
-        PhixTargetImg=datasets.Features50Org().target_phix_50_test
-        PhitTargetCaption=datasets.Features33KOrg().PhitTargetCaption
-        PhixAllImages=datasets.Features33KOrg().PhixAllImages
-        PhitAllImagesCaptions=datasets.Features33KOrg().PhitAllImagesCaptions
-        all_captions_text=datasets.Features33KOrg().all_captions_text
-        all_target_captions_text=datasets.Features33KOrg().all_target_captions_text
-        all_Query_captions_text=datasets.Features33KOrg().all_queries_captions_text
-        all_queries_Mod_text=datasets.Features33KOrg().all_queries_Mod_text
-        all_ids=datasets.Features33KOrg().all_ids
-        #SearchedFeatures=PhixAllImages
-
-
-    PhitQueryCaption=torch.tensor(PhitQueryCaption).to(device)
-    PhixQueryImg=torch.tensor(PhixQueryImg).to(device)
-    PhitQueryMod=torch.tensor(PhitQueryMod).to(device)
-    PhitTargetCaption=torch.tensor(PhitTargetCaption).to(device)
-    PhixTargetImg=torch.tensor(PhixTargetImg).to(device)
-
-    phix=PhixQueryImg
-    phit=PhitQueryMod
-
-
-
-    hidden=1000
-    NetA=NLR3T(phix.shape[1],phit.shape[1],hidden)
-    NetA.load_state_dict(torch.load( Path1+r'/NetANN50UpTR.pth', map_location=torch.device('cpu') ))
-    hidden=2500
-    NetB=NLR3T(phit.shape[1],phix.shape[1],hidden)
-    NetB.load_state_dict(torch.load( Path1+r'/NetB50_2500Upt1803.pth', map_location=torch.device('cpu') ))
-    hidden=1800
-    NetC=NLR3S(phit.shape[1]*2,phit.shape[1],hidden)
-    NetC.load_state_dict(torch.load( Path1+r'/NetCfinalUpTR.pth', map_location=torch.device('cpu') ))
-
-
-
-    NetAout=NetA.myforward(phix)
-    NetCinp=torch.cat((phit,NetAout[:phit.shape[0],:]),1)
-    NetCout=NetC.myforward(NetCinp)
-    net_target=NetB.myforward(NetCout)
-
-
-
-    nn_result = []
-    #phixN=torch.tensor(phixN)
-    net_target=tensor(net_target)
-    net_target=Variable(net_target,requires_grad=False)
-    net_target=np.array(net_target)
-    for i in range(net_target.shape[0]):
-        phix[i,:]=phix[i,:]/np.linalg.norm(phix[i,:])
-    net_target[i,:]=net_target[i,:]/np.linalg.norm(net_target[i,:])
-
-    for i in range (phix.shape[0]):  #(3900): #
-        sims = net_target[i, :].dot(phix[:net_target.shape[0],:].T)
-        #print(i)
-        nn_result.append(np.argsort(-sims[ :])[:110])
-
-
-    # compute recalls
-    out = []
-    nn_result = [[all_Query_captions_text[nn] for nn in nns] for nns in nn_result]
-
-
-    for k in [1, 5, 10, 50, 100]:
-
-        r = 0.0
-        for i, nns in enumerate(nn_result):
-            if all_target_captions_text[i] in nns[:k]:
-                r += 1
-        r /= len(nn_result)
-        #out += [('recall_top' + str(k) + '_correct_composition', r)]
-        out.append(str(k) + ' ---> '+ str(r*100))
-        r = 0.0
-
-    print (out)
-
 def euclideandistance(signature,signatureimg):
     from scipy.spatial import distance
     return distance.euclidean(signature, signatureimg)
@@ -741,13 +646,11 @@ def GetValuesRegModel():
   opt.dataset='fashion200k'
   
   for name, dataset in [ ('train', trainset),('test', testset)]: #('train', trainset), 
-    
+    # asbook = test_retrieval.test(opt, trig, dataset)
+    # print(name,' As PaPer: ',asbook)
     
     betaNor = test_retrieval.testLoadedRegModel(opt, trig, dataset,reg)
     print(name,'Reg Model: ',betaNor)
-
-    # asbook = test_retrieval.test(opt, trig, dataset)
-    # print(name,' As PaPer: ',asbook)
 
 def GetValuesRandomForestRegressor():
   SizeI=50000
@@ -866,13 +769,14 @@ def GetValuesRandomForestRegressor():
 
 
 
-#Due to need for high GPU Colab was used and for more efficiency Querys was saved to files
+# Due to need for high GPU Colab was used and for more efficiency All Features has been saved to files
+
 def SaveFeaturesToFiles():
     datasets.FeaturesToFiles172().SaveAllFeatures()
     datasets.FeaturesToFiles33().SaveAllFeatures()
 
 
-
+# Files in ColabFiles has been trained on Colab to genrate the below Models
 
 
 
