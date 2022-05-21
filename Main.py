@@ -706,9 +706,9 @@ def GetValuesRandomForestRegressor():
   imgdata = imgdata[:SizeI]
   all_queries1 = trigdata[:SizeI]
 
-  for i in range(all_queries1.shape[0]):
+  for i in range(all_queries1.__len__()):
     all_queries1[i, :] /= np.linalg.norm(all_queries1[i, :])
-  for i in range(imgdata.shape[0]):
+  for i in range(imgdata.__len__()):
     imgdata[i, :] /= np.linalg.norm(imgdata[i, :])
 
   print('1')
@@ -1049,12 +1049,10 @@ def Semantic152_5(run_test):
 
 
 if __name__ == '__main__':
-    # Semantic18_5(0)
-    # Semantic50_5(0)
-    # Semantic152_5(0)
-    Semantic18_5(1)
-    Semantic50_5(1)
-    Semantic152_5(1)
+  GetValuesRegModel()
+  GetValuesRandomForestRegressor()
+
+    
     
 
     
