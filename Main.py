@@ -1125,83 +1125,11 @@ def Semantic152_5(run_test):
     print (out)
 
 
-def checkfeatures():
-  train = datasets.Fashion200k(
-        path=Path1,
-        split='train',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-  
-  test = datasets.Fashion200k(
-        path=Path1,
-        split='test',
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(224),
-            torchvision.transforms.CenterCrop(224),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
-                                              [0.229, 0.224, 0.225])
-        ]))
-
-  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
-  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
-  trig.eval()
-
-  
-  imgs = []
-  mods = []
-  trigdata=[]
-  target=[]
-  imgdata=[]
-  fmods = []
-
-  with open (Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
-    AllData = pickle.load(fp)   
-
-    
-  
-  imgs=[]
-  mods=[]
-
-  Resnet18 = models.resnet18(pretrained=True)
-  Resnet18.fc = nn.Identity()
-  Resnet18.eval()  
-  
-
-  for Data in tqdm(test.get_test_queries()):
-    
-    img= test.get_img(Data['source_img_id'])
-    img= torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
-    # imgs += [test.get_img(Data['source_img_id'])]
-    # imgs = torch.stack(imgs).float()
-    # imgs = torch.autograd.Variable(imgs)
-    # mods += [Data['mod']['str']]
-
-    #f = trig.extract_img_feature(imgs).data.cpu().numpy()
-    #f = trig.compose_img_text(imgs,mods).data.cpu().numpy()
-
-    out=Resnet18(img)
-    out = Variable(out, requires_grad=False)
-    out=np.array(out)
-    f =out[0,:]
-
-    listalldata =list(filter(lambda item: item['QueryID'] == Data['source_img_id'], AllData))
-    ten=listalldata[0]['Query18F']#torch.tensor()
-    print(euclideandistance(f,ten))
-    imgs=[]
-    mods=[]
-
-
 
 
 
 if __name__ == '__main__':
-  checkfeatures()
+  Semantic18_5(0)
 
     
     
