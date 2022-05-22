@@ -778,7 +778,79 @@ def SaveFeaturesToFiles():
 
 # Files in ColabFiles has been trained on Colab to genrate the below Models
 
+def getfeatures(test):
 
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  
+  test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+
+
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.eval()
+
+  
+  imgs = []
+  mods = []
+  trigdata=[]
+  target=[]
+  imgdata=[]
+  fmods = []
+ 
+  
+  for Data in tqdm(test.get_test_queries()):
+    
+    
+    imgs += [test.get_img(Data['source_img_id'])]
+    mods += [Data['mod']['str']]
+    target +=[test.get_img(Data['target_id'])]
+    
+    imgs = torch.stack(imgs).float()
+    imgs = torch.autograd.Variable(imgs)
+    
+    f = trig.extract_img_feature(imgs).data.cpu().numpy()
+    fmod=trig.extract_text_feature(mods).data.cpu().numpy()
+
+    target = torch.stack(target).float()
+    target = torch.autograd.Variable(target)
+    f2 = trig.extract_img_feature(target).data.cpu().numpy()
+
+    trigdata.append(f[0])
+    imgdata.append(f2[0])
+    fmods.append(fmod[0])
+    
+    imgs = []
+    mods = []
+    target = []
+
+  all_queries1=np.array(trigdata)
+  imgdata=np.array(imgdata)
+  fmodss=np.array(fmods)
+
+  return all_queries1,imgdata,fmodss
+
+    
 
 class NLR3S(nn.Module):
     def __init__(self,netin,netout,nethidden):
@@ -798,6 +870,7 @@ class NLR3T(nn.Module):
       return outv
 
 def Semantic18_5(run_test):
+
     if run_test==0:
         with open (Path1+r'/FeaturesToFiles172/Features172QueryStructureallF.txt', 'rb') as fp:
             AllData = pickle.load(fp)         
@@ -808,12 +881,19 @@ def Semantic18_5(run_test):
             AllData = pickle.load(fp) 
 
     
+
+    
     phix=[d['Query18F'] for d in AllData]
     phit=[d['ModF'] for d in AllData]
+    target=[d['Target18F'] for d in AllData]
+
+    #phix,target,phit =getfeatures(run_test)
+
+
     phix=torch.tensor(phix)
     phit=torch.tensor(phit)
     phit=torch.squeeze(phit)
-    target=[d['Target18F'] for d in AllData]
+   
     target=torch.tensor(target)
     #allquerycaptions=[d['QueryCaption'] for d in AllData]
     
@@ -1045,12 +1125,83 @@ def Semantic152_5(run_test):
     print (out)
 
 
+def checkfeatures():
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  test = datasets.Fashion200k(
+        path=Path1,
+        split='test',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+
+  trig= img_text_composition_models.TIRG([t.encode().decode('utf-8') for t in train.get_all_texts()],512)
+  trig.load_state_dict(torch.load(Path1+r'\fashion200k.tirg.iter160k.pth' , map_location=torch.device('cpu') )['model_state_dict'])
+  trig.eval()
+
+  
+  imgs = []
+  mods = []
+  trigdata=[]
+  target=[]
+  imgdata=[]
+  fmods = []
+
+  with open (Path1+r'/FeaturesToFiles33/Features33QueryStructureallF.txt', 'rb') as fp:
+    AllData = pickle.load(fp)   
+
+    
+  
+  imgs=[]
+  mods=[]
+
+  Resnet18 = models.resnet18(pretrained=True)
+  Resnet18.fc = nn.Identity()
+  Resnet18.eval()  
+  
+
+  for Data in tqdm(test.get_test_queries()):
+    
+    img= test.get_img(Data['source_img_id'])
+    img= torch.reshape(img,(1,img.shape[0],img.shape[1],img.shape[2]))
+    # imgs += [test.get_img(Data['source_img_id'])]
+    # imgs = torch.stack(imgs).float()
+    # imgs = torch.autograd.Variable(imgs)
+    # mods += [Data['mod']['str']]
+
+    #f = trig.extract_img_feature(imgs).data.cpu().numpy()
+    #f = trig.compose_img_text(imgs,mods).data.cpu().numpy()
+
+    out=Resnet18(img)
+    out = Variable(out, requires_grad=False)
+    out=np.array(out)
+    f =out[0,:]
+
+    listalldata =list(filter(lambda item: item['QueryID'] == Data['source_img_id'], AllData))
+    ten=listalldata[0]['Query18F']#torch.tensor()
+    print(euclideandistance(f,ten))
+    imgs=[]
+    mods=[]
+
+
 
 
 
 if __name__ == '__main__':
-  GetValuesRegModel()
-  GetValuesRandomForestRegressor()
+  checkfeatures()
 
     
     
