@@ -9,6 +9,7 @@ import torchvision
 import torchvision.transforms as tvt
 import torch.nn as nn
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import numpy as np
 from torch import optim
 import torch.nn.functional as F
@@ -57,6 +58,35 @@ else:
 def euclideandistance(signature,signatureimg):
     from scipy.spatial import distance
     return distance.euclidean(signature, signatureimg)
+
+
+def getImagesExaple():
+  train = datasets.Fashion200k(
+        path=Path1,
+        split='train',
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(224),
+            torchvision.transforms.CenterCrop(224),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize([0.485, 0.456, 0.406],
+                                              [0.229, 0.224, 0.225])
+        ]))
+  
+  for Data in tqdm(train):
+    
+    print('Caption:' ,Data['source_caption'],',path',Data['source_path'],',Caption:' ,Data['target_caption'],',path',Data['target_path'],' ,Mod',
+    Data['mod'])
+    fig = plt.figure()
+    ax1 = fig.add_subplot(2,2,1)
+    ax1.imshow(mpimg.imread('C:/MMaster/Files/'+ Data['source_path']))
+    ax2 = fig.add_subplot(2,2,2)
+    ax2.imshow(mpimg.imread('C:/MMaster/Files/'+Data['target_path']))
+    plt.show()
+
+    
+
+
+
 
 
 
@@ -1055,7 +1085,8 @@ def Semantic152_5(run_test):
 
 
 if __name__ == '__main__':
-  Semantic18_5(0)
+  #Semantic18_5(0)
+  getImagesExaple()
 
     
     

@@ -7,6 +7,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
 import numpy as np
+
 from torch import optim
 import torch.nn.functional as F
 import math as m
