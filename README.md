@@ -1,7 +1,10 @@
 # Composing Text and Image for Image Retrieval
 
-This is the code for the paper:
 
+
+This Project is based on the following Paper and Code:
+
+Paper:
 **<a href="https://arxiv.org/abs/1812.07119">Composing Text and Image for Image Retrieval - An Empirical Odyssey
 </a>**
 <br>
@@ -9,6 +12,12 @@ Nam Vo, Lu Jiang, Chen Sun, Kevin Murphy, Li-Jia Li, Li Fei-Fei, James Hays
 <br>
 CVPR 2019.
 
+Code
+
+**<a href="https://github.com/google/tirg">GitHib Code</a>**
+
+
+---------------------------------------------------------------------------------------
 
 *Please note that this is not an officially supported Google product.* And *this is the reproduced, not the original code.*
 
