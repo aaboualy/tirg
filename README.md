@@ -37,6 +37,16 @@ This Project is based on the following Paper and Code:
 - VS Code
 
 
+## How To Run:
+
+- First Download File Folder From :**<a href="https://www.mediafire.com/file/544e4u46mcdf6oi/Files.rar/file">This Link</a>** 
+- Optional* : Download the Fashion200k dataset from this [external website](https://github.com/xthan/fashion-200k) Download our generated test_queries.txt from [here](https://storage.googleapis.com/image_retrieval_css/test_queries.txt).
+- Place Dataset inside File Folder (You may not need to download dataset beacuse features already extracted from images and saved in File Folder).
+- Then Place File Folder at location you want put edit "Path1" attribute in code to this location.
+- use the "Main.py" to run functions.
+
+
+
 ## Introduction
 In this paper, we study the task of image retrieval, where the input query is
 specified in the form of an image plus some text that describes desired
