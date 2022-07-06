@@ -3,19 +3,23 @@
 
 
 This Project is based on the following Paper and Code:
-
 Paper:
 <br>
-**<a href="https://arxiv.org/abs/1812.07119">Composing Text and Image for Image Retrieval - An Empirical Odyssey
-</a>**
+**<a href="https://arxiv.org/abs/1812.07119">Composing Text and Image for Image Retrieval - An Empirical Odyssey</a>**
 <br>
 Nam Vo, Lu Jiang, Chen Sun, Kevin Murphy, Li-Jia Li, Li Fei-Fei, James Hays
 <br>
 CVPR 2019.
 
 Code
-
 **<a href="https://github.com/google/tirg">GitHib Code</a>**
+
+@inproceedings{vo2019composing,
+  title={Composing Text and Image for Image Retrieval-An Empirical Odyssey},
+  author={Vo, Nam and Jiang, Lu and Sun, Chen and Murphy, Kevin and Li, Li-Jia and Fei-Fei, Li and Hays, James},
+  booktitle={CVPR},
+  year={2019}
+}
 
 
 ---------------------------------------------------------------------------------------
