@@ -3,39 +3,39 @@
 
 
 This Project is based on the following Paper and Code:
-Paper:
-<br>
-**<a href="https://arxiv.org/abs/1812.07119">Composing Text and Image for Image Retrieval - An Empirical Odyssey</a>**
-<br>
-Nam Vo, Lu Jiang, Chen Sun, Kevin Murphy, Li-Jia Li, Li Fei-Fei, James Hays
-<br>
-CVPR 2019.
+  Paper:
+  <br>
+  **<a href="https://arxiv.org/abs/1812.07119">Composing Text and Image for Image Retrieval - An Empirical Odyssey</a>**
+  <br>
+  Nam Vo, Lu Jiang, Chen Sun, Kevin Murphy, Li-Jia Li, Li Fei-Fei, James Hays
+  <br>
+  CVPR 2019.
 
-Code
-**<a href="https://github.com/google/tirg">GitHib Code</a>**
+  Code
+  <br>
+  **<a href="https://github.com/google/tirg">GitHib Code</a>**
 
-@inproceedings{vo2019composing,
-  title={Composing Text and Image for Image Retrieval-An Empirical Odyssey},
-  author={Vo, Nam and Jiang, Lu and Sun, Chen and Murphy, Kevin and Li, Li-Jia and Fei-Fei, Li and Hays, James},
-  booktitle={CVPR},
-  year={2019}
-}
-
+  ```
+  @inproceedings{vo2019composing,
+    title={Composing Text and Image for Image Retrieval-An Empirical Odyssey},
+    author={Vo, Nam and Jiang, Lu and Sun, Chen and Murphy, Kevin and Li, Li-Jia and Fei-Fei, Li and Hays, James},
+    booktitle={CVPR},
+    year={2019}
+  }
+  ```
 
 ---------------------------------------------------------------------------------------
 
-*Please note that this is not an officially supported Google product.* And *this is the reproduced, not the original code.*
+## Setup
 
-If you find this code useful in your research then please cite
+- torchvision
+- pytorch
+- numpy
+- tqdm
+- tensorboardX
+- Anaconda
+- VS Code
 
-```
-@inproceedings{vo2019composing,
-  title={Composing Text and Image for Image Retrieval-An Empirical Odyssey},
-  author={Vo, Nam and Jiang, Lu and Sun, Chen and Murphy, Kevin and Li, Li-Jia and Fei-Fei, Li and Hays, James},
-  booktitle={CVPR},
-  year={2019}
-}
-```
 
 ## Introduction
 In this paper, we study the task of image retrieval, where the input query is
@@ -52,13 +52,7 @@ existing approaches on different datasets.
 ![Method](images/newpipeline.png)
 
 
-## Setup
 
-- torchvision
-- pytorch
-- numpy
-- tqdm
-- tensorboardX
 
 ## Running Models
 
@@ -70,53 +64,6 @@ existing approaches on different datasets.
 - `test_retrieval.py`: functions to perform retrieval test and compute recall performance
 
 
-### CSS3D dataset
-
-Download the dataset from this [external website](https://drive.google.com/file/d/1wPqMw-HKmXUG2qTgYBiTNUnjz83hA2tY/view?usp=sharing).
-
-Make sure the dataset include these files:
-`<dataset_path>/css_toy_dataset_novel2_small.dup.npy`
-`<dataset_path>/images/*.png`
-
-To run our training & testing:
-
-```
-python main.py --dataset=css3d --dataset_path=./CSSDataset --num_iters=160000 \
-  --model=tirg --loss=soft_triplet --comment=css3d_tirg
-
-python main.py --dataset=css3d --dataset_path=./CSSDataset --num_iters=160000 \
-  --model=tirg_lastconv --loss=soft_triplet --comment=css3d_tirgconv
-```
-
-The first command apply TIRG to the fully connected layer and the second applies it to the last conv layer.
-To run the baseline:
-
-```
-python main.py --dataset=css3d --dataset_path=./CSSDataset --num_iters=160000 \
-  --model=concat --loss=soft_triplet --comment=css3d_concat
-```
-
-
-### MITStates dataset
-Download the dataset from this [external website](http://web.mit.edu/phillipi/Public/states_and_transformations/index.html).
-
-Make sure the dataset include these files:
-
-`<dataset_path>/images/<adj noun>/*.jpg`
-
-For training & testing:
-
-```
-python main.py --dataset=mitstates --dataset_path=./mitstates \
-  --num_iters=160000 --model=concat --loss=soft_triplet \
-  --learning_rate_decay_frequency=50000 --num_iters=160000 --weight_decay=5e-5 \
-  --comment=mitstates_concat
-
-python main.py --dataset=mitstates --dataset_path=./mitstates \
-  --num_iters=160000 --model=tirg --loss=soft_triplet \
-  --learning_rate_decay_frequency=50000 --num_iters=160000 --weight_decay=5e-5 \
-  --comment=mitstates_tirg
-```
 
 ### Fashion200k dataset
 Download the dataset from this [external website](https://github.com/xthan/fashion-200k) Download our generated test_queries.txt from [here](https://storage.googleapis.com/image_retrieval_css/test_queries.txt).
