@@ -37,11 +37,11 @@ In this Project, our problem definition goes the same as computer vision in whic
 
 Paper 1 OverView:
 <br>
-![Problem Overview1](BK/ReadMe3.JPG)
+![Problem Overview1](BK/ReadMe3.JPG )
 
 Paper 2 OverView:
 <br>
-![Problem Overview2](BK/ReadMe2.JPG)
+![Problem Overview2](BK/ReadMe2.JPG )
 
 
 ## Setup
@@ -66,7 +66,7 @@ Paper 2 OverView:
 
 ## Pretrained Models:
 
-pretrained models already downloaded with the above folder, but you can use Files in "ColabFiles" to train them again.
+pretrained models already downloaded with the above folder, but you can use the Code in "ColabFiles" Folder to train them again.
 *The numbers are slightly different from the ones reported in the paper due to the re-implementation.*
 
 
