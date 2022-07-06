@@ -36,10 +36,12 @@ In this Project, our problem definition goes the same as computer vision in whic
 
 
 Paper 1 OverView:
-![Method](BK/ReadME3.JPG)
+<br>
+![Problem Overview1](BK/ReadME3.JPG)
 
 Paper 2 OverView:
-![Method2](BK/ReadME2.JPG)
+<br>
+![Problem Overview2](BK/ReadME2.JPG)
 
 
 ## Setup
