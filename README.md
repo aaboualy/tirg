@@ -39,7 +39,7 @@ Paper 1 OverView:
 ![Method](BK/ReadME3.JPG)
 
 Paper 2 OverView:
-![Method](BK/ReadME2.JPG)
+![Method2](BK/ReadME2.JPG)
 
 
 ## Setup
