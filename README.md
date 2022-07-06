@@ -5,6 +5,7 @@
 This Project is based on the following Paper and Code:
 
 Paper:
+<br>
 **<a href="https://arxiv.org/abs/1812.07119">Composing Text and Image for Image Retrieval - An Empirical Odyssey
 </a>**
 <br>
