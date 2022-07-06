@@ -35,14 +35,11 @@ In this Project, our problem definition goes the same as computer vision in whic
 - Paper 2 : **<a href="BK/ANNPR2022_paper_0154.pdf">This Link</a>** 
 
 
+Paper 1 OverView:
+![Method](BK/ReadME3.JPG)
 
-
-
-We propose a new way to combine image and
-text using TIRG function for the retrieval task. We show this outperforms
-existing approaches on different datasets.
-
-![Method](images/newpipeline.png)
+Paper 2 OverView:
+![Method](BK/ReadME2.JPG)
 
 
 ## Setup
