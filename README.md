@@ -29,7 +29,7 @@
 
 ![Problem Overview](BK/ReadME1.JPG)
 
-In this Project, our problem definition goes the same as computer vision in which we try to retrieve an images with a query image and modifier text which describes user modification on the query, we will try to solve this problem with three diffrent approches as descriped in the following Papers:
+In this Project, our problem is trying to retrieve an images with a query image and modifier text which describes user modification on the query, we will try to solve this problem with three diffrent approches as descriped in the following Papers:
 
 - Paper 1 : **<a href="BK/2021236923.pdf">This Link</a>** 
 - Paper 2 : **<a href="BK/ANNPR2022_paper_0154.pdf">This Link</a>** 
