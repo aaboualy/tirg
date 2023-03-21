@@ -37,11 +37,11 @@ In this Project, our problem is trying to retrieve an images with a query image 
 
 Paper 1 OverView:
 <br>
-![Problem Overview1](BK/ReadMe3.JPG )
+![Problem Overview1](https://ieeexplore.ieee.org/document/9698617)
 
 Paper 2 OverView:
 <br>
-![Problem Overview2](BK/ReadMe2.JPG )
+![Problem Overview2](https://ieeexplore.ieee.org/document/10077372)
 
 
 ## Setup
