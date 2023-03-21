@@ -1,4 +1,5 @@
-# Composing Text and Image for Image Retrieval
+# Neural Textual Features Composition for CBIR
+
 
 
 
