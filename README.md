@@ -2,7 +2,7 @@
 
 
 
-## This Project is influenced by the following Paper and Code:
+## This Project is influenced by the following Paper:
   Paper:
   <br>
   **<a href="https://arxiv.org/abs/1812.07119">Composing Text and Image for Image Retrieval - An Empirical Odyssey</a>**
