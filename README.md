@@ -31,17 +31,17 @@
 
 In this Project, our problem is trying to retrieve an images with a query image and modifier text which describes user modification on the query, we will try to solve this problem with three diffrent approches as descriped in the following Papers:
 
-- Paper 1 : **<a href="BK/2021236923.pdf">This Link</a>** 
-- Paper 2 : **<a href="BK/ANNPR2022_paper_0154.pdf">This Link</a>** 
+- Paper 1 : **<a href="https://ieeexplore.ieee.org/document/9698617">This Link</a>** 
+- Paper 2 : **<a href="https://ieeexplore.ieee.org/document/10077372">This Link</a>** 
 
 
 Paper 1 OverView:
 <br>
-![Problem Overview1](https://ieeexplore.ieee.org/document/9698617)
+![Problem Overview1](BK/ReadMe3.JPG)
 
 Paper 2 OverView:
 <br>
-![Problem Overview2](https://ieeexplore.ieee.org/document/10077372)
+![Problem Overview2](BK/ReadMe2.JPG)
 
 
 ## Setup
