@@ -11,18 +11,7 @@
   <br>
   CVPR 2019.
 
-  Code
-  <br>
-  **<a href="https://github.com/google/tirg">GitHib Code</a>**
 
-  ```
-  @inproceedings{vo2019composing,
-    title={Composing Text and Image for Image Retrieval-An Empirical Odyssey},
-    author={Vo, Nam and Jiang, Lu and Sun, Chen and Murphy, Kevin and Li, Li-Jia and Fei-Fei, Li and Hays, James},
-    booktitle={CVPR},
-    year={2019}
-  }
-  ```
 
 ---------------------------------------------------------------------------------------
 ## Introduction
